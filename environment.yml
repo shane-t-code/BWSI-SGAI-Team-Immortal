@@ -1,0 +1,21 @@
+name: bwsi-sgai
+channels:
+  - pytorch
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.13
+  - pandas
+  - numpy
+  - pillow
+  - pyyaml
+  - tk
+  - pytorch
+  - torchvision
+  - gymnasium
+  - timm
+  - pip
+  - debugpy
+  - matplotlib
+  - pytest
+  - pytest-cov

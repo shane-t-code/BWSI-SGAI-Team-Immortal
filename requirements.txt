@@ -1,0 +1,15 @@
+pandas
+numpy
+pillow
+pyyaml
+tk
+matplotlib
+torch
+torchvision
+gymnasium
+timm
+pip
+debugpy
+matplotlib
+pytest
+pytest-cov
