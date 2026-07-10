@@ -121,6 +121,7 @@ class ScoreKeeper:
         recommended_action: str | None = None,
         confidence: str | None = None,
         obs: list[float] | None = None,
+        confidence_score: float | None = None,
     ) -> None:
         """Append an action entry to the current episode log.
 
@@ -145,6 +146,8 @@ class ScoreKeeper:
             obs: Raw 15-float RL observation vector (pre-action) as a Python
                 list, or ``None`` if not available (e.g. human UI modes).
                 Stored as a JSON array string in the log for RL debugging.
+            confidence_score: Float confidence score (0.0 to 1.0) from the classifier,
+                or ``None`` if no classifier was used.
         """
         self.logger.append(
             {
@@ -154,6 +157,7 @@ class ScoreKeeper:
                 "humanoid_predicted_class": predicted_class,
                 "recommended_action": recommended_action,
                 "confidence": confidence,
+                "confidence_score": confidence_score,
                 "humanoid_fp": humanoid.fp if humanoid is not None else None,
                 "action": action,
                 "remaining_time": self.remaining_time,

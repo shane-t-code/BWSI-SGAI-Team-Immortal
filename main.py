@@ -61,6 +61,8 @@ from training.train_cnn import NUM_EPOCHS
 from training.train_cnn import train as train_cnn
 from training.train_rl import NUM_EPISODES
 from training.train_rl import train as train_rl
+from training.train_adversarial import NUM_EPISODES as ADV_NUM_EPISODES
+from training.train_adversarial import train as train_adversarial
 from ui.ui import UI
 
 
@@ -223,6 +225,7 @@ class Main:
                     recommended_action=action.value,
                     confidence=confidence,
                     obs=None,
+                    confidence_score=max_prob,
                 )
             else:
                 print(
@@ -236,6 +239,29 @@ class Main:
             scorekeeper.save_log()
         print("RL equiv reward:", scorekeeper.get_cumulative_reward())
         print(score)
+
+        # Print confidence scores for each image
+        print("\n" + "=" * 80)
+        print("CONFIDENCE SCORES FOR EACH IMAGE")
+        print("=" * 80)
+        for entry in scorekeeper.logger:
+            if entry["humanoid_fp"] is not None and entry["confidence_score"] is not None:
+                fp = entry["humanoid_fp"]
+                conf_score = entry["confidence_score"]
+                ground_truth = entry["humanoid_ground_truth"]
+                predicted_idx = entry["humanoid_predicted_class"]
+                action = entry["action"]
+
+                # Convert predicted index to class name
+                from gameplay.humanoid import Humanoid
+                if predicted_idx is not None:
+                    predicted_class = Humanoid.get_state_string(predicted_idx)
+                else:
+                    predicted_class = "Unknown"
+
+                print(f"{fp:50s} | Confidence: {conf_score:.4f} | Truth: {ground_truth:8s} | Predicted: {predicted_class:8s} | Action: {action}")
+        print("=" * 80)
+
         return score
 
 
@@ -298,9 +324,9 @@ def build_parser() -> argparse.ArgumentParser:
     train_parser.add_argument(
         "--type",
         type=str,
-        choices=["rl", "cnn"],
+        choices=["rl", "cnn", "adversarial"],
         required=True,
-        help="Which model to train: rl=DQN agent, cnn=image classifier",
+        help="Which model to train: rl=DQN agent, cnn=image classifier, adversarial=image generation agent",
     )
     train_parser.add_argument(
         "-e",
@@ -345,6 +371,13 @@ if __name__ == "__main__":
                 episodes=args.epochs if args.epochs is not None else NUM_EPISODES,
                 seed=args.seed,
                 save_path=args.output if args.output is not None else RL_MODEL_PATH,
+            )
+        elif args.type == "adversarial":
+            train_adversarial(
+                data_dir=args.data,
+                episodes=args.epochs if args.epochs is not None else ADV_NUM_EPISODES,
+                seed=args.seed,
+                save_path=args.output if args.output is not None else "models/weights/adversarial_agent.pth",
             )
         else:
             train_cnn(

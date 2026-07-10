@@ -124,3 +124,150 @@ class CNNClassifier(HumanoidClassifier):
         with torch.no_grad():
             outputs = self.net(tensor)
             return torch.nn.functional.softmax(outputs, 1)[0].cpu().numpy()
+
+    def classify_with_features(
+        self, humanoid: Humanoid
+    ) -> dict[str, np.ndarray | float]:
+        """Return classification with detailed features for RL training.
+
+        Provides additional metrics beyond raw probabilities to help an RL agent
+        learn how to generate harder-to-classify images.
+
+        Args:
+            humanoid: Humanoid instance with a .fp filepath attribute.
+
+        Returns:
+            Dictionary with keys:
+                - ``probs``: Float32 array of shape ``(4,)`` with softmax probabilities.
+                - ``max_prob``: Maximum probability (confidence in predicted class).
+                - ``entropy``: Shannon entropy of the probability distribution.
+                - ``margin``: Difference between top-2 probabilities (lower = more ambiguous).
+                - ``predicted_class``: Index of the predicted class (0-3).
+                - ``logits``: Raw pre-softmax outputs (logits).
+        """
+        with Image.open(os.path.join(self.img_data_root, humanoid.fp)) as image_:
+            tensor = (
+                self.image_transforms(image_.convert("RGB"))
+                .float()
+                .unsqueeze(0)
+                .to(self.device)
+            )
+        with torch.no_grad():
+            logits = self.net(tensor)
+            probs = torch.nn.functional.softmax(logits, 1)[0].cpu().numpy()
+            logits_np = logits[0].cpu().numpy()
+
+        # Calculate additional metrics
+        max_prob = float(np.max(probs))
+        predicted_class = int(np.argmax(probs))
+
+        # Shannon entropy: -sum(p * log(p))
+        entropy = float(-np.sum(probs * np.log(probs + 1e-10)))
+
+        # Margin: difference between top-2 probabilities
+        sorted_probs = np.sort(probs)[::-1]
+        margin = float(sorted_probs[0] - sorted_probs[1]) if len(sorted_probs) > 1 else 0.0
+
+        return {
+            "probs": probs,
+            "max_prob": max_prob,
+            "entropy": entropy,
+            "margin": margin,
+            "predicted_class": predicted_class,
+            "logits": logits_np,
+        }
+
+    def get_feature_activations(
+        self, humanoid: Humanoid, layer: str = "conv2"
+    ) -> np.ndarray:
+        """Extract intermediate layer activations for analysis.
+
+        Useful for understanding what features the CNN is using to classify
+        an image, which can guide adversarial image generation.
+
+        Args:
+            humanoid: Humanoid instance with a .fp filepath attribute.
+            layer: Which layer to extract activations from. Options: ``"conv1"``,
+                ``"conv2"`` (default). ``"conv2"`` is recommended as it captures
+                higher-level features.
+
+        Returns:
+            Float32 array of feature map activations. Shape depends on layer:
+                - ``conv1``: ``(12, 256, 256)`` (12 channels, 256x256 spatial)
+                - ``conv2``: ``(24, 128, 128)`` (24 channels, 128x128 spatial)
+        """
+        with Image.open(os.path.join(self.img_data_root, humanoid.fp)) as image_:
+            tensor = (
+                self.image_transforms(image_.convert("RGB"))
+                .float()
+                .unsqueeze(0)
+                .to(self.device)
+            )
+
+        # Hook to capture intermediate activations
+        activations = {}
+
+        def get_activation(name):
+            def hook(model, input, output):
+                activations[name] = output.detach()
+            return hook
+
+        # Register hook on requested layer
+        if layer == "conv1":
+            handle = self.net.conv1.register_forward_hook(get_activation("conv1"))
+        elif layer == "conv2":
+            handle = self.net.conv2.register_forward_hook(get_activation("conv2"))
+        else:
+            raise ValueError(f"Unknown layer: {layer}. Use 'conv1' or 'conv2'.")
+
+        # Forward pass
+        with torch.no_grad():
+            _ = self.net(tensor)
+
+        # Remove hook
+        handle.remove()
+
+        # Return activations as numpy array (remove batch dimension)
+        return activations[layer][0].cpu().numpy()
+
+    def get_gradients(
+        self, humanoid: Humanoid, target_class: int | None = None
+    ) -> np.ndarray:
+        """Compute gradients w.r.t. input image for adversarial analysis.
+
+        Shows which pixels most influence the classification, useful for
+        identifying vulnerable features to attack.
+
+        Args:
+            humanoid: Humanoid instance with a .fp filepath attribute.
+            target_class: If provided, compute gradients for maximizing this class.
+                If None, use the predicted class.
+
+        Returns:
+            Float32 array of shape ``(3, 512, 512)`` with gradients for each RGB channel.
+        """
+        with Image.open(os.path.join(self.img_data_root, humanoid.fp)) as image_:
+            tensor = (
+                self.image_transforms(image_.convert("RGB"))
+                .float()
+                .unsqueeze(0)
+                .to(self.device)
+            )
+        tensor.requires_grad = True
+
+        # Forward pass
+        outputs = self.net(tensor)
+
+        # Use predicted class if target not specified
+        if target_class is None:
+            target_class = int(outputs.argmax(dim=1))
+
+        # Compute gradient of target class score w.r.t. input
+        target_score = outputs[0, target_class]
+        target_score.backward()
+
+        # Get gradients
+        gradients = tensor.grad.detach()[0].cpu().numpy()
+        tensor.requires_grad = False
+
+        return gradients
