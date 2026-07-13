@@ -125,6 +125,29 @@ class CNNClassifier(HumanoidClassifier):
             outputs = self.net(tensor)
             return torch.nn.functional.softmax(outputs, 1)[0].cpu().numpy()
 
+    def classify_pil_image(self, image: Image.Image) -> np.ndarray:
+        """Return CNN probability distribution for a PIL image in memory.
+
+        Useful for RL environments that generate images in memory without
+        saving to disk, avoiding the overhead of temporary file I/O.
+
+        Args:
+            image: PIL Image object (will be converted to RGB if needed).
+
+        Returns:
+            Float32 array of shape ``(4,)`` with softmax probabilities in
+            class order: ``[zombie, healthy, injured, corpse]``.
+        """
+        tensor = (
+            self.image_transforms(image.convert("RGB"))
+            .float()
+            .unsqueeze(0)
+            .to(self.device)
+        )
+        with torch.no_grad():
+            outputs = self.net(tensor)
+            return torch.nn.functional.softmax(outputs, 1)[0].cpu().numpy()
+
     def classify_with_features(
         self, humanoid: Humanoid
     ) -> dict[str, np.ndarray | float]:
