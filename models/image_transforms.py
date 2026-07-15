@@ -1,3 +1,5 @@
+# hello
+
 """Image transformation functions for adversarial generation.
 
 All transformations follow the 5 rules:
@@ -297,6 +299,50 @@ class OcclusionTransform(ImageTransform):
         return img
 
 
+class FogTransform(ImageTransform):
+    """Atmospheric haze — blends the whole frame toward pale gray (Rule 5).
+
+    This is the Red Team's "fool the human" action. The zombie's single strongest
+    human-visible tell is its bright-green skin; blending toward gray fades that
+    green out so the figure reads as an ordinary person in foggy weather, while the
+    CNN (which ignores color) barely reacts.
+
+    Rule 2: Even at max intensity it does NOT fully erase the character — some green
+    stays faintly visible (alpha caps at 0.75, not 1.0), so the figure is still there.
+    Rule 4: Tunable via a single intensity knob.
+    """
+
+    def apply(self, image: Image.Image, intensity: float) -> Image.Image:
+        """Blend the image toward pale gray haze.
+
+        Args:
+            image: Input PIL Image.
+            intensity: Haze amount in [0, 1] (0 = no fog, 1 = heaviest fog).
+
+        Returns:
+            Hazed image.
+        """
+        # Work in float so the blend math doesn't overflow the 0-255 pixel range mid-way.
+        arr = np.array(image.convert("RGB")).astype(np.float32)
+
+        # The "fog color": a pale, slightly blue-gray. Every pixel gets pulled toward this.
+        haze = np.array([200, 205, 210], dtype=np.float32)
+
+        # alpha = how much of the final pixel is fog vs. original (0 = none, 1 = all fog).
+        # Capped at 0.75 (not 1.0) on purpose: at full intensity the image is 75% fog,
+        # 25% original — enough to gray out the green but leave the figure present (Rule 2).
+        # NOTE: the 0.75 constant is load-bearing — the reward weights (0.55/0.45) were
+        # tuned against fog's measured strength at this exact value. Do not change it
+        # without re-running the swing analysis and re-balancing the weights.
+        alpha = 0.75 * intensity
+
+        # Alpha blend: each output pixel is a weighted average of original and fog.
+        blended = arr * (1.0 - alpha) + haze * alpha
+
+        # Clip back into the valid 0-255 range and convert to uint8 to make a real image.
+        return Image.fromarray(np.clip(blended, 0, 255).astype(np.uint8))
+
+
 class CompositeTransform:
     """Combines multiple transformations with controlled intensity.
 
@@ -344,6 +390,7 @@ TRANSFORM_REGISTRY = {
     "saturation": SaturationTransform(),
     "shadow": ShadowTransform(),
     "occlusion": OcclusionTransform(),
+    "fog": FogTransform(),  # Red Team "fool the human" action — fades the green tell
 }
 
 
@@ -390,3 +437,88 @@ def apply_random_transform(
     transform_name = random.choice(available)
     transform = get_transform(transform_name)
     return transform.apply(image, intensity), transform_name
+
+
+# ---------------------------------------------------------------------------
+# Human-plausibility perception ("does the character still look green?")
+#
+# These two functions are NOT image edits — they MEASURE an image. Together they
+# form the "fool the human" half of the Red Team reward: green_mask finds the
+# character's green pixels on the ORIGINAL zombie, and hue_proxy scores how green
+# those same pixels still look after editing. Prajwal's tier-verification script
+# imports hue_proxy too — this is the single shared definition, so the reward the
+# agent optimizes and the metric he reports can never silently disagree.
+# ---------------------------------------------------------------------------
+
+
+def green_mask(
+    image: Image.Image,
+    hue_low: int = 45,
+    hue_high: int = 115,
+    sat_min: int = 60,
+) -> np.ndarray:
+    """Find the zombie-green pixels in an image.
+
+    "Green" is easiest to detect in HSV color space, where a color is described by
+    Hue (which color on the rainbow), Saturation (how vivid vs. gray), and Value
+    (how bright) — instead of RGB. A pixel counts as zombie-green if its hue is in
+    the green band AND it is saturated enough to be real green (not a washed-out
+    gray that merely leans green).
+
+    Args:
+        image: Input PIL Image.
+        hue_low: Lower edge of the green hue band (PIL's 0-255 hue scale).
+        hue_high: Upper edge of the green hue band.
+        sat_min: Minimum saturation to count as vivid green (filters out gray).
+
+    Returns:
+        A boolean array of shape (height, width): True where the pixel is
+        zombie-green, False elsewhere. Use this as a mask to select those pixels.
+    """
+    # Convert to HSV and split into the three channels. int16 (not uint8) so later
+    # arithmetic in hue_proxy can't overflow or wrap around.
+    hsv = np.array(image.convert("HSV")).astype(np.int16)
+    h, s = hsv[..., 0], hsv[..., 1]
+
+    # Green pixel = hue inside the green band AND saturated enough to be real green.
+    return (h > hue_low) & (h < hue_high) & (s > sat_min)
+
+
+def hue_proxy(image: Image.Image, mask: np.ndarray) -> float:
+    """Score how human (non-green) the masked pixels look, in [0, 1].
+
+    This is a stand-in ("proxy") for human perception: 1.0 means the character's
+    original-green pixels now show no green at all (reads as a normal person),
+    and low values mean they are still vividly green (reads as a zombie).
+
+    IMPORTANT: the mask must be computed ONCE on the ORIGINAL image and then reused
+    on every edited version. If you recomputed the mask on a fogged image, the green
+    would already be gone, the mask would be empty, and this would trivially return
+    1.0 — measuring nothing. Freezing the mask forces the honest question: did the
+    edit actually push the character's pixels away from green?
+
+    Args:
+        image: The (possibly edited) PIL Image to score.
+        mask: Boolean array from green_mask(original), same H×W as the image.
+
+    Returns:
+        Float in [0, 1]. Higher = less green = more human-looking.
+    """
+    arr = np.array(image.convert("RGB")).astype(np.float32)
+
+    # No green pixels to begin with (e.g. a human image) → nothing to hide → looks human.
+    if mask.sum() == 0:
+        return 1.0
+
+    # Pull out just the character's original-green pixels (mask selects them).
+    r, g, b = arr[..., 0][mask], arr[..., 1][mask], arr[..., 2][mask]
+
+    # "Green excess": how much the green channel dominates the other two.
+    #   vivid green → g >> r and g >> b → large positive number (still a zombie)
+    #   skin / gray → r, g, b close together → near zero (looks human)
+    # Divide by 255 to land in ~[0, 1], average over all masked pixels, and multiply
+    # by 4 so a fully-green character scores ~1.0 (the ×4 was calibrated on real data).
+    green_excess = np.clip(((g - np.maximum(r, b)) / 255.0).mean() * 4.0, 0.0, 1.0)
+
+    # Flip it so the reward points the right way: high = not green = human-plausible.
+    return float(1.0 - green_excess)

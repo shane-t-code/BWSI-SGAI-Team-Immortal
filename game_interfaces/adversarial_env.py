@@ -1,332 +1,289 @@
-"""Adversarial image generation environment for RL training.
+"""Adversarial image-disguise environment for RL training.
 
-This environment allows an RL agent to learn to generate harder-to-classify
-images by applying transformations that target the CNN's decision boundaries
-while following the 5 rules:
-1. Must remain theoretically solvable
-2. Character must still be present and recognizable
-3. Target specific features the CNN was trained on
-4. Difficulty should be tunable
-5. Stay within airport/human-plausible setting
+The Red Team agent applies small, budget-limited edits to a zombie ("overgrown")
+image, trying to make it look human on two fronts at once:
+  * to a PERSON  -> fog fades the bright-green skin (the main human-visible tell)
+  * to the CNN   -> a small rotation tips the classifier toward "healthy"
+Both edits spend from one shared malice budget, so the agent faces a real
+allocation problem: how much budget goes to fooling the human vs. the CNN.
+
+Three design ideas hold this together (see the methods for detail):
+  * Accumulator pattern: we keep the ORIGINAL image plus running edit totals and
+    re-render from the original every step. We never stack an edit on an edit.
+  * Delta reward: each step's reward is the *improvement* in a weighted disguise
+    score, so the whole episode's reward telescopes to the total improvement.
+  * Constraints by masking: illegal moves (over budget, past a cap) are hidden
+    from the agent via action_mask(), never punished with a penalty.
 """
 
-import math
+import os
+import random
 from typing import Any
-import numpy as np
-import torch
-from gymnasium import Env, spaces
-from PIL import Image, ImageEnhance, ImageFilter
-import torchvision.transforms as transforms
 
-from gameplay.humanoid import Humanoid
+import numpy as np
+import pandas as pd
+from gymnasium import Env, spaces
+from PIL import Image
+
 from models.CNNClassifier import CNNClassifier
+from models.image_transforms import TRANSFORM_REGISTRY, green_mask, hue_proxy
 
 
 class AdversarialEnv(Env):
-    """RL environment for generating adversarial humanoid images.
+    """RL environment for learning budget-limited image disguises."""
 
-    The agent selects transformation parameters to make images harder to classify
-    while keeping them solvable and realistic. The reward is based on classification
-    difficulty metrics (entropy, margin, confidence).
+    # ----- action layout: the 5 discrete moves, by index --------------------
+    ROTATE_CW = 0    # rotate the scene +2 degrees  (fools the CNN)
+    ROTATE_CCW = 1   # rotate the scene -2 degrees  (fools the CNN)
+    FOG = 2          # add +0.25 fog intensity      (fools the human)
+    BLUR = 3         # add +0.25 blur intensity      (weak filler)
+    STOP = 4         # submit the image and end the episode
+    NUM_ACTIONS = 5
 
-    Observation space: Current image features + transformation parameters
-    Action space: Discrete actions for different transformation types
-    """
+    # ----- edit step sizes and hard caps ------------------------------------
+    ANGLE_STEP = 2.0      # degrees added per rotate action
+    MAX_ANGLE = 12.0      # |cumulative angle| never exceeds this: past ~20 deg the
+                          # CNN RECOVERS, so more rotation would undo our own work.
+    FOG_STEP = 0.25       # fog intensity added per fog action  (4 steps -> full fog)
+    BLUR_STEP = 0.25      # blur intensity added per blur action
+    MAX_INTENSITY = 1.0   # fog and blur intensities cap at 1.0
+
+    # ----- reward weights: tuned so both channels contribute about equally --
+    W_HUMAN = 0.55        # weight on hue_proxy  (how human the color looks)
+    W_AI = 0.45           # weight on P(healthy) (how much the CNN is fooled)
+
+    # ----- budget -----------------------------------------------------------
+    MAX_BUDGET = 6        # fixed training budget; also normalizes the obs slot.
+                          # Tiers (low/med/high) are made later by snapshotting the
+                          # image after 1 / 3 / 6 edits of a single budget-6 rollout.
 
     def __init__(
         self,
         classifier: CNNClassifier,
         img_data_root: str = "data",
-        max_difficulty: float = 0.8,
+        max_budget: int = MAX_BUDGET,
+        seed: int | None = None,
     ) -> None:
-        """Initialize the adversarial image generation environment.
+        """Set up the environment and the pool of zombie images.
 
         Args:
-            classifier: CNNClassifier to evaluate image difficulty.
-            img_data_root: Root directory for image files.
-            max_difficulty: Maximum allowed difficulty (0-1). Images exceeding
-                this threshold receive penalties to maintain solvability (Rule 1).
+            classifier: CNNClassifier used to score P(healthy) in memory.
+            img_data_root: Root folder the image filepaths are relative to.
+            max_budget: Malice units the agent starts each episode with.
+            seed: Optional seed for reproducible image sampling.
         """
         self.classifier = classifier
         self.img_data_root = img_data_root
-        self.max_difficulty = max_difficulty
+        self.max_budget = max_budget
+        self.rng = random.Random(seed)
 
-        # Transformation types (Rule 4: tunable difficulty)
-        self.transform_types = [
-            "none",           # No transformation
-            "blur",           # Gaussian blur (Rule 3: target texture features)
-            "brightness",     # Brightness adjustment (Rule 3: target coloring)
-            "contrast",       # Contrast adjustment (Rule 3: target visibility)
-            "rotation",       # Small rotation (Rule 3: target posture cues)
-            "crop",           # Slight crop (Rule 2: keep character visible)
-            "noise",          # Subtle noise (Rule 3: target texture)
-        ]
+        # Pool of ZOMBIE-only images. Humans have nothing to disguise (they already
+        # look human and score ~1.0), so training on them would give no signal.
+        meta = pd.read_csv(os.path.join(img_data_root, "consolidated_metadata.csv"))
+        self.zombie_paths: list[str] = meta[meta["Class"] == "Zombie"]["Filename"].tolist()
+        if not self.zombie_paths:
+            raise ValueError("No Zombie-class images found in the metadata CSV.")
 
-        # Action space: select transformation type + intensity
-        # Actions 0-6: transformation type
-        # Action 7: apply current transformation and move to next image
-        self.action_space = spaces.Discrete(len(self.transform_types) + 1)
-
-        # Observation space: [current_transform_idx, intensity, difficulty_metrics]
-        # difficulty_metrics: [entropy, margin, max_prob, predicted_class]
+        # 5 discrete actions; 8-number observation, every slot already in [0, 1].
+        self.action_space = spaces.Discrete(self.NUM_ACTIONS)
         self.observation_space = spaces.Box(
-            low=0.0,
-            high=1.0,
-            shape=(6,),  # [transform_idx, intensity, entropy, margin, max_prob, class]
-            dtype=np.float32,
+            low=0.0, high=1.0, shape=(8,), dtype=np.float32
         )
 
-        # Current state
-        self.current_humanoid: Humanoid | None = None
-        self.current_image: Image.Image | None = None
-        self.current_transform_idx = 0
-        self.current_intensity = 0.0
-        self.current_features: dict[str, Any] = {}
-        self.original_features: dict[str, Any] = {}
+        # Episode state — filled in properly by reset().
+        self.original_image: Image.Image | None = None  # pristine zombie, never mutated
+        self.green_mask: np.ndarray | None = None        # frozen on the original
+        self.current_image: Image.Image | None = None    # latest full render (for saving)
+        self.cum_angle = 0.0    # running rotation total (degrees)
+        self.cum_fog = 0.0      # running fog intensity total (0..1)
+        self.cum_blur = 0.0     # running blur intensity total (0..1)
+        self.budget_left = 0    # malice units remaining this episode
+        self.prev_score = 0.0   # last step's disguise score (for the delta reward)
+        self.last_probs = np.zeros(4, dtype=np.float32)  # last CNN output (for the obs)
+        self.last_hue = 0.0     # last hue_proxy value (for logging the human channel)
 
-        # Load a random humanoid to start
-        self._load_random_humanoid()
-
-    def _load_random_humanoid(self) -> None:
-        """Load a random humanoid image from the dataset."""
-        # For now, use a fixed approach - in production, use DataParser
-        import os
-        import random
-
-        image_dir = os.path.join(self.img_data_root, "consolidated_dataset")
-        if os.path.exists(image_dir):
-            images = [f for f in os.listdir(image_dir) if f.endswith(('.png', '.jpg', '.jpeg'))]
-            if images:
-                img_path = random.choice(images)
-                self.current_humanoid = Humanoid(
-                    fp=f"consolidated_dataset/{img_path}",
-                    state="unknown",  # Will be determined by classifier
-                    value=0.5
-                )
-                with Image.open(os.path.join(self.img_data_root, self.current_humanoid.fp)) as img:
-                    self.current_image = img.convert("RGB").copy()
-            else:
-                raise ValueError(f"No images found in {image_dir}")
-        else:
-            raise ValueError(f"Image directory not found: {image_dir}")
+    # ------------------------------------------------------------------
+    # Episode setup
+    # ------------------------------------------------------------------
 
     def reset(
         self, *, seed: int | None = None, options: dict | None = None
     ) -> tuple[np.ndarray, dict]:
-        """Reset the environment with a new random image.
+        """Start a fresh episode on a new random zombie image.
 
         Returns:
-            Tuple of (observation, info_dict).
+            (observation, info) where info carries the chosen image path.
         """
         if seed is not None:
-            np.random.seed(seed)
+            self.rng.seed(seed)
 
-        self._load_random_humanoid()
-        self.current_transform_idx = 0
-        self.current_intensity = 0.0
+        # Load a pristine copy of a random zombie. We never edit this copy in place —
+        # every render starts from it, which is the whole point of the accumulator idea.
+        path = self.rng.choice(self.zombie_paths)
+        with Image.open(os.path.join(self.img_data_root, path)) as im:
+            self.original_image = im.convert("RGB").copy()
 
-        # Get original classification features
-        self.original_features = self.classifier.classify_with_features(self.current_humanoid)
-        self.current_features = self.original_features.copy()
+        # Freeze the green mask on the ORIGINAL. hue_proxy needs a fixed set of pixel
+        # locations so the agent can't "hide" green by making the mask move (see hue_proxy).
+        self.green_mask = green_mask(self.original_image)
 
-        obs = self._get_observation()
-        return obs, {"original_features": self.original_features}
+        # Reset accumulators and hand out the full budget.
+        self.cum_angle = 0.0
+        self.cum_fog = 0.0
+        self.cum_blur = 0.0
+        self.budget_left = self.max_budget
+
+        # Baseline score of the untouched zombie. The first step's delta reward
+        # measures improvement against this starting point.
+        self.prev_score = self._score_and_observe()
+
+        return self._get_observation(), {"path": path}
+
+    # ------------------------------------------------------------------
+    # Rendering and scoring
+    # ------------------------------------------------------------------
+
+    def _render(self) -> tuple[Image.Image, Image.Image]:
+        """Rebuild the current image from the ORIGINAL + all accumulators, applied once.
+
+        Returns two layers:
+            color_img: original + fog + blur, but NOT rotated. hue_proxy is measured
+                here because fog/blur don't move pixels, so the frozen green mask still
+                lines up with the character.
+            full_img: color_img + rotation. This is the real game image and the CNN's
+                input. Rotation moves pixels (so the frozen mask would NOT line up on
+                this one) but rotation doesn't change color, so greenness measured on
+                color_img is exactly right for full_img too.
+        """
+        # Start from a COPY of the pristine original so the returned images can never
+        # alias original_image. Without this, a zero-edit render (baseline, or a STOP
+        # with no edits) would hand back the original object itself — and any future
+        # in-place edit to current_image would silently corrupt the pristine base that
+        # every step re-renders from. The copy is negligible next to the CNN forward pass.
+        color = self.original_image.copy()
+        # Fog first, then blur — both recolor/average pixels in place (no movement).
+        if self.cum_fog > 0.0:
+            color = TRANSFORM_REGISTRY["fog"].apply(color, self.cum_fog)
+        if self.cum_blur > 0.0:
+            color = TRANSFORM_REGISTRY["blur"].apply(color, self.cum_blur)
+
+        # Rotation last. Convert our angle (degrees) into the library's intensity
+        # convention: RotationTransform uses angle = (intensity - 0.5) * 30.
+        full = color
+        if self.cum_angle != 0.0:
+            intensity = self.cum_angle / 30.0 + 0.5
+            full = TRANSFORM_REGISTRY["rotation"].apply(color, intensity)
+
+        return color, full
+
+    def _score_and_observe(self) -> float:
+        """Render, score the disguise, and cache the CNN probs + current image.
+
+        Caches self.last_probs (for the observation) and self.current_image (so the
+        Friday generation script can snapshot it). Returns the weighted disguise score.
+        """
+        color_img, full_img = self._render()
+        self.current_image = full_img
+
+        # CNN sees the full (rotated) game image. probs = [zombie, healthy, injured, corpse].
+        probs = self.classifier.classify_pil_image(full_img).astype(np.float32)
+        self.last_probs = probs
+
+        # Human channel: how non-green the character looks, measured on the color layer.
+        human_look = hue_proxy(color_img, self.green_mask)
+        self.last_hue = human_look  # cache for logging (and for the STOP info below)
+        # AI channel: how much the CNN believes "healthy".
+        fools_cnn = float(probs[1])
+
+        return self.W_HUMAN * human_look + self.W_AI * fools_cnn
 
     def _get_observation(self) -> np.ndarray:
-        """Build the current observation vector.
+        """Assemble the 8-number observation, every slot normalized to [0, 1]."""
+        return np.array(
+            [
+                # angle runs -12..+12; shift+scale into 0..1 (0.5 = no rotation).
+                (self.cum_angle + self.MAX_ANGLE) / (2.0 * self.MAX_ANGLE),
+                self.cum_fog,                              # already 0..1
+                self.cum_blur,                             # already 0..1
+                self.budget_left / self.MAX_BUDGET,        # 0..1
+                self.last_probs[0],                        # P(zombie)
+                self.last_probs[1],                        # P(healthy)
+                self.last_probs[2],                        # P(injured)
+                self.last_probs[3],                        # P(corpse)
+            ],
+            dtype=np.float32,
+        )
 
-        Returns:
-            Float32 array of shape (6,) with:
-                [transform_idx, intensity, entropy, margin, max_prob, predicted_class]
+    # ------------------------------------------------------------------
+    # Legal-move mask
+    # ------------------------------------------------------------------
+
+    def action_mask(self) -> list[bool]:
+        """Return a length-5 list: True where that action is currently legal.
+
+        Passed to agent.select_action(obs, available=...), which sets illegal
+        actions to -inf before choosing — so the agent can never spend budget it
+        doesn't have or push an edit past its cap. 'stop' is always legal.
         """
-        return np.array([
-            self.current_transform_idx / len(self.transform_types),
-            self.current_intensity,
-            self.current_features.get("entropy", 0.0) / 2.0,  # Normalize entropy (max ~2.0 for 4 classes)
-            self.current_features.get("margin", 0.0),
-            self.current_features.get("max_prob", 0.0),
-            self.current_features.get("predicted_class", 0) / 4.0,
-        ], dtype=np.float32)
+        has_budget = self.budget_left > 0
+        return [
+            has_budget and self.cum_angle < self.MAX_ANGLE,     # rotate CW: room to go up
+            has_budget and self.cum_angle > -self.MAX_ANGLE,    # rotate CCW: room to go down
+            has_budget and self.cum_fog < self.MAX_INTENSITY,   # fog: not maxed
+            has_budget and self.cum_blur < self.MAX_INTENSITY,  # blur: not maxed
+            True,                                               # stop: always allowed
+        ]
 
-    def _apply_transformation(self, transform_idx: int, intensity: float) -> Image.Image:
-        """Apply a transformation to the current image.
-
-        Args:
-            transform_idx: Index of transformation type.
-            intensity: Intensity of transformation (0.0 to 1.0).
-
-        Returns:
-            Transformed PIL Image.
-        """
-        if self.current_image is None:
-            raise RuntimeError("No image loaded. Call reset() first.")
-
-        transform_type = self.transform_types[transform_idx]
-        img = self.current_image.copy()
-
-        # Rule 4: Tunable difficulty via intensity parameter
-        # Rule 5: Keep transformations realistic and human-plausible
-
-        if transform_type == "none":
-            return img
-
-        elif transform_type == "blur":
-            # Gaussian blur - target texture features (Rule 3)
-            # Intensity maps to radius (0 to 3 pixels)
-            radius = intensity * 3.0
-            return img.filter(ImageFilter.GaussianBlur(radius=radius))
-
-        elif transform_type == "brightness":
-            # Brightness adjustment - target coloring (Rule 3)
-            # Intensity maps to factor (0.5 to 1.5)
-            factor = 0.5 + intensity
-            enhancer = ImageEnhance.Brightness(img)
-            return enhancer.enhance(factor)
-
-        elif transform_type == "contrast":
-            # Contrast adjustment - target visibility (Rule 3)
-            # Intensity maps to factor (0.5 to 1.5)
-            factor = 0.5 + intensity
-            enhancer = ImageEnhance.Contrast(img)
-            return enhancer.enhance(factor)
-
-        elif transform_type == "rotation":
-            # Small rotation - target posture cues (Rule 3)
-            # Intensity maps to angle (-15 to +15 degrees)
-            # Rule 2: Keep character recognizable (small angles only)
-            angle = (intensity - 0.5) * 30.0
-            return img.rotate(angle, expand=False, fillcolor=(128, 128, 128))
-
-        elif transform_type == "crop":
-            # Slight crop - Rule 2: keep character visible
-            # Intensity maps to crop percentage (0% to 20%)
-            crop_pct = intensity * 0.2
-            w, h = img.size
-            crop_w = int(w * crop_pct)
-            crop_h = int(h * crop_pct)
-            return img.crop((crop_w, crop_h, w - crop_w, h - crop_h)).resize((w, h), Image.LANCZOS)
-
-        elif transform_type == "noise":
-            # Subtle noise - target texture (Rule 3)
-            # Intensity maps to noise magnitude (0 to 30)
-            noise_mag = int(intensity * 30)
-            img_array = np.array(img)
-            noise = np.random.randint(-noise_mag, noise_mag, img_array.shape).astype(np.int16)
-            noisy_array = np.clip(img_array.astype(np.int16) + noise, 0, 255).astype(np.uint8)
-            return Image.fromarray(noisy_array)
-
-        else:
-            return img
-
-    def _compute_reward(self, features: dict[str, Any]) -> float:
-        """Compute reward based on classification difficulty.
-
-        Reward function encourages:
-        - Higher entropy (more uncertainty)
-        - Lower margin (more ambiguous between top classes)
-        - Lower max_prob (less confident predictions)
-        - But not exceeding max_difficulty (Rule 1: must remain solvable)
-
-        Args:
-            features: Classification features from classify_with_features.
-
-        Returns:
-            Reward value (higher is better for the agent).
-        """
-        entropy = features.get("entropy", 0.0)
-        margin = features.get("margin", 0.0)
-        max_prob = features.get("max_prob", 1.0)
-
-        # Base reward: encourage difficulty
-        reward = entropy * 2.0  # Higher entropy = more uncertain = better
-        reward -= margin * 2.0  # Lower margin = more ambiguous = better
-        reward -= max_prob * 2.0  # Lower confidence = harder = better
-
-        # Penalty for exceeding max_difficulty (Rule 1: must remain solvable)
-        if max_prob < (1.0 - self.max_difficulty):
-            # If confidence is too low (too difficult), apply penalty
-            penalty = (1.0 - self.max_difficulty - max_prob) * 10.0
-            reward -= penalty
-
-        # Bonus for maintaining some recognizability (Rule 2)
-        # If entropy is reasonable but not chaotic, give bonus
-        if 0.5 < entropy < 1.5:
-            reward += 1.0
-
-        return reward
+    # ------------------------------------------------------------------
+    # One step
+    # ------------------------------------------------------------------
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict]:
-        """Execute one step in the environment.
+        """Apply one edit (or stop), and return (obs, reward, terminated, truncated, info).
 
-        Args:
-            action: Action index (0-6: select transform, 7: apply and finalize).
-
-        Returns:
-            Tuple of (observation, reward, terminated, truncated, info).
+        Reward is the DELTA in disguise score: how much better this one move made the
+        image. Summed over the episode, the deltas telescope to (final - starting) score.
         """
-        if self.current_humanoid is None or self.current_image is None:
-            raise RuntimeError("Environment not initialized. Call reset() first.")
+        info: dict[str, Any] = {}
 
-        reward = 0.0
-        terminated = False
-        truncated = False
-        info = {}
+        # STOP: submit as-is. No image change, so no reward. Episode ends (terminated).
+        # last_probs / last_hue still reflect the current image, so logging stays correct.
+        if action == self.STOP:
+            info["stopped"] = True
+            info["p_healthy"] = float(self.last_probs[1])
+            info["hue"] = float(self.last_hue)
+            return self._get_observation(), 0.0, True, False, info
 
-        if action < len(self.transform_types):
-            # Select transformation type
-            self.current_transform_idx = action
-            # Reset intensity when changing transform
-            self.current_intensity = 0.0
-            info["action_type"] = "select_transform"
-
-        elif action == len(self.transform_types):
-            # Apply current transformation with current intensity
-            transformed_img = self._apply_transformation(
-                self.current_transform_idx, self.current_intensity
-            )
-
-            # Temporarily save transformed image for classification
-            temp_path = f"temp_transformed.png"
-            transformed_img.save(temp_path)
-
-            # Create temporary humanoid with transformed image
-            temp_humanoid = Humanoid(
-                fp=temp_path,
-                state=self.current_humanoid.state,
-                value=self.current_humanoid.value
-            )
-
-            # Get classification features for transformed image
-            self.current_features = self.classifier.classify_with_features(temp_humanoid)
-
-            # Compute reward based on difficulty
-            reward = self._compute_reward(self.current_features)
-
-            # Episode terminates after applying a transformation
-            terminated = True
-            info["action_type"] = "apply_transform"
-            info["transform_type"] = self.transform_types[self.current_transform_idx]
-            info["intensity"] = self.current_intensity
-            info["features"] = self.current_features
-
-            # Cleanup temp file
-            import os
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-
+        # Otherwise apply the chosen edit to its accumulator, clamped at the cap.
+        if action == self.ROTATE_CW:
+            self.cum_angle = min(self.cum_angle + self.ANGLE_STEP, self.MAX_ANGLE)
+        elif action == self.ROTATE_CCW:
+            self.cum_angle = max(self.cum_angle - self.ANGLE_STEP, -self.MAX_ANGLE)
+        elif action == self.FOG:
+            self.cum_fog = min(self.cum_fog + self.FOG_STEP, self.MAX_INTENSITY)
+        elif action == self.BLUR:
+            self.cum_blur = min(self.cum_blur + self.BLUR_STEP, self.MAX_INTENSITY)
         else:
             raise ValueError(f"Invalid action: {action}")
 
-        obs = self._get_observation()
-        return obs, reward, terminated, truncated, info
+        # Every edit costs one malice unit.
+        self.budget_left -= 1
 
-    def render(self, mode: str = "human") -> Any:
-        """Render the environment (optional, for debugging).
+        # Re-render from the original, re-score, reward = improvement over last step.
+        new_score = self._score_and_observe()
+        reward = new_score - self.prev_score
+        self.prev_score = new_score
 
-        Args:
-            mode: Rendering mode (not implemented in this version).
+        # Out of budget -> episode ends. We call this "truncated" (a time/limit stop)
+        # rather than "terminated" (agent chose to finish) to match Gymnasium's meaning.
+        truncated = self.budget_left <= 0
 
-        Returns:
-            None (rendering not implemented).
-        """
-        pass
+        info["score"] = new_score
+        info["probs"] = self.last_probs
+        info["p_healthy"] = float(self.last_probs[1])
+        info["hue"] = float(self.last_hue)
+        return self._get_observation(), reward, False, truncated, info
+
+    def render(self) -> Image.Image | None:
+        """Return the latest full game image (or None before the first render)."""
+        return self.current_image
