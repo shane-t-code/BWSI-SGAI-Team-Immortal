@@ -155,7 +155,12 @@ class AdversarialEnv(Env):
                 this one) but rotation doesn't change color, so greenness measured on
                 color_img is exactly right for full_img too.
         """
-        color = self.original_image
+        # Start from a COPY of the pristine original so the returned images can never
+        # alias original_image. Without this, a zero-edit render (baseline, or a STOP
+        # with no edits) would hand back the original object itself — and any future
+        # in-place edit to current_image would silently corrupt the pristine base that
+        # every step re-renders from. The copy is negligible next to the CNN forward pass.
+        color = self.original_image.copy()
         # Fog first, then blur — both recolor/average pixels in place (no movement).
         if self.cum_fog > 0.0:
             color = TRANSFORM_REGISTRY["fog"].apply(color, self.cum_fog)
