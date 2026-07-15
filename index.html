@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Checkpoint Terminal — prototype</title>
+<style>
+  :root {
+    --bg: #060b12;
+    --panel-bg: rgba(8, 18, 28, 0.75);
+    --cyan: #6fd6e8;
+    --cyan-dim: #3a6b78;
+    --orange: #e8845a;
+    --text-dim: #7d95a0;
+    --line: rgba(111, 214, 232, 0.25);
+  }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: radial-gradient(ellipse at center, #0a141e 0%, var(--bg) 70%);
+    font-family: 'Courier New', monospace;
+    color: var(--cyan);
+  }
+  canvas { display: block; }
+
+  .hud-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--cyan);
+  }
+
+  /* Top tick-mark ruler */
+  #tick-ruler {
+    position: fixed; top: 0; left: 0; right: 0; height: 14px;
+    display: flex; justify-content: space-between; padding: 0 8px;
+    pointer-events: none;
+  }
+  #tick-ruler span { width: 1px; height: 8px; background: var(--line); }
+
+  /* Top-left: wave progress */
+  #wave-panel { position: fixed; top: 20px; left: 20px; width: 220px; }
+  #wave-bar-track {
+    width: 100%; height: 3px; background: rgba(111,214,232,0.15);
+    margin-bottom: 8px; position: relative;
+  }
+  #wave-bar-fill {
+    height: 100%; background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    transition: width 0.3s ease;
+  }
+  #wave-text { font-size: 11px; letter-spacing: 2px; color: var(--cyan); }
+
+  /* Top-center: timer */
+  #timer-panel {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  #timer-circle {
+    width: 60px; height: 60px; border-radius: 50%;
+    border: 1.5px solid var(--orange);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--orange); font-size: 20px; letter-spacing: 1px;
+    box-shadow: 0 0 10px rgba(232,132,90,0.25) inset;
+  }
+
+  /* Top-right: threat advisory */
+  #threat-panel {
+    position: fixed; top: 20px; right: 20px; width: 230px;
+    background: var(--panel-bg); border: 1px solid var(--line);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #threat-panel.revealed { opacity: 1; pointer-events: auto; }
+  #threat-header {
+    background: rgba(111,214,232,0.12);
+    padding: 8px 12px; font-size: 11px; letter-spacing: 3px;
+    border-bottom: 1px solid var(--line);
+  }
+  #threat-list { list-style: none; margin: 0; padding: 10px 12px; }
+  #threat-list li {
+    font-size: 12px; color: #b9cdd4; padding: 4px 0;
+    position: relative; padding-left: 14px;
+  }
+  #threat-list li::before {
+    content: '▪'; position: absolute; left: 0; color: var(--cyan); font-size: 9px; top: 6px;
+  }
+
+  /* Center reticle */
+  #reticle {
+    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -55%);
+    display: flex; flex-direction: column; align-items: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .tick-v { width: 1px; height: 22px; background: var(--cyan-dim); }
+  #reticle-mid { display: flex; align-items: center; gap: 14px; margin: 6px 0; }
+  .tick-h { width: 22px; height: 1px; background: var(--cyan-dim); }
+  #diamond {
+    width: 14px; height: 14px; border: 1.5px solid var(--cyan);
+    transform: rotate(45deg);
+  }
+  #subject-id {
+    margin-top: 14px; font-size: 11px; letter-spacing: 3px; color: var(--cyan);
+  }
+
+  /* Bottom-left: actions panel */
+  #actions-panel {
+    position: fixed; bottom: 30px; left: 20px; width: 190px;
+    border: 1px solid var(--line);
+  }
+  #actions-header {
+    background: rgba(111,214,232,0.12);
+    padding: 8px 12px; font-size: 11px; letter-spacing: 3px;
+    text-align: center; border-bottom: 1px solid var(--line);
+  }
+  .action-item {
+    padding: 10px 14px; font-size: 12px; letter-spacing: 1px;
+    color: #b9cdd4; cursor: pointer; background: var(--panel-bg);
+    border-bottom: 1px solid rgba(111,214,232,0.08);
+  }
+  .action-item:hover { background: rgba(111,214,232,0.1); color: var(--cyan); }
+  .action-item.toggled { background: rgba(111,214,232,0.18); color: var(--cyan); }
+  #act-flag.toggled { background: rgba(232,132,90,0.18); color: var(--orange); }
+
+  /* Bottom-center: decision buttons */
+  #decision-panel {
+    position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 14px;
+  }
+  .decision-btn {
+    padding: 13px 30px; font-size: 12px; letter-spacing: 2px;
+    background: var(--panel-bg); cursor: pointer;
+    font-family: inherit; transition: filter 0.1s ease;
+  }
+  #btn-permit { border: 1px solid var(--cyan); color: var(--cyan); }
+  #btn-reject { border: 1px solid var(--orange); color: var(--orange); }
+  .decision-btn:hover { filter: brightness(1.3); }
+
+  /* Bottom-right: AI assistant confidence */
+  #ai-panel {
+    position: fixed; bottom: 30px; right: 20px; width: 200px;
+    border: 1px solid var(--line); background: var(--panel-bg);
+    padding: 10px 14px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease;
+  }
+  #ai-panel.revealed { opacity: 1; pointer-events: auto; }
+  #ai-header { font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
+  #ai-conf-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+  #ai-conf-track {
+    flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative;
+  }
+  #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
+
+  #feedback {
+    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; letter-spacing: 1px; color: var(--cyan);
+    opacity: 0; transition: opacity 0.2s ease;
+  }
+  #feedback.show { opacity: 1; }
+
+  /* HUD only appears once the player is near the kiosk */
+  #hud-root { display: none; }
+  #hud-root.active { display: contents; }
+
+  #walk-prompt {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    font-size: 12px; letter-spacing: 2px; color: var(--text-dim);
+  }
+  #walk-prompt.hidden { display: none; }
+
+  #click-to-play {
+    position: fixed; inset: 0; background: rgba(6,11,18,0.9);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; letter-spacing: 3px; color: var(--cyan);
+    cursor: pointer; z-index: 10;
+  }
+  #click-to-play.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div id="click-to-play">CLICK TO ENTER CHECKPOINT — WASD TO MOVE, MOUSE TO LOOK</div>
+
+<div id="walk-prompt">WALK TO THE KIOSK TO BEGIN INSPECTION</div>
+
+<div id="hud-root">
+
+<div id="tick-ruler"></div>
+
+<div id="wave-panel">
+  <div id="wave-bar-track"><div id="wave-bar-fill" style="width: 55%;"></div></div>
+  <div id="wave-text">WAVE: <span id="wave-num">6</span>/<span id="wave-total">10</span></div>
+</div>
+
+<div id="timer-panel">
+  <div class="hud-label" style="color:var(--text-dim)">TIME REMAINING</div>
+  <div id="timer-circle"><span id="timer-value">45</span></div>
+</div>
+
+<div id="threat-panel">
+  <div id="threat-header">THREAT ADVISORY</div>
+  <ul id="threat-list"></ul>
+</div>
+
+<div id="reticle">
+  <div class="tick-v"></div>
+  <div id="reticle-mid">
+    <div class="tick-h"></div>
+    <div id="diamond"></div>
+    <div class="tick-h"></div>
+  </div>
+  <div class="tick-v"></div>
+  <div id="subject-id">SUBJECT <span id="subject-num">0417</span></div>
+</div>
+
+<div id="actions-panel">
+  <div id="actions-header">ACTIONS</div>
+  <div class="action-item" id="act-scan">SCAN</div>
+  <div class="action-item" id="act-zoom">ZOOM</div>
+  <div class="action-item" id="act-assist">AI ASSIST</div>
+  <div class="action-item" id="act-flag">FLAG</div>
+</div>
+
+<div id="decision-panel">
+  <button class="decision-btn" id="btn-permit">PERMIT</button>
+  <button class="decision-btn" id="btn-reject">REJECT</button>
+</div>
+
+<div id="ai-panel">
+  <div id="ai-header">AI ASSISTANT</div>
+  <div id="ai-conf-row">
+    <span>CONF</span>
+    <div id="ai-conf-track"><div id="ai-conf-fill" style="width: 82%;"></div></div>
+    <span id="ai-conf-value">82</span>
+  </div>
+</div>
+
+<div id="feedback"></div>
+
+</div><!-- /hud-root -->
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------------------------------------------------------------------
+// Tick ruler (purely decorative, matches the mockup's top strip)
+// ---------------------------------------------------------------------
+const ruler = document.getElementById('tick-ruler');
+for (let i = 0; i < 90; i++) {
+  const tick = document.createElement('span');
+  ruler.appendChild(tick);
+}
+
+// ---------------------------------------------------------------------
+// Scene setup — a simple placeholder room + kiosk box. Swap the block
+// marked below for the real glTF checkpoint hall once it's uploaded;
+// nothing else in this file (movement, proximity check, HUD/round logic)
+// needs to change when that swap happens.
+// ---------------------------------------------------------------------
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060b12);
+scene.fog = new THREE.Fog(0x060b12, 10, 40);
+
+const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 1.6, 10); // start well back from the kiosk, walk toward it
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.insertBefore(renderer.domElement, document.body.firstChild);
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+scene.add(new THREE.AmbientLight(0x1a2a33, 2));
+const rim = new THREE.DirectionalLight(0x6fd6e8, 0.5);
+rim.position.set(2, 6, 4);
+scene.add(rim);
+
+// --- Placeholder room: floor + 4 walls forming a simple hallway ---
+const ROOM_WIDTH = 8;
+const ROOM_LENGTH = 24;
+const WALL_HEIGHT = 4;
+
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x11161d });
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_LENGTH), floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.set(0, 0, 0);
+scene.add(floor);
+
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x1c232c });
+function makeWall(w, h, x, z, rotY = 0) {
+  const wall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
+  wall.position.set(x, h / 2, z);
+  wall.rotation.y = rotY;
+  scene.add(wall);
+  return wall;
+}
+makeWall(ROOM_LENGTH, WALL_HEIGHT, -ROOM_WIDTH / 2, 0, Math.PI / 2);  // left wall
+makeWall(ROOM_LENGTH, WALL_HEIGHT, ROOM_WIDTH / 2, 0, -Math.PI / 2);  // right wall
+makeWall(ROOM_WIDTH, WALL_HEIGHT, 0, -ROOM_LENGTH / 2, 0);            // far wall
+
+// --- Placeholder kiosk (swap for gltf.scene.getObjectByName('kiosk') later) ---
+const kiosk = new THREE.Group();
+const standMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33 });
+const stand = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.6, 0.4), standMat);
+stand.position.set(0, 0.8, 0);
+kiosk.add(stand);
+const screenMat = new THREE.MeshBasicMaterial({ color: 0x0d3a42 });
+const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.7), screenMat);
+screen.position.set(0, 1.65, 0.21);
+kiosk.add(screen);
+kiosk.position.set(0, 0, -ROOM_LENGTH / 2 + 3); // near the far wall
+scene.add(kiosk);
+
+// --- When the real scene lands, replace the room+kiosk block above with: ---
+//   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+//   const loader = new GLTFLoader();
+//   let kiosk;
+//   loader.load('models/checkpoint_hall.glb', (gltf) => {
+//     scene.add(gltf.scene);
+//     kiosk = gltf.scene.getObjectByName('kiosk');
+//   });
+// Everything below (movement, proximity check, HUD) reads `kiosk.position`
+// and doesn't care whether it came from a placeholder or a loaded model.
+
+// ---------------------------------------------------------------------
+// Movement: WASD + pointer-lock mouse look
+// ---------------------------------------------------------------------
+const clickOverlay = document.getElementById('click-to-play');
+const keys = { w: false, a: false, s: false, d: false };
+let isNearKiosk = false; // set by checkProximity(); also controls pointer-lock release
+
+clickOverlay.addEventListener('click', () => {
+  if (!isNearKiosk) renderer.domElement.requestPointerLock();
+});
+function refreshClickOverlay() {
+  const locked = document.pointerLockElement === renderer.domElement;
+  // Hide the "click to enter" prompt whenever we're locked OR standing at
+  // the kiosk — near the kiosk we want the normal cursor free to click
+  // HUD buttons, not another full-screen overlay in the way.
+  clickOverlay.classList.toggle('hidden', locked || isNearKiosk);
+}
+document.addEventListener('pointerlockchange', refreshClickOverlay);
+
+let yaw = 0;
+let pitch = 0;
+document.addEventListener('mousemove', (e) => {
+  if (document.pointerLockElement !== renderer.domElement) return;
+  yaw -= e.movementX * 0.002;
+  pitch -= e.movementY * 0.002;
+  pitch = Math.max(-1.3, Math.min(1.3, pitch));
+  camera.rotation.set(pitch, yaw, 0, 'YXZ');
+});
+
+document.addEventListener('keydown', (e) => {
+  const k = e.key.toLowerCase();
+  if (k in keys) keys[k] = true;
+});
+document.addEventListener('keyup', (e) => {
+  const k = e.key.toLowerCase();
+  if (k in keys) keys[k] = false;
+});
+
+const MOVE_SPEED = 4.5; // units/sec
+const HALF_ROOM = ROOM_WIDTH / 2 - 0.5; // keep the player from walking through walls
+
+function updateMovement(dt) {
+  // Derive forward/right from the camera's actual look direction rather than
+  // recomputing yaw trig by hand — avoids sign errors like a flipped A/D.
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  forward.normalize();
+  const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
+
+  const move = new THREE.Vector3();
+  if (keys.w) move.add(forward);
+  if (keys.s) move.sub(forward);
+  if (keys.d) move.add(right);
+  if (keys.a) move.sub(right);
+  if (move.lengthSq() > 0) {
+    move.normalize().multiplyScalar(MOVE_SPEED * dt);
+    camera.position.add(move);
+  }
+  // Simple wall clamp so the placeholder room actually stops you
+  camera.position.x = Math.max(-HALF_ROOM, Math.min(HALF_ROOM, camera.position.x));
+  camera.position.z = Math.max(-ROOM_LENGTH / 2 + 0.5, Math.min(ROOM_LENGTH / 2 - 0.5, camera.position.z));
+}
+
+// ---------------------------------------------------------------------
+// Proximity gate: HUD only appears (and a round only starts) when the
+// player is standing near the kiosk.
+// ---------------------------------------------------------------------
+const hudRoot = document.getElementById('hud-root');
+const walkPrompt = document.getElementById('walk-prompt');
+const KIOSK_TRIGGER_RADIUS = 4;
+let roundActive = false;
+
+function checkProximity() {
+  if (!kiosk) return; // guards the async-load case once you swap in the real glTF
+  const dist = camera.position.distanceTo(kiosk.position);
+  const near = dist < KIOSK_TRIGGER_RADIUS;
+
+  if (near && !isNearKiosk && document.pointerLockElement === renderer.domElement) {
+    // Just arrived at the kiosk while still mouse-look-locked — release the
+    // lock so the cursor is free and clicks land on the HUD buttons normally.
+    document.exitPointerLock();
+  }
+  isNearKiosk = near;
+  refreshClickOverlay();
+
+  hudRoot.classList.toggle('active', near);
+  walkPrompt.classList.toggle('hidden', near);
+
+  if (near && !roundActive) {
+    roundActive = true;
+    roundIndex = 0; // fresh run each time they approach, for easy repeat testing
+    startRound();
+  } else if (!near && roundActive) {
+    roundActive = false;
+    clearInterval(timerInterval);
+  }
+}
+
+// ---------------------------------------------------------------------
+// Round data — replace with your real per-tier manifest
+// ---------------------------------------------------------------------
+const ROUNDS = [
+  { subjectId: '0417', tier: 3, groundTruthIsHuman: false, aiConfidence: 82,
+    threats: ['Asymmetrical Features', 'Unnatural Joint Angles', 'Irregular Regrowth Pattern', 'Low AI Confidence'] },
+  { subjectId: '0418', tier: 1, groundTruthIsHuman: false, aiConfidence: 91,
+    threats: ['Minor Discoloration', 'High AI Confidence'] },
+  { subjectId: '0419', tier: 0, groundTruthIsHuman: true, aiConfidence: 96,
+    threats: ['No Anomalies Detected', 'High AI Confidence'] },
+  { subjectId: '0420', tier: 4, groundTruthIsHuman: false, aiConfidence: 58,
+    threats: ['Asymmetrical Features', 'Unnatural Gait', 'Low AI Confidence'] },
+];
+
+let roundIndex = 0;
+let waveNum = 6;
+const WAVE_TOTAL = 10;
+let roundStartTime = null;
+let currentRound = null;
+let timerInterval = null;
+let timeRemaining = 45;
+const results = [];
+
+const waveNumEl = document.getElementById('wave-num');
+const waveBarFill = document.getElementById('wave-bar-fill');
+const timerValueEl = document.getElementById('timer-value');
+const threatListEl = document.getElementById('threat-list');
+const threatPanelEl = document.getElementById('threat-panel');
+const subjectNumEl = document.getElementById('subject-num');
+const aiPanelEl = document.getElementById('ai-panel');
+const aiConfFill = document.getElementById('ai-conf-fill');
+const aiConfValue = document.getElementById('ai-conf-value');
+const feedbackEl = document.getElementById('feedback');
+const actScan = document.getElementById('act-scan');
+const actZoom = document.getElementById('act-zoom');
+const actAssist = document.getElementById('act-assist');
+const actFlag = document.getElementById('act-flag');
+
+// Per-round interaction state — reset at the top of every startRound()
+let scanned = false;
+let zoomed = false;
+let aiAssistUsed = false;
+let flagged = false;
+let aiAssistClickTime = null; // used to log how long into the round they asked for help
+
+document.getElementById('wave-total').textContent = WAVE_TOTAL;
+
+function renderThreats(threats) {
+  threatListEl.innerHTML = '';
+  threats.forEach((t) => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    threatListEl.appendChild(li);
+  });
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timeRemaining = 45;
+  timerValueEl.textContent = timeRemaining;
+  timerInterval = setInterval(() => {
+    timeRemaining -= 1;
+    timerValueEl.textContent = Math.max(timeRemaining, 0);
+    if (timeRemaining <= 0) {
+      clearInterval(timerInterval);
+      recordAnswer(null); // timeout — no answer given
+    }
+  }, 1000);
+}
+
+function startRound() {
+  if (roundIndex >= ROUNDS.length) {
+    feedbackEl.textContent = 'ALL ROUNDS COMPLETE — see console for results';
+    feedbackEl.classList.add('show');
+    console.log('Final results:', results);
+    return;
+  }
+  currentRound = ROUNDS[roundIndex];
+  waveNum = 6 + roundIndex;
+  waveNumEl.textContent = waveNum;
+  waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
+  subjectNumEl.textContent = currentRound.subjectId;
+  renderThreats(currentRound.threats);
+  aiConfFill.style.width = `${currentRound.aiConfidence}%`;
+  aiConfValue.textContent = currentRound.aiConfidence;
+  feedbackEl.classList.remove('show');
+
+  // Reset every per-round toggle so nothing carries over from the last subject
+  scanned = false;
+  zoomed = false;
+  aiAssistUsed = false;
+  flagged = false;
+  aiAssistClickTime = null;
+  threatPanelEl.classList.remove('revealed');
+  aiPanelEl.classList.remove('revealed');
+  actScan.classList.remove('toggled');
+  actZoom.classList.remove('toggled');
+  actAssist.classList.remove('toggled');
+  actFlag.classList.remove('toggled');
+
+  roundStartTime = performance.now();
+  startTimer();
+}
+
+function recordAnswer(saysHuman) {
+  if (!currentRound) return;
+  clearInterval(timerInterval);
+  const reactionMs = Math.round(performance.now() - roundStartTime);
+  const correct = saysHuman === currentRound.groundTruthIsHuman;
+
+  const entry = {
+    subject: currentRound.subjectId,
+    tier: currentRound.tier,
+    ground_truth_human: currentRound.groundTruthIsHuman,
+    player_answer_human: saysHuman, // null = timed out, no answer
+    correct: saysHuman === null ? null : correct,
+    ai_confidence_shown: currentRound.aiConfidence,
+    reaction_time_ms: reactionMs,
+    scanned,
+    zoomed,
+    ai_assist_used: aiAssistUsed,
+    ai_assist_time_ms: aiAssistClickTime, // null if never opened
+    flagged,
+    timestamp: new Date().toISOString(),
+  };
+  results.push(entry);
+
+  feedbackEl.textContent = saysHuman === null
+    ? 'TIMED OUT — NO DECISION'
+    : 'DECISION LOGGED';
+  feedbackEl.classList.add('show');
+  console.log('Round result:', entry);
+
+  roundIndex += 1;
+  setTimeout(startRound, 700);
+}
+
+// PERMIT / REJECT — intentionally do nothing yet. There's no real image or
+// ground truth to judge against until the generated images are wired in, so
+// wiring these to recordAnswer() now would just log meaningless test data.
+document.getElementById('btn-permit').addEventListener('click', () => {
+  console.log('PERMIT clicked — not wired up yet (waiting on real images/ground truth)');
+});
+document.getElementById('btn-reject').addEventListener('click', () => {
+  console.log('REJECT clicked — not wired up yet (waiting on real images/ground truth)');
+});
+
+// SCAN — reveals the Threat Advisory panel (hidden until inspected).
+actScan.addEventListener('click', () => {
+  scanned = true;
+  actScan.classList.add('toggled');
+  threatPanelEl.classList.add('revealed');
+});
+
+// ZOOM — will magnify the subject image once images are wired in; for now
+// just tracks toggled state.
+actZoom.addEventListener('click', () => {
+  zoomed = !zoomed;
+  actZoom.classList.toggle('toggled', zoomed);
+});
+
+// AI ASSIST — reveals the AI confidence panel. Logging when this happens
+// (relative to round start) matters for your AI-assistance research question.
+actAssist.addEventListener('click', () => {
+  if (!aiAssistUsed) {
+    aiAssistClickTime = Math.round(performance.now() - roundStartTime);
+  }
+  aiAssistUsed = true;
+  actAssist.classList.add('toggled');
+  aiPanelEl.classList.add('revealed');
+});
+
+// FLAG — marks this subject for review. Toggleable, purely a label on the
+// logged data; doesn't end the round or change the timer.
+actFlag.addEventListener('click', () => {
+  flagged = !flagged;
+  actFlag.classList.toggle('toggled', flagged);
+});
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+  lastFrameTime = now;
+
+  updateMovement(dt);
+  checkProximity();
+  renderer.render(scene, camera);
+}
+let lastFrameTime = performance.now();
+animate();
+</script>
+</body>
+</html>
