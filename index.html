@@ -433,7 +433,10 @@ function checkProximity() {
 }
 
 // ---------------------------------------------------------------------
-// Round data — replace with your real per-tier manifest
+// Round data — replace with your real per-tier manifest.
+// Confirmed tier set (Shane, PR #6): {0, 1, 3, 6} — tier 0 is the real-human
+// control, 1/3/6 are Shane's malice-budget edit-count snapshots. The old
+// placeholder tier 4 below has been corrected to 6 to match.
 // ---------------------------------------------------------------------
 const ROUNDS = [
   { subjectId: '0417', tier: 3, groundTruthIsHuman: false, aiConfidence: 82,
@@ -442,7 +445,7 @@ const ROUNDS = [
     threats: ['Minor Discoloration', 'High AI Confidence'] },
   { subjectId: '0419', tier: 0, groundTruthIsHuman: true, aiConfidence: 96,
     threats: ['No Anomalies Detected', 'High AI Confidence'] },
-  { subjectId: '0420', tier: 4, groundTruthIsHuman: false, aiConfidence: 58,
+  { subjectId: '0420', tier: 6, groundTruthIsHuman: false, aiConfidence: 58,
     threats: ['Asymmetrical Features', 'Unnatural Gait', 'Low AI Confidence'] },
 ];
 
@@ -504,9 +507,10 @@ function startTimer() {
 
 function startRound() {
   if (roundIndex >= ROUNDS.length) {
-    feedbackEl.textContent = 'ALL ROUNDS COMPLETE — see console for results';
+    feedbackEl.textContent = 'ALL ROUNDS COMPLETE — results exported to CSV';
     feedbackEl.classList.add('show');
     console.log('Final results:', results);
+    exportResultsCSV(results);
     return;
   }
   currentRound = ROUNDS[roundIndex];
@@ -567,6 +571,49 @@ function recordAnswer(saysHuman) {
 
   roundIndex += 1;
   setTimeout(startRound, 700);
+}
+
+// Exports the session's logged trials as a downloadable CSV, matching the
+// canonical schema in docs/data-logging-schema.md. Column names here differ
+// slightly from the in-memory `entry` object above (e.g. `subject` ->
+// `subject_id`, `tier` -> `malice_tier`) — this function is the single place
+// that maps internal field names to the schema everyone else (analysis,
+// Shane's tier manifest) agrees on, so a future rename of the internal
+// variable doesn't have to also become a schema change.
+// participant_id / session_id are left blank for now — there's no
+// participant-identification step in this prototype yet (see Open Question 2
+// in docs/data-logging-schema.md). Fill them in once that's added.
+// `condition` is INFERRED from ai_assist_used as a placeholder so this export
+// isn't empty — it is NOT a real assigned condition. Per Open Question 1 in
+// docs/data-logging-schema.md, condition needs to be fixed per session (or
+// block) rather than left up to whether the player happened to click AI
+// ASSIST that round. Replace this line once that assignment mechanism exists.
+function exportResultsCSV(sessionResults) {
+  if (!sessionResults.length) return;
+  const headers = [
+    'participant_id', 'session_id', 'subject_id', 'malice_tier', 'condition',
+    'ground_truth_human', 'player_answer_human', 'correct',
+    'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
+    'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
+  ];
+  const rows = sessionResults.map((r) => [
+    '', '', r.subject, r.tier, r.ai_assist_used ? 'human_ai' : 'human_alone',
+    r.ground_truth_human, r.player_answer_human, r.correct,
+    r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
+    r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
+  ]);
+  const csv = [headers, ...rows]
+    .map((row) => row.map((v) => (v === null || v === undefined) ? '' : v).join(','))
+    .join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `trial-results-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 // PERMIT / REJECT — intentionally do nothing yet. There's no real image or
