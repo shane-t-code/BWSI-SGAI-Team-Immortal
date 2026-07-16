@@ -57,3 +57,27 @@ def test_summarize_computes_mean_reaction_time():
 
     tier0 = summary[(summary["malice_tier"] == 0) & (summary["condition"] == "human_alone")].iloc[0]
     assert round(tier0["mean_reaction_time_ms"], 2) == round((2000 + 2200 + 1800) / 3, 2)
+
+
+def test_summarize_keeps_a_cell_visible_when_every_trial_is_flagged():
+    """A cell where every trial is invalid (e.g. everyone timed out) must still
+    appear as n_trials=0, n_flagged=N — not disappear from the output, which
+    would hide exactly the worst-case flag rate. Regression test for the bug
+    Prajwal caught in PR review."""
+    df = pd.DataFrame(
+        [
+            # tier 3, human_ai: both trials timed out -> 100% flagged
+            {"malice_tier": 3, "condition": "human_ai", "correct": None, "reaction_time_ms": None, "player_answer_human": None},
+            {"malice_tier": 3, "condition": "human_ai", "correct": None, "reaction_time_ms": None, "player_answer_human": None},
+        ]
+    )
+    df = flag_trials(df)
+    summary = summarize_by_tier_and_condition(df)
+
+    assert len(summary) == 1
+    row = summary.iloc[0]
+    assert row["malice_tier"] == 3
+    assert row["condition"] == "human_ai"
+    assert row["n_trials"] == 0
+    assert row["n_flagged"] == 2
+    assert pd.isna(row["accuracy"])

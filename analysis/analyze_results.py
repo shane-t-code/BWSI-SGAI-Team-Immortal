@@ -43,22 +43,32 @@ def summarize_by_tier_and_condition(df: pd.DataFrame) -> pd.DataFrame:
         One row per (malice_tier, condition) with n_trials, n_flagged,
         accuracy, and mean_reaction_time_ms.
     """
+    # Every (tier, condition) cell that appears anywhere in df gets a row in
+    # the output, even if 100% of its trials are flagged invalid — otherwise
+    # a fully-flagged cell (e.g. everyone timed out on tier 6) silently
+    # disappears from valid.groupby(...) instead of showing up as
+    # n_trials=0, n_flagged=N, which is exactly the worst-case flag rate we
+    # most need to see.
+    all_cells = df.groupby(["malice_tier", "condition"]).size().to_frame("n_total")
     flagged_counts = (
         df.groupby(["malice_tier", "condition"])["flagged_invalid"]
         .sum()
         .rename("n_flagged")
     )
     valid = df[~df["flagged_invalid"]]
+    valid_stats = valid.groupby(["malice_tier", "condition"]).agg(
+        n_trials=("correct", "size"),
+        accuracy=("correct", "mean"),
+        mean_reaction_time_ms=("reaction_time_ms", "mean"),
+    )
     summary = (
-        valid.groupby(["malice_tier", "condition"])
-        .agg(
-            n_trials=("correct", "size"),
-            accuracy=("correct", "mean"),
-            mean_reaction_time_ms=("reaction_time_ms", "mean"),
-        )
+        all_cells.join(valid_stats)
         .join(flagged_counts)
+        .drop(columns="n_total")
         .reset_index()
     )
+    summary["n_trials"] = summary["n_trials"].fillna(0).astype(int)
+    summary["n_flagged"] = summary["n_flagged"].fillna(0).astype(int)
     return summary
 
 

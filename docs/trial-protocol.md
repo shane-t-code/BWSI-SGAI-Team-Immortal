@@ -5,8 +5,7 @@ Owner: Smit (data lead). Companion to `docs/data-logging-schema.md`.
 ## Design
 
 - **Independent variable:** `malice_tier` — 4 levels: `0` (real human, control),
-  `1`, `3`, `6` (malice-budget edit counts, pending confirmation from Shane —
-  see the tier mismatch flagged in `data-logging-schema.md`).
+  `1`, `3`, `6` (malice-budget edit counts — confirmed by Shane in PR #6).
 - **Between/within factor:** `condition` — `human_alone` vs. `human_ai`.
   Recommended as **between-subjects per session** (a participant is either an
   "alone" participant or an "assisted" participant for their whole session) so

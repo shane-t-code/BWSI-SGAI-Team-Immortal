@@ -433,7 +433,10 @@ function checkProximity() {
 }
 
 // ---------------------------------------------------------------------
-// Round data — replace with your real per-tier manifest
+// Round data — replace with your real per-tier manifest.
+// Confirmed tier set (Shane, PR #6): {0, 1, 3, 6} — tier 0 is the real-human
+// control, 1/3/6 are Shane's malice-budget edit-count snapshots. The old
+// placeholder tier 4 below has been corrected to 6 to match.
 // ---------------------------------------------------------------------
 const ROUNDS = [
   { subjectId: '0417', tier: 3, groundTruthIsHuman: false, aiConfidence: 82,
@@ -442,7 +445,7 @@ const ROUNDS = [
     threats: ['Minor Discoloration', 'High AI Confidence'] },
   { subjectId: '0419', tier: 0, groundTruthIsHuman: true, aiConfidence: 96,
     threats: ['No Anomalies Detected', 'High AI Confidence'] },
-  { subjectId: '0420', tier: 4, groundTruthIsHuman: false, aiConfidence: 58,
+  { subjectId: '0420', tier: 6, groundTruthIsHuman: false, aiConfidence: 58,
     threats: ['Asymmetrical Features', 'Unnatural Gait', 'Low AI Confidence'] },
 ];
 

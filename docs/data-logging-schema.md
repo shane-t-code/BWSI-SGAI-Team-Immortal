@@ -14,7 +14,7 @@ the one that already exists so it doesn't drift as the UI is wired up further.
 | `participant_id` | string | assigned at session start | Not yet in `recordAnswer()` — needs to be added once real sessions run (see Open Questions). |
 | `session_id` | string | assigned at session start | Groups all trials from one sitting; lets us tell repeat participants apart from repeat sessions. |
 | `subject_id` | string | `currentRound.subjectId` | Identifies which humanoid/image was shown. |
-| `malice_tier` | int | `currentRound.tier` | Independent variable. See "Tier definition" below — **currently mismatched between Shane's and Claire's code, needs reconciling.** |
+| `malice_tier` | int | `currentRound.tier` | Independent variable. 4 confirmed levels: `{0, 1, 3, 6}` — see "Tier definition" below. |
 | `condition` | enum: `human_alone` \| `human_ai` | not yet in `recordAnswer()` | Needs to be an assigned condition, not inferred from whether the player happened to click AI ASSIST. See Open Questions. |
 | `ground_truth_human` | bool | `currentRound.groundTruthIsHuman` | True if the subject is actually a healthy human, false if overgrown/zombie. |
 | `player_answer_human` | bool \| null | argument to `recordAnswer()` | `null` = timed out, no decision made. |
@@ -34,24 +34,17 @@ the one that already exists so it doesn't drift as the UI is wired up further.
 |---|---|---|
 | `flagged_invalid` | bool | Set by the analysis pipeline (see `analysis/data_quality.py`), not the game itself — `reaction_time_ms < MIN_VALID_RESPONSE_MS` (default 1000ms) or `player_answer_human is None`. Kept separate from the player-facing `flagged` field, which means something different (player suspicion, not data validity). |
 
-## Tier definition — needs reconciling (flag for Shane + Claire)
+## Tier definition — resolved (Shane, PR #6)
 
 Shane's `AdversarialEnv` (`game_interfaces/adversarial_env.py`) defines tiers as
 **edit-count snapshots along a single budget-6 rollout** — the comment at
 `MAX_BUDGET = 6` says tiers are made "by snapshotting the image after 1 / 3 / 6
-edits of a single budget-6 rollout," implying 3 tiers: `{1, 3, 6}`.
+edits of a single budget-6 rollout."
 
-Claire's placeholder `ROUNDS` array in `index.html` uses `tier` values `{0, 1,
-3, 4}`, where `0` appears to mean "no disguise, real human." That `4` doesn't
-match Shane's `{1, 3, 6}` scheme, and it's explicitly placeholder data ("replace
-with your real per-tier manifest" per the comment above `ROUNDS`), so this may
-just not have been updated yet — but it needs to be before real trials run.
-
-**Recommendation to bring to the team:** four tiers total — `tier 0` = real
-human (no disguise, control condition) plus Shane's three malice tiers `{1, 3,
-6}` — rather than inventing a fourth malice tier. I'll raise this with Shane
-and Claire directly rather than silently picking one in code, since it affects
-both the RL snapshot script and the game manifest.
+Confirmed tier set: **`{0, 1, 3, 6}`** — `tier 0` is the real-human control
+(no disguise), and `1`/`3`/`6` are Shane's malice-budget edit-count snapshots.
+Claire's placeholder `ROUNDS` array in `index.html` originally had a stray
+`tier: 4` that didn't match this scheme — corrected to `6` in this branch.
 
 ## Open questions (blocking, need a team decision before real trials run)
 
