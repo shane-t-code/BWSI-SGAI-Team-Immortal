@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flat Test Map — Player Controller Test</title>
+  <style>
+    html, body { margin: 0; overflow: hidden; height: 100%; background: #87ceeb; }
+    canvas { display: block; }
+    #overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-family: sans-serif; font-size: 20px;
+      background: rgba(0,0,0,0.4); cursor: pointer; text-align: center;
+    }
+    #hint {
+      position: absolute; bottom: 16px; left: 16px; color: white;
+      font-family: sans-serif; font-size: 13px; background: rgba(0,0,0,0.4);
+      padding: 8px 12px; border-radius: 6px; pointer-events: none;
+    }
+    #inventory {
+      position: absolute; top: 16px; right: 16px;
+      background: rgba(0,0,0,0.6);
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: white;
+      font-family: sans-serif;
+      min-width: 150px;
+    }
+    #inventory h3 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      color: #FFD700;
+    }
+    .fuse-slot {
+      background: rgba(255,255,255,0.1);
+      padding: 6px 10px;
+      margin: 4px 0;
+      border-radius: 4px;
+      font-size: 12px;
+      border-left: 3px solid #FF4500;
+    }
+    #fuse-count {
+      font-weight: bold;
+      color: #FFD700;
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px;
+      height: 20px;
+      pointer-events: none;
+      display: none;
+    }
+    #crosshair::before,
+    #crosshair::after {
+      content: '';
+      position: absolute;
+      background: rgba(255, 255, 255, 0.8);
+    }
+    #crosshair::before {
+      width: 2px;
+      height: 20px;
+      left: 9px;
+      top: 0;
+    }
+    #crosshair::after {
+      width: 20px;
+      height: 2px;
+      top: 9px;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="overlay">Click to start — WASD to move, mouse to look, Shift to sprint, Space to jump</div>
+  <div id="hint" style="display:none;">WASD: move | Mouse: look | Shift: sprint | Space: jump | E: pickup/drop fuse | Esc: release mouse</div>
+  <div id="crosshair"></div>
+  <div id="inventory">
+    <h3>Inventory (<span id="fuse-count">0</span>/3)</h3>
+    <div id="inventory-slots"></div>
+  </div>
+
+  <!-- Import map so bare specifiers like 'three' resolve to the CDN build -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { PlayerController } from './player-controller.js';
+    import { FuseSystem } from './fuse-system.js';
+
+    // --- Scene setup ---
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.Fog(0x87ceeb, 0, 150);
+
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // --- Lighting ---
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
+    const sun = new THREE.DirectionalLight(0xffffff, 1);
+    sun.position.set(50, 80, 30);
+    scene.add(sun);
+
+    // --- Base ground (underneath green tiles) ---
+    const groundSize = 200;
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(groundSize, groundSize),
+      new THREE.MeshStandardMaterial({ color: 0x2d5a30 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    scene.add(ground);
+
+    // A few reference cubes so you have landmarks to walk toward
+    const cubeGeo = new THREE.BoxGeometry(2, 2, 2);
+    const positions = [[10, 1, 0], [-10, 1, 5], [0, 1, -15], [20, 1, 20]];
+    positions.forEach(([x, y, z], i) => {
+      const cube = new THREE.Mesh(cubeGeo, new THREE.MeshStandardMaterial({ color: 0xff5533 + i * 1000 }));
+      cube.position.set(x, y, z);
+      scene.add(cube);
+    });
+
+    // --- Player controller ---
+    const player = new PlayerController(camera, renderer.domElement, scene, {
+      eyeHeight: 1.7,
+      moveSpeed: 6,
+      groundY: 0,
+    });
+
+    // --- Fuse system ---
+    const fuseSystem = new FuseSystem(scene, camera, player);
+
+    const overlay = document.getElementById('overlay');
+    const hint = document.getElementById('hint');
+    const crosshair = document.getElementById('crosshair');
+    player.controls.addEventListener('lock', () => { overlay.style.display = 'none'; hint.style.display = 'block'; crosshair.style.display = 'block'; });
+    player.controls.addEventListener('unlock', () => { overlay.style.display = 'flex'; hint.style.display = 'none'; crosshair.style.display = 'none'; });
+
+    // The overlay sits visually on top of the canvas, so it must trigger the lock itself —
+    // a click on the canvas underneath never fires while the overlay is showing.
+    overlay.addEventListener('click', () => player.controls.lock());
+
+    // --- Resize handling ---
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- Animation loop ---
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.1); // clamp to avoid big jumps on tab-switch
+      player.update(delta);
+      fuseSystem.update(delta);
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
