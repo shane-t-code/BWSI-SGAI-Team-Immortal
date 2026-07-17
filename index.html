@@ -271,12 +271,16 @@ function getOrCreateParticipantId() {
   return id;
 }
 
-// Mirrors analysis/trial_protocol.py's assign_condition() alternation logic,
-// just keyed by a hash of participant_id instead of an enrollment index,
+// Assigns condition once per participant, keyed by a hash of participant_id,
 // since this static page has no backend/shared counter to assign from.
-// No shared import is possible here (Python package vs. browser module) —
-// if the alternation rule in trial_protocol.py ever changes, update this
-// function to match by hand.
+// NOTE: this is NOT equivalent to analysis/trial_protocol.py's
+// assign_condition(). That version alternates on an enrollment index and
+// guarantees a ~50/50 split; hashing a random UUID mod 2 is only 50/50 in
+// expectation, so with ~30-40 participants the split can come out lopsided.
+// Guaranteeing balance would need a shared enrollment counter (backend or
+// manual signup), which the MVP doesn't have — so check the realized split
+// after collection and report it. See docs/data-logging-schema.md
+// "Participant tracking -> Balance caveat".
 function assignCondition(participantId) {
   const stored = localStorage.getItem('condition');
   if (stored) return stored;

@@ -49,14 +49,24 @@ This supersedes the `{0, 1, 3, 6}` set from PR #6. Verified directly against
 `data/game_sets/game_manifest.csv` (180 rows, `malice_tier` column values
 exactly `{0, 1, 5, 10}`).
 
-Key finding from Shane's data (from his PR #7 summary, worth keeping in mind
-for the write-up): the AI assistant's own accuracy drops sharply as tier rises
-— correct 83% of the time at tier 1, down to 27% at tier 6-equivalent strength
-in the old scheme (numbers superseded by the retrain, re-derive from
-`game_manifest.csv`'s `cnn_correct` column once real trial data exists) —
-meaning a human leaning on the assistant gets good advice against weak
-disguises and actively bad advice against strong ones. That's the crux of the
-`human_alone` vs `human_ai` comparison this whole pipeline exists to run.
+Key finding from Shane's data (worth keeping in mind for the write-up): the AI
+assistant's own accuracy drops sharply as tier rises. Derived from
+`game_manifest.csv`'s `cnn_correct` column for the current `{0, 1, 5, 10}`
+tiers (Shane's numbers, verified against the manifest — 180 rows):
+
+| Tier | CNN accuracy |
+|---|---|
+| 0 (real human) | 90% (81/90) |
+| 1 | 77% (23/30) |
+| 5 | 50% (15/30) |
+| 10 | 13% (4/30) |
+
+(Supersedes the old `{0, 1, 3, 6}` figures of 83% at tier 1 down to 27% at
+tier 6.) A human leaning on the assistant therefore gets good advice against
+weak disguises and actively bad advice against strong ones — at tier 10 the CNN
+is worse than a coin flip, so `ai_confidence_shown` is actively misleading.
+That's the crux of the `human_alone` vs `human_ai` comparison this whole
+pipeline exists to run.
 
 ## Participant tracking — resolved (Shane, PR #7)
 
@@ -74,10 +84,20 @@ between-subjects design below.
 - `condition`: assigned **once**, the first time a `participant_id` is created,
   and never changes on repeat visits (between-subjects, per Shane's note that
   AI advice teaches people what a disguise looks like — letting someone see
-  both conditions would contaminate the comparison). Mirrors
-  `analysis/trial_protocol.assign_condition()`'s alternation logic client-side
-  (see the code comment in `index.html` for why this is duplicated rather than
-  shared — no backend to be the single source of truth against).
+  both conditions would contaminate the comparison). Assigned client-side by
+  hashing the `participant_id` UUID and taking it mod 2.
+  **Balance caveat (Shane, PR #7 review):** this is *not* equivalent to
+  `analysis/trial_protocol.assign_condition()`, despite the earlier claim that
+  it "mirrors" it. The Python version alternates on an enrollment index, which
+  *guarantees* a near-50/50 split. The browser version has no shared enrollment
+  counter (static page, independent browsers, no backend), so it hashes the
+  UUID instead — which is only 50/50 *in expectation*. With ~30-40 participants
+  a lopsided split (e.g. 24/13) can happen by chance. **Mitigation:** check the
+  realized `condition` split after data collection and report it; if it's badly
+  skewed, weight or note it in the analysis. A guaranteed balance would require
+  assigning `condition` at signup from a shared counter (backend or manual
+  enrollment sheet) rather than client-side hashing — out of scope for the MVP,
+  but the fallback if the observed split is unacceptable.
 - `session_id`: a fresh `crypto.randomUUID()` every page load/game start —
   identifies one sitting. A participant who plays 3 times has 1 `participant_id`,
   1 `condition`, and 3 distinct `session_id`s.
@@ -113,7 +133,13 @@ participant: `15 x 5 = 75` to `20 x 5 = 100` trials per (tier, condition) cell
    actually respect the assigned `condition` (disabled entirely in
    `human_alone`) rather than always being available — her PR #7 assignment,
    not mine to patch unilaterally.
-2. Prajwal still needs to fix `tests/test_scorekeeper.py::test_save_log_log_csv_columns`
+2. `game_set` is defined in the schema above but **not yet exported** by
+   `exportResultsCSV()` in `index.html` — it's blocked on Claire wiring
+   `rounds.json` (which carries the `session`/game-set column) into the game.
+   Fine for now (Shane, PR #7 review), but the moment her wiring lands, add a
+   `game_set` column to the `exportResultsCSV()` header + row arrays so it
+   actually reaches the trial CSV.
+3. Prajwal still needs to fix `tests/test_scorekeeper.py::test_save_log_log_csv_columns`
    (missing `confidence_score` in `LOG_COLUMNS`) per Shane's note — unrelated
    to this pipeline, flagging here only because it's a known pre-existing
    failure noted twice now.
