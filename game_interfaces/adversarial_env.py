@@ -1,19 +1,28 @@
-"""Adversarial image-disguise environment for RL training.
+"""Adversarial image-disguise environment for RL training (two-channel version).
 
 The Red Team agent applies small, budget-limited edits to a zombie ("overgrown")
-image, trying to make it look human on two fronts at once:
-  * to a PERSON  -> fog fades the bright-green skin (the main human-visible tell)
-  * to the CNN   -> a small rotation tips the classifier toward "healthy"
-Both edits spend from one shared malice budget, so the agent faces a real
-allocation problem: how much budget goes to fooling the human vs. the CNN.
+image on two ORTHOGONAL channels, competing for one shared malice budget:
+  * RECOLOR the green skin toward human skin tone -> fools a PERSON (the CNN, which
+    ignores color, still catches it). Validated: human accuracy 100%->~50%->0% across
+    recolor strength, while CNN P(healthy) stays ~0.
+  * ROTATE the whole scene a few degrees -> fools the CNN (a small tilt pushes it off
+    the images it was trained on) while a person barely notices.
+Recolor changes COLOR and rotation changes GEOMETRY, so they don't interfere — the
+agent faces a real allocation problem: spend budget fooling the human, the AI, or both.
 
-Three design ideas hold this together (see the methods for detail):
-  * Accumulator pattern: we keep the ORIGINAL image plus running edit totals and
-    re-render from the original every step. We never stack an edit on an edit.
-  * Delta reward: each step's reward is the *improvement* in a weighted disguise
-    score, so the whole episode's reward telescopes to the total improvement.
-  * Constraints by masking: illegal moves (over budget, past a cap) are hidden
-    from the agent via action_mask(), never punished with a penalty.
+Design ideas that hold this together:
+  * Accumulator pattern: keep the ORIGINAL image + running edit totals and re-render
+    from the original each step. We never stack an edit on an edit.
+  * Two-layer render: hue_proxy (human channel) is measured on the recolor-only "color
+    layer" where the frozen green mask stays aligned; the CNN sees the full rotated
+    image. Rotation moves pixels but not colors, so this split is exact.
+  * Lookahead observation: each step the agent also sees what P(healthy) WOULD be if it
+    rotated +2 or -2 from here, so it can learn rotation DIRECTION (which is
+    image-specific) instead of blindly guessing.
+  * Constraints by masking, not penalty: illegal moves (over budget / past a cap) are
+    hidden via action_mask(), never punished.
+  * Delta reward: each step's reward is the improvement in a weighted disguise score, so
+    episode reward telescopes to the total improvement.
 """
 
 import os
@@ -30,32 +39,35 @@ from models.image_transforms import TRANSFORM_REGISTRY, green_mask, hue_proxy
 
 
 class AdversarialEnv(Env):
-    """RL environment for learning budget-limited image disguises."""
+    """RL environment for learning budget-limited two-channel disguises."""
 
-    # ----- action layout: the 5 discrete moves, by index --------------------
+    # ----- action layout: the 4 discrete moves, by index --------------------
     ROTATE_CW = 0    # rotate the scene +2 degrees  (fools the CNN)
     ROTATE_CCW = 1   # rotate the scene -2 degrees  (fools the CNN)
-    FOG = 2          # add +0.25 fog intensity      (fools the human)
-    BLUR = 3         # add +0.25 blur intensity      (weak filler)
-    STOP = 4         # submit the image and end the episode
-    NUM_ACTIONS = 5
+    RECOLOR = 2      # recolor +0.25 toward skin    (fools the human)
+    STOP = 3         # submit the image and end the episode
+    NUM_ACTIONS = 4
 
     # ----- edit step sizes and hard caps ------------------------------------
-    ANGLE_STEP = 2.0      # degrees added per rotate action
-    MAX_ANGLE = 12.0      # |cumulative angle| never exceeds this: past ~20 deg the
-                          # CNN RECOVERS, so more rotation would undo our own work.
-    FOG_STEP = 0.25       # fog intensity added per fog action  (4 steps -> full fog)
-    BLUR_STEP = 0.25      # blur intensity added per blur action
-    MAX_INTENSITY = 1.0   # fog and blur intensities cap at 1.0
+    ANGLE_STEP = 2.0       # degrees added per rotate action
+    MAX_ANGLE = 12.0       # |cumulative angle| cap: past ~20 deg the CNN RECOVERS.
+    RECOLOR_STEP = 0.25    # recolor intensity added per recolor action (4 steps -> full)
+    MAX_RECOLOR = 1.0      # recolor intensity caps at 1.0
 
     # ----- reward weights: tuned so both channels contribute about equally --
-    W_HUMAN = 0.55        # weight on hue_proxy  (how human the color looks)
-    W_AI = 0.45           # weight on P(healthy) (how much the CNN is fooled)
+    W_HUMAN = 0.55         # weight on hue_proxy  (how human the color looks)
+    W_AI = 0.45            # weight on P(healthy) (how much the CNN is fooled)
 
     # ----- budget -----------------------------------------------------------
-    MAX_BUDGET = 6        # fixed training budget; also normalizes the obs slot.
-                          # Tiers (low/med/high) are made later by snapshotting the
-                          # image after 1 / 3 / 6 edits of a single budget-6 rollout.
+    # 10 = enough to max BOTH channels (rotation caps at 12 deg = 6 edits, recolor
+    # caps at 1.0 = 4 edits). This matters: at budget 6 the agent had to choose, and
+    # because hue_proxy saturates around recolor 0.75 it stopped recoloring there and
+    # spent the rest on rotation — leaving tier-6 figures visibly olive. At 10, once
+    # rotation hits its cap the mask makes it illegal, so the surplus is FORCED into
+    # recolor and drives it to 1.0. Top tier now fools the human AND the CNN.
+    MAX_BUDGET = 10        # fixed training budget; also normalizes the obs slot.
+
+    OBS_SIZE = 9  # [angle, recolor, budget, Pz, Ph, Pi, Pc, look_cw, look_ccw]
 
     def __init__(
         self,
@@ -77,30 +89,29 @@ class AdversarialEnv(Env):
         self.max_budget = max_budget
         self.rng = random.Random(seed)
 
-        # Pool of ZOMBIE-only images. Humans have nothing to disguise (they already
-        # look human and score ~1.0), so training on them would give no signal.
+        # Zombie-only pool: humans already look human, so there's no reward gradient.
         meta = pd.read_csv(os.path.join(img_data_root, "consolidated_metadata.csv"))
         self.zombie_paths: list[str] = meta[meta["Class"] == "Zombie"]["Filename"].tolist()
         if not self.zombie_paths:
             raise ValueError("No Zombie-class images found in the metadata CSV.")
 
-        # 5 discrete actions; 8-number observation, every slot already in [0, 1].
         self.action_space = spaces.Discrete(self.NUM_ACTIONS)
         self.observation_space = spaces.Box(
-            low=0.0, high=1.0, shape=(8,), dtype=np.float32
+            low=0.0, high=1.0, shape=(self.OBS_SIZE,), dtype=np.float32
         )
 
-        # Episode state — filled in properly by reset().
-        self.original_image: Image.Image | None = None  # pristine zombie, never mutated
-        self.green_mask: np.ndarray | None = None        # frozen on the original
-        self.current_image: Image.Image | None = None    # latest full render (for saving)
-        self.cum_angle = 0.0    # running rotation total (degrees)
-        self.cum_fog = 0.0      # running fog intensity total (0..1)
-        self.cum_blur = 0.0     # running blur intensity total (0..1)
-        self.budget_left = 0    # malice units remaining this episode
-        self.prev_score = 0.0   # last step's disguise score (for the delta reward)
-        self.last_probs = np.zeros(4, dtype=np.float32)  # last CNN output (for the obs)
-        self.last_hue = 0.0     # last hue_proxy value (for logging the human channel)
+        # Episode state — filled by reset().
+        self.original_image: Image.Image | None = None
+        self.green_mask: np.ndarray | None = None
+        self.current_image: Image.Image | None = None
+        self.cum_angle = 0.0
+        self.cum_recolor = 0.0
+        self.budget_left = 0
+        self.prev_score = 0.0
+        self.last_probs = np.zeros(4, dtype=np.float32)
+        self.last_hue = 0.0
+        self.last_look_cw = 0.0   # P(healthy) if we rotate +2 from here
+        self.last_look_ccw = 0.0  # P(healthy) if we rotate -2 from here
 
     # ------------------------------------------------------------------
     # Episode setup
@@ -109,107 +120,89 @@ class AdversarialEnv(Env):
     def reset(
         self, *, seed: int | None = None, options: dict | None = None
     ) -> tuple[np.ndarray, dict]:
-        """Start a fresh episode on a new random zombie image.
-
-        Returns:
-            (observation, info) where info carries the chosen image path.
-        """
+        """Start a fresh episode on a new random zombie image."""
         if seed is not None:
             self.rng.seed(seed)
 
-        # Load a pristine copy of a random zombie. We never edit this copy in place —
-        # every render starts from it, which is the whole point of the accumulator idea.
         path = self.rng.choice(self.zombie_paths)
         with Image.open(os.path.join(self.img_data_root, path)) as im:
             self.original_image = im.convert("RGB").copy()
 
-        # Freeze the green mask on the ORIGINAL. hue_proxy needs a fixed set of pixel
-        # locations so the agent can't "hide" green by making the mask move (see hue_proxy).
+        # Freeze the green mask on the ORIGINAL so hue_proxy measures the same pixels.
         self.green_mask = green_mask(self.original_image)
 
-        # Reset accumulators and hand out the full budget.
         self.cum_angle = 0.0
-        self.cum_fog = 0.0
-        self.cum_blur = 0.0
+        self.cum_recolor = 0.0
         self.budget_left = self.max_budget
 
-        # Baseline score of the untouched zombie. The first step's delta reward
-        # measures improvement against this starting point.
         self.prev_score = self._score_and_observe()
-
         return self._get_observation(), {"path": path}
 
     # ------------------------------------------------------------------
-    # Rendering and scoring
+    # Rendering (accumulator -> image)
     # ------------------------------------------------------------------
 
-    def _render(self) -> tuple[Image.Image, Image.Image]:
-        """Rebuild the current image from the ORIGINAL + all accumulators, applied once.
+    def _render_color(self) -> Image.Image:
+        """The recolor-only 'color layer' (NO rotation), built from the original.
 
-        Returns two layers:
-            color_img: original + fog + blur, but NOT rotated. hue_proxy is measured
-                here because fog/blur don't move pixels, so the frozen green mask still
-                lines up with the character.
-            full_img: color_img + rotation. This is the real game image and the CNN's
-                input. Rotation moves pixels (so the frozen mask would NOT line up on
-                this one) but rotation doesn't change color, so greenness measured on
-                color_img is exactly right for full_img too.
+        hue_proxy is measured here: recolor doesn't move pixels, so the frozen green
+        mask still lines up. Starts from a COPY so we never alias the pristine original.
         """
-        # Start from a COPY of the pristine original so the returned images can never
-        # alias original_image. Without this, a zero-edit render (baseline, or a STOP
-        # with no edits) would hand back the original object itself — and any future
-        # in-place edit to current_image would silently corrupt the pristine base that
-        # every step re-renders from. The copy is negligible next to the CNN forward pass.
         color = self.original_image.copy()
-        # Fog first, then blur — both recolor/average pixels in place (no movement).
-        if self.cum_fog > 0.0:
-            color = TRANSFORM_REGISTRY["fog"].apply(color, self.cum_fog)
-        if self.cum_blur > 0.0:
-            color = TRANSFORM_REGISTRY["blur"].apply(color, self.cum_blur)
+        if self.cum_recolor > 0.0:
+            color = TRANSFORM_REGISTRY["recolor"].apply(color, self.cum_recolor)
+        return color
 
-        # Rotation last. Convert our angle (degrees) into the library's intensity
-        # convention: RotationTransform uses angle = (intensity - 0.5) * 30.
-        full = color
-        if self.cum_angle != 0.0:
-            intensity = self.cum_angle / 30.0 + 0.5
-            full = TRANSFORM_REGISTRY["rotation"].apply(color, intensity)
+    def _rotate(self, color_img: Image.Image, angle_deg: float) -> Image.Image:
+        """Rotate a color-layer image by angle_deg (0 = unchanged).
 
-        return color, full
+        Converts degrees into the library's intensity convention:
+        RotationTransform uses angle = (intensity - 0.5) * 30.
+        """
+        if angle_deg == 0.0:
+            return color_img
+        return TRANSFORM_REGISTRY["rotation"].apply(color_img, angle_deg / 30.0 + 0.5)
+
+    def _clamp_angle(self, angle: float) -> float:
+        return max(-self.MAX_ANGLE, min(self.MAX_ANGLE, angle))
 
     def _score_and_observe(self) -> float:
-        """Render, score the disguise, and cache the CNN probs + current image.
+        """Render, score the disguise, and cache everything the observation needs.
 
-        Caches self.last_probs (for the observation) and self.current_image (so the
-        Friday generation script can snapshot it). Returns the weighted disguise score.
+        Caches last_probs, last_hue, the two rotation lookaheads, and current_image.
+        Returns the weighted disguise score. Uses 3 CNN calls: the current full image
+        plus the +2/-2 rotation lookaheads (all share one color-layer render).
         """
-        color_img, full_img = self._render()
+        color_img = self._render_color()                       # recolor only
+        full_img = self._rotate(color_img, self.cum_angle)     # + rotation = game image
         self.current_image = full_img
 
-        # CNN sees the full (rotated) game image. probs = [zombie, healthy, injured, corpse].
         probs = self.classifier.classify_pil_image(full_img).astype(np.float32)
         self.last_probs = probs
+        self.last_hue = hue_proxy(color_img, self.green_mask)   # human channel
 
-        # Human channel: how non-green the character looks, measured on the color layer.
-        human_look = hue_proxy(color_img, self.green_mask)
-        self.last_hue = human_look  # cache for logging (and for the STOP info below)
-        # AI channel: how much the CNN believes "healthy".
-        fools_cnn = float(probs[1])
+        # Lookahead: what the CNN would say if we rotated one more step each way.
+        # Gives the agent a "which way helps" sense so it can learn rotation direction.
+        cw = self._rotate(color_img, self._clamp_angle(self.cum_angle + self.ANGLE_STEP))
+        ccw = self._rotate(color_img, self._clamp_angle(self.cum_angle - self.ANGLE_STEP))
+        self.last_look_cw = float(self.classifier.classify_pil_image(cw)[1])
+        self.last_look_ccw = float(self.classifier.classify_pil_image(ccw)[1])
 
-        return self.W_HUMAN * human_look + self.W_AI * fools_cnn
+        return self.W_HUMAN * self.last_hue + self.W_AI * float(probs[1])
 
     def _get_observation(self) -> np.ndarray:
-        """Assemble the 8-number observation, every slot normalized to [0, 1]."""
+        """Assemble the 9-number observation, every slot normalized to [0, 1]."""
         return np.array(
             [
-                # angle runs -12..+12; shift+scale into 0..1 (0.5 = no rotation).
-                (self.cum_angle + self.MAX_ANGLE) / (2.0 * self.MAX_ANGLE),
-                self.cum_fog,                              # already 0..1
-                self.cum_blur,                             # already 0..1
-                self.budget_left / self.MAX_BUDGET,        # 0..1
-                self.last_probs[0],                        # P(zombie)
-                self.last_probs[1],                        # P(healthy)
-                self.last_probs[2],                        # P(injured)
-                self.last_probs[3],                        # P(corpse)
+                (self.cum_angle + self.MAX_ANGLE) / (2.0 * self.MAX_ANGLE),  # -12..12 -> 0..1
+                self.cum_recolor,                     # 0..1
+                self.budget_left / self.MAX_BUDGET,   # 0..1
+                self.last_probs[0],                   # P(zombie)
+                self.last_probs[1],                   # P(healthy)
+                self.last_probs[2],                   # P(injured)
+                self.last_probs[3],                   # P(corpse)
+                self.last_look_cw,                    # P(healthy) if rotate +2
+                self.last_look_ccw,                   # P(healthy) if rotate -2
             ],
             dtype=np.float32,
         )
@@ -219,19 +212,13 @@ class AdversarialEnv(Env):
     # ------------------------------------------------------------------
 
     def action_mask(self) -> list[bool]:
-        """Return a length-5 list: True where that action is currently legal.
-
-        Passed to agent.select_action(obs, available=...), which sets illegal
-        actions to -inf before choosing — so the agent can never spend budget it
-        doesn't have or push an edit past its cap. 'stop' is always legal.
-        """
+        """Return a length-4 list: True where that action is currently legal."""
         has_budget = self.budget_left > 0
         return [
-            has_budget and self.cum_angle < self.MAX_ANGLE,     # rotate CW: room to go up
-            has_budget and self.cum_angle > -self.MAX_ANGLE,    # rotate CCW: room to go down
-            has_budget and self.cum_fog < self.MAX_INTENSITY,   # fog: not maxed
-            has_budget and self.cum_blur < self.MAX_INTENSITY,  # blur: not maxed
-            True,                                               # stop: always allowed
+            has_budget and self.cum_angle < self.MAX_ANGLE,     # rotate CW
+            has_budget and self.cum_angle > -self.MAX_ANGLE,    # rotate CCW
+            has_budget and self.cum_recolor < self.MAX_RECOLOR, # recolor
+            True,                                               # stop
         ]
 
     # ------------------------------------------------------------------
@@ -239,45 +226,35 @@ class AdversarialEnv(Env):
     # ------------------------------------------------------------------
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict]:
-        """Apply one edit (or stop), and return (obs, reward, terminated, truncated, info).
+        """Apply one edit (or stop); return (obs, reward, terminated, truncated, info).
 
-        Reward is the DELTA in disguise score: how much better this one move made the
-        image. Summed over the episode, the deltas telescope to (final - starting) score.
+        Reward is the DELTA in disguise score, so episode rewards telescope to the
+        total improvement produced.
         """
         info: dict[str, Any] = {}
 
-        # STOP: submit as-is. No image change, so no reward. Episode ends (terminated).
-        # last_probs / last_hue still reflect the current image, so logging stays correct.
         if action == self.STOP:
             info["stopped"] = True
             info["p_healthy"] = float(self.last_probs[1])
             info["hue"] = float(self.last_hue)
             return self._get_observation(), 0.0, True, False, info
 
-        # Otherwise apply the chosen edit to its accumulator, clamped at the cap.
         if action == self.ROTATE_CW:
             self.cum_angle = min(self.cum_angle + self.ANGLE_STEP, self.MAX_ANGLE)
         elif action == self.ROTATE_CCW:
             self.cum_angle = max(self.cum_angle - self.ANGLE_STEP, -self.MAX_ANGLE)
-        elif action == self.FOG:
-            self.cum_fog = min(self.cum_fog + self.FOG_STEP, self.MAX_INTENSITY)
-        elif action == self.BLUR:
-            self.cum_blur = min(self.cum_blur + self.BLUR_STEP, self.MAX_INTENSITY)
+        elif action == self.RECOLOR:
+            self.cum_recolor = min(self.cum_recolor + self.RECOLOR_STEP, self.MAX_RECOLOR)
         else:
             raise ValueError(f"Invalid action: {action}")
 
-        # Every edit costs one malice unit.
         self.budget_left -= 1
 
-        # Re-render from the original, re-score, reward = improvement over last step.
         new_score = self._score_and_observe()
         reward = new_score - self.prev_score
         self.prev_score = new_score
 
-        # Out of budget -> episode ends. We call this "truncated" (a time/limit stop)
-        # rather than "terminated" (agent chose to finish) to match Gymnasium's meaning.
         truncated = self.budget_left <= 0
-
         info["score"] = new_score
         info["probs"] = self.last_probs
         info["p_healthy"] = float(self.last_probs[1])
