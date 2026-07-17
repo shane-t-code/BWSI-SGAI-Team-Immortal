@@ -17,7 +17,6 @@ Hyperparameters to tune:
     TARGET_UPDATE_FREQ  — episodes between target net hard updates (default: 10)
     GAMMA               — discount factor (default: 0.95)
     LEARNING_RATE       — Adam step size (default: 1e-3)
-    MAX_DIFFICULTY      — maximum allowed difficulty (default: 0.8)
 """
 
 import os
@@ -45,6 +44,7 @@ from gameplay.constants import DATA_DIR  # noqa: E402
 from models.CNNClassifier import CNNClassifier  # noqa: E402
 from models.DQNAgent import DQNAgent  # noqa: E402
 from game_interfaces.adversarial_env import AdversarialEnv  # noqa: E402
+from training.action_tracker import ActionTracker  # noqa: E402
 
 # -----------------------------------------------------------------------
 # Hyperparameters — edit these to experiment
@@ -56,7 +56,6 @@ EPSILON_DECAY: int = 250  # episodes over which epsilon decays linearly to epsil
 TARGET_UPDATE_FREQ: int = 10
 GAMMA: float = 0.95
 LEARNING_RATE: float = 1e-3
-MAX_DIFFICULTY: float = 0.8  # Maximum difficulty to maintain solvability (Rule 1)
 
 # Log a summary line every N episodes
 LOG_INTERVAL: int = 25
@@ -96,14 +95,14 @@ def make_env(data_dir: str, seed: int | None = None) -> AdversarialEnv:
     return AdversarialEnv(
         classifier=classifier,
         img_data_root=data_dir,
-        max_difficulty=MAX_DIFFICULTY,
     )
 
 
 def _save_adversarial_plots(
     episode_rewards: list[float],
     epsilon_log: list[float],
-    difficulty_log: list[float],
+    phealthy_log: list[float],
+    hue_log: list[float],
     log_dir: str,
 ) -> None:
     """Save adversarial training curves to log_dir.
@@ -111,7 +110,8 @@ def _save_adversarial_plots(
     Args:
         episode_rewards: Total reward per episode, in order.
         epsilon_log: Epsilon value at the end of each episode, in order.
-        difficulty_log: Average difficulty (1 - max_prob) per episode.
+        phealthy_log: Final P(healthy) per episode (how much the CNN was fooled).
+        hue_log: Final hue_proxy per episode (how human the color looks).
         log_dir: Directory to write plot files into.
     """
     os.makedirs(log_dir, exist_ok=True)
@@ -143,7 +143,7 @@ def _save_adversarial_plots(
     ax1.axhline(0, color="gray", linewidth=0.8, linestyle="--")
     ax1.set_xlabel("Episode")
     ax1.set_ylabel("Total Reward")
-    ax1.set_title("Episode Reward (Higher = Better Difficulty)")
+    ax1.set_title("Episode Reward (Higher = More Disguise)")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
 
@@ -155,12 +155,15 @@ def _save_adversarial_plots(
     ax2.set_ylim(0, 1)
     ax2.grid(True, alpha=0.3)
 
-    # ── Bottom: difficulty progression ────────────────────────────────────
-    ax3.plot(episodes_range, difficulty_log, color="green", linewidth=1.5)
-    ax3.axhline(MAX_DIFFICULTY, color="red", linestyle="--", alpha=0.5, label="Max difficulty")
+    # ── Bottom: disguise progression — both channels ──────────────────────
+    ax3.plot(episodes_range, phealthy_log, color="crimson", linewidth=1.5,
+             label="P(healthy) — fools the CNN")
+    ax3.plot(episodes_range, hue_log, color="seagreen", linewidth=1.5,
+             label="hue_proxy — fools the human")
+    ax3.axhline(0.5, color="gray", linewidth=0.8, linestyle="--", label="0.5 boundary")
     ax3.set_xlabel("Episode")
-    ax3.set_ylabel("Difficulty (1 - max_prob)")
-    ax3.set_title("Classification Difficulty Over Time")
+    ax3.set_ylabel("Final disguise level")
+    ax3.set_title("How Disguised the Final Image Is (both channels)")
     ax3.set_ylim(0, 1)
     ax3.legend()
     ax3.grid(True, alpha=0.3)
@@ -183,13 +186,12 @@ def train(
     """Runs the full adversarial DQN training loop and saves the best weights.
 
     Episode loop:
-        1. Reset environment — get initial observation (random image).
-        2. Agent selects transformation type.
-        3. Agent selects intensity level.
-        4. Apply transformation and evaluate classification difficulty.
-        5. Receive reward based on difficulty metrics.
-        6. Train agent on experience.
-        7. Track best performing model.
+        1. Reset environment — get initial observation (random zombie image).
+        2. Agent picks an edit (rotate / recolor) or stop, under the legal-move mask.
+        3. Apply the edit; re-score the disguise (hue_proxy + P(healthy)).
+        4. Reward = improvement in the disguise score (delta).
+        5. Train agent on the transition; repeat until budget runs out or stop.
+        6. Track best performing model.
 
     Args:
         data_dir: Path to the directory containing humanoid image files.
@@ -214,28 +216,38 @@ def train(
         target_update_freq=TARGET_UPDATE_FREQ,
     )
 
+    # Watches how the agent splits its malice budget across attack channels, so a
+    # collapse onto one channel shows up during training instead of after it.
+    tracker = ActionTracker(env)
+
     best_reward = float("-inf")
     weights_saved = False
     episode_rewards: list[float] = []
     epsilon_log: list[float] = []
-    difficulty_log: list[float] = []
+    phealthy_log: list[float] = []  # final P(healthy) per episode (CNN-fool metric)
+    hue_log: list[float] = []       # final hue_proxy per episode (human-fool metric)
 
     for episode in range(1, episodes + 1):
         obs, info = env.reset()
+        tracker.start_episode()
         episode_reward = 0.0
         episode_loss = 0.0
         steps = 0
         done = False
 
-        # Track original features for comparison
-        original_max_prob = info["original_features"]["max_prob"]
-
         while not done:
-            action = agent.select_action(obs)
-            next_obs, reward, done, _truncated, info = env.step(action)
+            # Pass the legal-move mask so the agent never spends budget on an
+            # illegal action (e.g. recoloring past full, or rotating past the cap).
+            action = agent.select_action(obs, available=env.action_mask())
+            tracker.record(action)  # note which channel this move spends budget on
+
+            # The env ends episodes with `truncated` (budget ran out) far more
+            # often than `terminated` (agent chose to stop), so either means done.
+            next_obs, reward, terminated, truncated, info = env.step(action)
+            done = terminated or truncated
 
             # Push transition to replay buffer
-            agent.replay_buffer.push(obs, action, reward, next_obs, done or _truncated)
+            agent.replay_buffer.push(obs, action, reward, next_obs, done)
 
             loss = agent.train_step()
             if loss is not None:
@@ -250,10 +262,10 @@ def train(
         episode_rewards.append(episode_reward)
         epsilon_log.append(agent.epsilon)
 
-        # Track difficulty (1 - max_prob, higher = harder)
-        if "features" in info:
-            difficulty = 1.0 - info["features"]["max_prob"]
-            difficulty_log.append(difficulty)
+        # Record how disguised the final image ended up: how much the CNN was
+        # fooled (P(healthy)) and how human the color looks (hue_proxy).
+        phealthy_log.append(info.get("p_healthy", 0.0))
+        hue_log.append(info.get("hue", 0.0))
 
         # Save best weights
         if episode_reward > best_reward and agent.epsilon < 0.5:
@@ -270,7 +282,8 @@ def train(
             recent = episode_rewards[-LOG_INTERVAL:]
             avg = sum(recent) / len(recent)
             avg_loss = episode_loss / steps if steps > 0 else 0.0
-            avg_difficulty = sum(difficulty_log[-LOG_INTERVAL:]) / len(difficulty_log[-LOG_INTERVAL:]) if difficulty_log else 0.0
+            avg_ph = sum(phealthy_log[-LOG_INTERVAL:]) / len(phealthy_log[-LOG_INTERVAL:])
+            avg_hue = sum(hue_log[-LOG_INTERVAL:]) / len(hue_log[-LOG_INTERVAL:])
             target_flag = " [target updated]" if target_updated else ""
             print(
                 f"Episode {episode:4d}/{episodes}  "
@@ -278,10 +291,13 @@ def train(
                 f"avg(last {LOG_INTERVAL}): {avg:+.2f}  "
                 f"loss(ep): {avg_loss:.4f}  "
                 f"epsilon: {agent.epsilon:.3f}  "
-                f"difficulty: {avg_difficulty:.3f}  "
+                f"P(healthy): {avg_ph:.3f}  "
+                f"hue: {avg_hue:.3f}  "
                 f"steps: {steps}"
                 f"{target_flag}"
             )
+            # Channel budget-share line — flags a collapse once epsilon has decayed.
+            print(f"           channels -> {tracker.report(last_n=LOG_INTERVAL, epsilon=agent.epsilon)}")
 
     if weights_saved:
         print(f"\nTraining complete. Best episode reward: {best_reward:+.2f}")
@@ -292,7 +308,7 @@ def train(
         )
         print("Try increasing NUM_EPISODES or decreasing EPSILON_DECAY.")
 
-    _save_adversarial_plots(episode_rewards, epsilon_log, difficulty_log, log_dir)
+    _save_adversarial_plots(episode_rewards, epsilon_log, phealthy_log, hue_log, log_dir)
 
 
 if __name__ == "__main__":
