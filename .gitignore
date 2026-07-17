@@ -231,3 +231,8 @@ large_data_files
 
 # jupyter checkpoints
 .ipynb_checkpoints
+
+# Regenerable RL intermediates — rebuild with training/generate_rl_pool.py
+# (~81MB of images; only the curated data/game_sets/ is committed)
+data/rl_pool/
+training/Adversarial-logs/

@@ -44,6 +44,7 @@ from gameplay.constants import DATA_DIR  # noqa: E402
 from models.CNNClassifier import CNNClassifier  # noqa: E402
 from models.DQNAgent import DQNAgent  # noqa: E402
 from game_interfaces.adversarial_env import AdversarialEnv  # noqa: E402
+from training.action_tracker import ActionTracker  # noqa: E402
 
 # -----------------------------------------------------------------------
 # Hyperparameters — edit these to experiment
@@ -185,13 +186,12 @@ def train(
     """Runs the full adversarial DQN training loop and saves the best weights.
 
     Episode loop:
-        1. Reset environment — get initial observation (random image).
-        2. Agent selects transformation type.
-        3. Agent selects intensity level.
-        4. Apply transformation and evaluate classification difficulty.
-        5. Receive reward based on difficulty metrics.
-        6. Train agent on experience.
-        7. Track best performing model.
+        1. Reset environment — get initial observation (random zombie image).
+        2. Agent picks an edit (rotate / recolor) or stop, under the legal-move mask.
+        3. Apply the edit; re-score the disguise (hue_proxy + P(healthy)).
+        4. Reward = improvement in the disguise score (delta).
+        5. Train agent on the transition; repeat until budget runs out or stop.
+        6. Track best performing model.
 
     Args:
         data_dir: Path to the directory containing humanoid image files.
@@ -216,6 +216,10 @@ def train(
         target_update_freq=TARGET_UPDATE_FREQ,
     )
 
+    # Watches how the agent splits its malice budget across attack channels, so a
+    # collapse onto one channel shows up during training instead of after it.
+    tracker = ActionTracker(env)
+
     best_reward = float("-inf")
     weights_saved = False
     episode_rewards: list[float] = []
@@ -225,6 +229,7 @@ def train(
 
     for episode in range(1, episodes + 1):
         obs, info = env.reset()
+        tracker.start_episode()
         episode_reward = 0.0
         episode_loss = 0.0
         steps = 0
@@ -232,8 +237,9 @@ def train(
 
         while not done:
             # Pass the legal-move mask so the agent never spends budget on an
-            # illegal action (e.g. adding fog that is already maxed).
+            # illegal action (e.g. recoloring past full, or rotating past the cap).
             action = agent.select_action(obs, available=env.action_mask())
+            tracker.record(action)  # note which channel this move spends budget on
 
             # The env ends episodes with `truncated` (budget ran out) far more
             # often than `terminated` (agent chose to stop), so either means done.
@@ -290,6 +296,8 @@ def train(
                 f"steps: {steps}"
                 f"{target_flag}"
             )
+            # Channel budget-share line — flags a collapse once epsilon has decayed.
+            print(f"           channels -> {tracker.report(last_n=LOG_INTERVAL, epsilon=agent.epsilon)}")
 
     if weights_saved:
         print(f"\nTraining complete. Best episode reward: {best_reward:+.2f}")

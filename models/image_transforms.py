@@ -299,48 +299,49 @@ class OcclusionTransform(ImageTransform):
         return img
 
 
-class FogTransform(ImageTransform):
-    """Atmospheric haze — blends the whole frame toward pale gray (Rule 5).
+class RecolorTransform(ImageTransform):
+    """Recolor the character's green skin toward human skin tone (Rule 3).
 
-    This is the Red Team's "fool the human" action. The zombie's single strongest
-    human-visible tell is its bright-green skin; blending toward gray fades that
-    green out so the figure reads as an ordinary person in foggy weather, while the
-    CNN (which ignores color) barely reacts.
+    The bright-green skin is the single strongest human-visible tell in these scenes.
+    Unlike a global edit, this changes ONLY the figure's pixels and leaves the scene
+    intact, so it fools a human while the CNN — which ignores color — still catches it. Validated in a pilot: human accuracy falls 100% -> ~50% -> 0%
+    across intensity 0.4 / 0.75 / 1.0, while CNN P(healthy) stays ~0.
 
-    Rule 2: Even at max intensity it does NOT fully erase the character — some green
-    stays faintly visible (alpha caps at 0.75, not 1.0), so the figure is still there.
-    Rule 4: Tunable via a single intensity knob.
+    Rule 2: keeps the figure present (it stays a figure, just skin-colored).
+    Rule 4: tunable via intensity — this is the "malice budget" dial for the human.
     """
 
     def apply(self, image: Image.Image, intensity: float) -> Image.Image:
-        """Blend the image toward pale gray haze.
+        """Blend the character's green pixels toward skin tone.
 
         Args:
             image: Input PIL Image.
-            intensity: Haze amount in [0, 1] (0 = no fog, 1 = heaviest fog).
+            intensity: Recolor amount in [0, 1] (0 = untouched green, 1 = full skin).
 
         Returns:
-            Hazed image.
+            Recolored image (scene unchanged, figure skin-toned).
         """
-        # Work in float so the blend math doesn't overflow the 0-255 pixel range mid-way.
         arr = np.array(image.convert("RGB")).astype(np.float32)
+        r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
 
-        # The "fog color": a pale, slightly blue-gray. Every pixel gets pulled toward this.
-        haze = np.array([200, 205, 210], dtype=np.float32)
+        # Ratio-based green-dominance mask: green must lead BOTH other channels by
+        # >12%. This catches vivid AND shadowed green on the figure while ignoring
+        # faint gray-green ground tints (which barely exceed the other channels).
+        # Green is the only green-dominant thing in-scene, so the scene stays safe.
+        mask = (g > 1.12 * r) & (g > 1.12 * b) & (g > 25)
 
-        # alpha = how much of the final pixel is fog vs. original (0 = none, 1 = all fog).
-        # Capped at 0.75 (not 1.0) on purpose: at full intensity the image is 75% fog,
-        # 25% original — enough to gray out the green but leave the figure present (Rule 2).
-        # NOTE: the 0.75 constant is load-bearing — the reward weights (0.55/0.45) were
-        # tuned against fog's measured strength at this exact value. Do not change it
-        # without re-running the swing analysis and re-balancing the weights.
-        alpha = 0.75 * intensity
+        # Target skin tone built from each pixel's own brightness, so the figure keeps
+        # its light/dark shading (folds, shadows) instead of going flat. Skin: R>G>B.
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        tr = np.clip(lum * 1.12, 0, 255)
+        tg = np.clip(lum * 0.80, 0, 255)
+        tb = np.clip(lum * 0.66, 0, 255)
 
-        # Alpha blend: each output pixel is a weighted average of original and fog.
-        blended = arr * (1.0 - alpha) + haze * alpha
-
-        # Clip back into the valid 0-255 range and convert to uint8 to make a real image.
-        return Image.fromarray(np.clip(blended, 0, 255).astype(np.uint8))
+        out = arr.copy()
+        out[..., 0] = np.where(mask, r * (1 - intensity) + tr * intensity, r)
+        out[..., 1] = np.where(mask, g * (1 - intensity) + tg * intensity, g)
+        out[..., 2] = np.where(mask, b * (1 - intensity) + tb * intensity, b)
+        return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 
 class CompositeTransform:
@@ -390,7 +391,7 @@ TRANSFORM_REGISTRY = {
     "saturation": SaturationTransform(),
     "shadow": ShadowTransform(),
     "occlusion": OcclusionTransform(),
-    "fog": FogTransform(),  # Red Team "fool the human" action — fades the green tell
+    "recolor": RecolorTransform(),  # Red Team human channel — skin-tones the green tell
 }
 
 
@@ -492,7 +493,7 @@ def hue_proxy(image: Image.Image, mask: np.ndarray) -> float:
     and low values mean they are still vividly green (reads as a zombie).
 
     IMPORTANT: the mask must be computed ONCE on the ORIGINAL image and then reused
-    on every edited version. If you recomputed the mask on a fogged image, the green
+    on every edited version. If you recomputed the mask on the edited image, the green
     would already be gone, the mask would be empty, and this would trivially return
     1.0 — measuring nothing. Freezing the mask forces the honest question: did the
     edit actually push the character's pixels away from green?
