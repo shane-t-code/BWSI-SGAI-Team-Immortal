@@ -44,8 +44,10 @@ _root = Path(__file__).resolve().parent.parent
 if str(_root) not in sys.path:
     sys.path.insert(0, str(_root))
 
-ZOMBIE_TIERS = (1, 3, 6)   # malice budgets; tier 0 is the real-human control
-HUMAN_TIER = 0
+HUMAN_TIER = 0   # tier 0 = unedited real human (the control)
+# NOTE: the zombie malice tiers are read from the pool metadata at runtime, never
+# hardcoded here — generate_rl_pool.py owns them, and duplicating the list in two
+# files is exactly how they silently drift apart.
 
 # CNN predicted class -> advisory line. One line per thing the CNN can actually say.
 THREAT_TEXT = {
@@ -92,12 +94,16 @@ def build_sessions(meta: pd.DataFrame, per_tier: int, n_sessions: int, seed: int
     zombies = meta[~meta.ground_truth_human]
     humans = meta[meta.ground_truth_human]
 
+    # Read the malice tiers straight from the pool — whatever generate_rl_pool.py
+    # produced is the truth, so changing tiers there can never break this script.
+    zombie_tiers = sorted(int(t) for t in zombies.malice_tier.unique())
+
     zombie_sources = sorted(zombies.source.unique())
     human_sources = sorted(humans.source.unique())
     rng.shuffle(zombie_sources)
     rng.shuffle(human_sources)
 
-    per_session = per_tier * len(ZOMBIE_TIERS)          # zombies per session
+    per_session = per_tier * len(zombie_tiers)          # zombies per session
     need = n_sessions * per_session                      # ... and the same many humans
     if need > len(zombie_sources):
         raise SystemExit(
@@ -115,7 +121,7 @@ def build_sessions(meta: pd.DataFrame, per_tier: int, n_sessions: int, seed: int
     for session in range(1, n_sessions + 1):
         # --- zombies: per_tier distinct sources at each malice tier ---
         session_rows = []
-        for tier in ZOMBIE_TIERS:
+        for tier in zombie_tiers:
             for _ in range(per_tier):
                 src = zombie_sources[zi]; zi += 1
                 row = zombies[(zombies.source == src)
@@ -194,7 +200,7 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     print("\nassistant reliability by tier (what SCAN/AI panel will tell players):")
     print(sets.groupby("malice_tier")["cnn_correct"].agg(["size", "mean"]).round(3))
     print("\nsample threat lines:")
-    for tier in (0, 1, 6):
+    for tier in sorted(sets.malice_tier.unique()):
         r = sets[sets.malice_tier == tier].iloc[0]
         truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
         print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")

@@ -134,7 +134,19 @@ class RotationTransform(ImageTransform):
         angle = (intensity - 0.5) * 30.0
         if abs(angle) < 0.1:
             return image
-        return image.rotate(angle, expand=False, fillcolor=(128, 128, 128))
+        # Fill the corners that open up with MIRRORED scene content, not flat grey.
+        # Flat grey wedges make the frame look tampered-with rather than "shot at an
+        # angle" (Rule 5), and they advertise that an edit happened.
+        # Verified the CNN reacts to the TILT, not the fill: grey wedges painted on an
+        # upright image move P(healthy) 0.093 -> 0.089 (i.e. nothing), while a
+        # wedge-free tilt reproduces the whole effect (0.639 vs 0.627 grey-filled).
+        arr = np.array(image.convert("RGB"))
+        h, w = arr.shape[:2]
+        padded = np.pad(arr, ((h // 2, h // 2), (w // 2, w // 2), (0, 0)), mode="reflect")
+        rotated = Image.fromarray(padded).rotate(angle, expand=False)
+        big_w, big_h = rotated.size
+        left, top = (big_w - w) // 2, (big_h - h) // 2
+        return rotated.crop((left, top, left + w, top + h))
 
 
 class CropTransform(ImageTransform):

@@ -59,7 +59,13 @@ class AdversarialEnv(Env):
     W_AI = 0.45            # weight on P(healthy) (how much the CNN is fooled)
 
     # ----- budget -----------------------------------------------------------
-    MAX_BUDGET = 6         # fixed training budget; also normalizes the obs slot.
+    # 10 = enough to max BOTH channels (rotation caps at 12 deg = 6 edits, recolor
+    # caps at 1.0 = 4 edits). This matters: at budget 6 the agent had to choose, and
+    # because hue_proxy saturates around recolor 0.75 it stopped recoloring there and
+    # spent the rest on rotation — leaving tier-6 figures visibly olive. At 10, once
+    # rotation hits its cap the mask makes it illegal, so the surplus is FORCED into
+    # recolor and drives it to 1.0. Top tier now fools the human AND the CNN.
+    MAX_BUDGET = 10        # fixed training budget; also normalizes the obs slot.
 
     OBS_SIZE = 9  # [angle, recolor, budget, Pz, Ph, Pi, Pc, look_cw, look_ccw]
 

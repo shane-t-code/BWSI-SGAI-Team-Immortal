@@ -37,9 +37,10 @@ from models.image_transforms import TRANSFORM_REGISTRY, green_mask, hue_proxy  #
 from game_interfaces.adversarial_env import AdversarialEnv  # noqa: E402
 
 # Malice tiers ARE the edit counts: we snapshot the agent's rollout after this many
-# edits. Matches docs/data-logging-schema.md, where malice_tier in {0, 1, 3, 6} and
-# tier 0 = an unedited real human (the control).
-SNAPSHOT_EDITS = (1, 3, 6)
+# edits. malice_tier in {0, 1, 5, 10}; tier 0 = an unedited real human (the control).
+# 10 is the top tier because that's where both channels max out (6 rotation edits to
+# reach the 12 deg cap + 4 recolor edits to reach full skin tone).
+SNAPSHOT_EDITS = (1, 5, 10)
 HUMAN_TIER = 0
 ROT_ANGLE = 12.0                              # tilt magnitude for human controls
 CLASS_NAMES = ["zombie", "healthy", "injured", "corpse"]

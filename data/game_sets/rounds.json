@@ -16,7 +16,7 @@
       "image": "test_00048_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.86,
+      "aiConfidence": 86.88,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -27,7 +27,7 @@
       "image": "test_00058_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 98.7,
+      "aiConfidence": 87.05,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -38,7 +38,7 @@
       "image": "test_00116_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 91.52,
+      "aiConfidence": 91.83,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -49,51 +49,40 @@
       "image": "test_00199_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.86,
+      "aiConfidence": 91.53,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00016_tier3",
-      "image": "test_00016_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00016_tier5",
+      "image": "test_00016_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 86.88,
+      "aiConfidence": 86.8,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00149_tier3",
-      "image": "test_00149_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00149_tier5",
+      "image": "test_00149_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.64,
+      "aiConfidence": 81.51,
       "threats": [
-        "Overgrowth Signature Detected",
+        "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00110_tier3",
-      "image": "test_00110_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00110_tier5",
+      "image": "test_00110_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.51,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00060_tier3",
-      "image": "test_00060_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 46.7,
+      "aiConfidence": 49.38,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -101,66 +90,77 @@
       ]
     },
     {
-      "subjectId": "test_00029_tier3",
-      "image": "test_00029_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00060_tier5",
+      "image": "test_00060_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 92.99,
+      "aiConfidence": 62.78,
+      "threats": [
+        "No Anomalies Detected",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00029_tier5",
+      "image": "test_00029_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 96.83,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00022_tier6",
-      "image": "test_00022_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00022_tier10",
+      "image": "test_00022_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 79.48,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00156_tier6",
-      "image": "test_00156_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 99.88,
+      "aiConfidence": 88.05,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00018_tier6",
-      "image": "test_00018_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00156_tier10",
+      "image": "test_00156_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 82.12,
+      "aiConfidence": 99.61,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00091_tier6",
-      "image": "test_00091_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00018_tier10",
+      "image": "test_00018_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 96.2,
+      "aiConfidence": 75.38,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00112_tier6",
-      "image": "test_00112_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00091_tier10",
+      "image": "test_00091_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.32,
+      "aiConfidence": 98.26,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00112_tier10",
+      "image": "test_00112_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 99.19,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -171,7 +171,7 @@
       "image": "test_00194_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 84.83,
+      "aiConfidence": 85.96,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -182,9 +182,10 @@
       "image": "test_00055_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 62.91,
+      "aiConfidence": 48.03,
       "threats": [
         "Overgrowth Signature Detected",
+        "Ambiguous Classification",
         "Low AI Confidence"
       ]
     },
@@ -193,7 +194,7 @@
       "image": "test_00063_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 83.12,
+      "aiConfidence": 85.8,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -204,7 +205,7 @@
       "image": "test_00185_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 85.84,
+      "aiConfidence": 89.02,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -215,9 +216,9 @@
       "image": "test_00150_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 54.24,
+      "aiConfidence": 54.13,
       "threats": [
-        "No Anomalies Detected",
+        "Overgrowth Signature Detected",
         "Ambiguous Classification",
         "Low AI Confidence"
       ]
@@ -227,7 +228,7 @@
       "image": "test_00196_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 98.08,
+      "aiConfidence": 97.27,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -238,7 +239,7 @@
       "image": "test_00069_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 85.58,
+      "aiConfidence": 88.54,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -249,7 +250,7 @@
       "image": "test_00171_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 98.09,
+      "aiConfidence": 98.31,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -260,66 +261,65 @@
       "image": "test_00132_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 90.66,
+      "aiConfidence": 96.75,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00023_tier0",
-      "image": "test_00023_tier0.png",
+      "subjectId": "test_00023_tier0_tilt",
+      "image": "test_00023_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.56,
+      "aiConfidence": 72.26,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00085_tier0",
-      "image": "test_00085_tier0.png",
+      "subjectId": "test_00085_tier0_tilt",
+      "image": "test_00085_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 71.3,
+      "aiConfidence": 96.77,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00011_tier0",
-      "image": "test_00011_tier0.png",
+      "subjectId": "test_00011_tier0_tilt",
+      "image": "test_00011_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.81,
+      "aiConfidence": 99.71,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00186_tier0",
-      "image": "test_00186_tier0.png",
+      "subjectId": "test_00186_tier0_tilt",
+      "image": "test_00186_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 87.96,
+      "aiConfidence": 82.32,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00190_tier0",
-      "image": "test_00190_tier0.png",
+      "subjectId": "test_00190_tier0_tilt",
+      "image": "test_00190_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 49.95,
+      "aiConfidence": 85.23,
       "threats": [
-        "No Vital Signs Detected",
-        "Ambiguous Classification",
-        "Low AI Confidence"
+        "No Anomalies Detected",
+        "High AI Confidence"
       ]
     },
     {
@@ -362,7 +362,7 @@
       "image": "test_00046_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 93.74,
+      "aiConfidence": 91.93,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -391,99 +391,33 @@
       ]
     },
     {
-      "subjectId": "test_00197_tier3",
-      "image": "test_00197_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00197_tier5",
+      "image": "test_00197_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.91,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00177_tier3",
-      "image": "test_00177_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 99.38,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00121_tier3",
-      "image": "test_00121_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 99.98,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00180_tier3",
-      "image": "test_00180_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 67.99,
+      "aiConfidence": 66.91,
       "threats": [
         "No Anomalies Detected",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00167_tier3",
-      "image": "test_00167_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00177_tier5",
+      "image": "test_00177_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.72,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00047_tier6",
-      "image": "test_00047_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 96.29,
+      "aiConfidence": 68.8,
       "threats": [
         "No Anomalies Detected",
-        "High AI Confidence"
+        "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00161_tier6",
-      "image": "test_00161_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00121_tier5",
+      "image": "test_00121_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 94.69,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00179_tier6",
-      "image": "test_00179_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 92.16,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00037_tier6",
-      "image": "test_00037_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 44.89,
+      "aiConfidence": 57.22,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -491,13 +425,81 @@
       ]
     },
     {
-      "subjectId": "test_00044_tier6",
-      "image": "test_00044_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00180_tier5",
+      "image": "test_00180_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 50.94,
+      "aiConfidence": 42.77,
       "threats": [
-        "Overgrowth Signature Detected",
+        "No Anomalies Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00167_tier5",
+      "image": "test_00167_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 97.44,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00047_tier10",
+      "image": "test_00047_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 96.8,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00161_tier10",
+      "image": "test_00161_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 68.62,
+      "threats": [
+        "No Anomalies Detected",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00179_tier10",
+      "image": "test_00179_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 53.41,
+      "threats": [
+        "No Anomalies Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00037_tier10",
+      "image": "test_00037_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 82.68,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00044_tier10",
+      "image": "test_00044_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 61.45,
+      "threats": [
+        "No Anomalies Detected",
         "Ambiguous Classification",
         "Low AI Confidence"
       ]
@@ -507,7 +509,7 @@
       "image": "test_00111_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 77.36,
+      "aiConfidence": 72.64,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -518,10 +520,10 @@
       "image": "test_00126_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 85.51,
+      "aiConfidence": 67.87,
       "threats": [
         "No Anomalies Detected",
-        "High AI Confidence"
+        "Low AI Confidence"
       ]
     },
     {
@@ -529,9 +531,9 @@
       "image": "test_00053_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 52.9,
+      "aiConfidence": 54.37,
       "threats": [
-        "Overgrowth Signature Detected",
+        "No Anomalies Detected",
         "Ambiguous Classification",
         "Low AI Confidence"
       ]
@@ -541,7 +543,7 @@
       "image": "test_00102_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.61,
+      "aiConfidence": 99.68,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -552,7 +554,7 @@
       "image": "test_00012_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 77.44,
+      "aiConfidence": 83.52,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -563,7 +565,7 @@
       "image": "test_00184_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 90.01,
+      "aiConfidence": 83.3,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -574,53 +576,53 @@
       "image": "test_00165_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.62,
+      "aiConfidence": 98.46,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00130_tier0",
-      "image": "test_00130_tier0.png",
+      "subjectId": "test_00130_tier0_tilt",
+      "image": "test_00130_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.82,
+      "aiConfidence": 97.21,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00178_tier0",
-      "image": "test_00178_tier0.png",
+      "subjectId": "test_00178_tier0_tilt",
+      "image": "test_00178_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.7,
+      "aiConfidence": 98.01,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00003_tier0",
-      "image": "test_00003_tier0.png",
+      "subjectId": "test_00003_tier0_tilt",
+      "image": "test_00003_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 93.97,
+      "aiConfidence": 99.56,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00169_tier0",
-      "image": "test_00169_tier0.png",
+      "subjectId": "test_00169_tier0_tilt",
+      "image": "test_00169_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.99,
+      "aiConfidence": 74.95,
       "threats": [
-        "Trauma Indicators Present",
+        "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
@@ -686,7 +688,7 @@
       "image": "test_00087_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.95,
+      "aiConfidence": 91.96,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -697,7 +699,7 @@
       "image": "test_00095_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 81.43,
+      "aiConfidence": 94.1,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -708,7 +710,7 @@
       "image": "test_00133_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 98.71,
+      "aiConfidence": 76.78,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -719,118 +721,118 @@
       "image": "test_00014_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 98.09,
+      "aiConfidence": 61.75,
       "threats": [
         "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00173_tier3",
-      "image": "test_00173_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 97.25,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00113_tier3",
-      "image": "test_00113_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 93.51,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00033_tier3",
-      "image": "test_00033_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 89.05,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00166_tier3",
-      "image": "test_00166_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 73.62,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00092_tier3",
-      "image": "test_00092_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 83.3,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00031_tier6",
-      "image": "test_00031_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 89.47,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00159_tier6",
-      "image": "test_00159_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 51.52,
-      "threats": [
-        "No Vital Signs Detected",
         "Ambiguous Classification",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00101_tier6",
-      "image": "test_00101_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00173_tier5",
+      "image": "test_00173_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 98.82,
+      "aiConfidence": 70.65,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00009_tier6",
-      "image": "test_00009_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00113_tier5",
+      "image": "test_00113_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 97.83,
+      "aiConfidence": 97.82,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00005_tier6",
-      "image": "test_00005_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00033_tier5",
+      "image": "test_00033_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 89.11,
+      "aiConfidence": 79.04,
+      "threats": [
+        "No Vital Signs Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00166_tier5",
+      "image": "test_00166_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 97.7,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00092_tier5",
+      "image": "test_00092_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 58.55,
+      "threats": [
+        "No Vital Signs Detected",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00031_tier10",
+      "image": "test_00031_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 97.33,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00159_tier10",
+      "image": "test_00159_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 90.53,
+      "threats": [
+        "No Vital Signs Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00101_tier10",
+      "image": "test_00101_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 98.16,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00009_tier10",
+      "image": "test_00009_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 96.47,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00005_tier10",
+      "image": "test_00005_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 96.39,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -841,7 +843,7 @@
       "image": "test_00094_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 80.38,
+      "aiConfidence": 78.93,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -852,7 +854,7 @@
       "image": "test_00151_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 94.19,
+      "aiConfidence": 94.89,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -863,7 +865,7 @@
       "image": "test_00115_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.76,
+      "aiConfidence": 99.62,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -874,7 +876,7 @@
       "image": "test_00006_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 34.82,
+      "aiConfidence": 35.14,
       "threats": [
         "Trauma Indicators Present",
         "Ambiguous Classification",
@@ -886,7 +888,7 @@
       "image": "test_00160_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 95.32,
+      "aiConfidence": 96.86,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -897,11 +899,10 @@
       "image": "test_00127_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 43.36,
+      "aiConfidence": 80.0,
       "threats": [
         "No Vital Signs Detected",
-        "Ambiguous Classification",
-        "Low AI Confidence"
+        "High AI Confidence"
       ]
     },
     {
@@ -909,7 +910,7 @@
       "image": "test_00191_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.3,
+      "aiConfidence": 99.73,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -931,62 +932,64 @@
       "image": "test_00147_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 73.59,
+      "aiConfidence": 85.83,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00010_tier0",
-      "image": "test_00010_tier0.png",
+      "subjectId": "test_00010_tier0_tilt",
+      "image": "test_00010_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.61,
+      "aiConfidence": 54.38,
+      "threats": [
+        "No Vital Signs Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00054_tier0_tilt",
+      "image": "test_00054_tier0_tilt.png",
+      "tier": 0,
+      "groundTruthIsHuman": true,
+      "aiConfidence": 53.86,
+      "threats": [
+        "No Anomalies Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00119_tier0_tilt",
+      "image": "test_00119_tier0_tilt.png",
+      "tier": 0,
+      "groundTruthIsHuman": true,
+      "aiConfidence": 94.98,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00054_tier0",
-      "image": "test_00054_tier0.png",
+      "subjectId": "test_00128_tier0_tilt",
+      "image": "test_00128_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 91.45,
+      "aiConfidence": 95.38,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00119_tier0",
-      "image": "test_00119_tier0.png",
+      "subjectId": "test_00008_tier0_tilt",
+      "image": "test_00008_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.67,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00128_tier0",
-      "image": "test_00128_tier0.png",
-      "tier": 0,
-      "groundTruthIsHuman": true,
-      "aiConfidence": 98.87,
-      "threats": [
-        "Trauma Indicators Present",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00008_tier0",
-      "image": "test_00008_tier0.png",
-      "tier": 0,
-      "groundTruthIsHuman": true,
-      "aiConfidence": 99.84,
+      "aiConfidence": 85.85,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1010,7 +1013,7 @@
       "image": "test_00103_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.82,
+      "aiConfidence": 82.99,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1032,10 +1035,10 @@
       "image": "test_00089_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 100.0,
+      "aiConfidence": 66.29,
       "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
+        "No Anomalies Detected",
+        "Low AI Confidence"
       ]
     },
     {
@@ -1043,7 +1046,7 @@
       "image": "test_00093_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.95,
+      "aiConfidence": 86.4,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1061,55 +1064,91 @@
       ]
     },
     {
-      "subjectId": "test_00157_tier3",
-      "image": "test_00157_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00157_tier5",
+      "image": "test_00157_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.86,
+      "aiConfidence": 99.32,
       "threats": [
-        "Overgrowth Signature Detected",
+        "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00198_tier3",
-      "image": "test_00198_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00198_tier5",
+      "image": "test_00198_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 66.8,
+      "aiConfidence": 52.21,
+      "threats": [
+        "No Vital Signs Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00013_tier5",
+      "image": "test_00013_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 45.61,
+      "threats": [
+        "Overgrowth Signature Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00004_tier5",
+      "image": "test_00004_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 84.15,
+      "threats": [
+        "No Vital Signs Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00030_tier5",
+      "image": "test_00030_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 55.45,
+      "threats": [
+        "No Vital Signs Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00024_tier10",
+      "image": "test_00024_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 66.91,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00013_tier3",
-      "image": "test_00013_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00106_tier10",
+      "image": "test_00106_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.7,
+      "aiConfidence": 94.9,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00004_tier3",
-      "image": "test_00004_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00175_tier10",
+      "image": "test_00175_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.34,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00030_tier3",
-      "image": "test_00030_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 57.58,
+      "aiConfidence": 59.92,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -1117,56 +1156,22 @@
       ]
     },
     {
-      "subjectId": "test_00024_tier6",
-      "image": "test_00024_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00007_tier10",
+      "image": "test_00007_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 95.51,
+      "aiConfidence": 71.83,
       "threats": [
-        "No Vital Signs Detected",
+        "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00106_tier6",
-      "image": "test_00106_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00144_tier10",
+      "image": "test_00144_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 90.53,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00175_tier6",
-      "image": "test_00175_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 87.31,
-      "threats": [
-        "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00007_tier6",
-      "image": "test_00007_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 61.83,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "Ambiguous Classification",
-        "Low AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00144_tier6",
-      "image": "test_00144_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 90.4,
+      "aiConfidence": 91.86,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1177,7 +1182,7 @@
       "image": "test_00050_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 83.31,
+      "aiConfidence": 77.63,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1188,7 +1193,7 @@
       "image": "test_00141_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 90.31,
+      "aiConfidence": 90.3,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1199,7 +1204,7 @@
       "image": "test_00104_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 82.02,
+      "aiConfidence": 87.15,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1210,7 +1215,7 @@
       "image": "test_00154_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 93.54,
+      "aiConfidence": 94.64,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1221,7 +1226,7 @@
       "image": "test_00000_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 94.4,
+      "aiConfidence": 93.19,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1232,7 +1237,7 @@
       "image": "test_00148_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 98.79,
+      "aiConfidence": 99.42,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1243,73 +1248,73 @@
       "image": "test_00100_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.95,
+      "aiConfidence": 98.04,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00020_tier0",
-      "image": "test_00020_tier0.png",
+      "subjectId": "test_00020_tier0_tilt",
+      "image": "test_00020_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.99,
+      "aiConfidence": 95.68,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00120_tier0",
-      "image": "test_00120_tier0.png",
+      "subjectId": "test_00120_tier0_tilt",
+      "image": "test_00120_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.92,
+      "aiConfidence": 97.76,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00002_tier0",
-      "image": "test_00002_tier0.png",
+      "subjectId": "test_00002_tier0_tilt",
+      "image": "test_00002_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.97,
+      "aiConfidence": 95.86,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00038_tier0",
-      "image": "test_00038_tier0.png",
+      "subjectId": "test_00038_tier0_tilt",
+      "image": "test_00038_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.77,
+      "aiConfidence": 99.11,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00057_tier0",
-      "image": "test_00057_tier0.png",
+      "subjectId": "test_00057_tier0_tilt",
+      "image": "test_00057_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.37,
+      "aiConfidence": 95.15,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00028_tier0",
-      "image": "test_00028_tier0.png",
+      "subjectId": "test_00028_tier0_tilt",
+      "image": "test_00028_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.16,
+      "aiConfidence": 99.88,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1344,10 +1349,11 @@
       "image": "test_00170_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 93.57,
+      "aiConfidence": 52.56,
       "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
+        "No Anomalies Detected",
+        "Ambiguous Classification",
+        "Low AI Confidence"
       ]
     },
     {
@@ -1366,10 +1372,10 @@
       "image": "test_00045_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 83.62,
+      "aiConfidence": 66.85,
       "threats": [
         "No Anomalies Detected",
-        "High AI Confidence"
+        "Low AI Confidence"
       ]
     },
     {
@@ -1377,10 +1383,11 @@
       "image": "test_00061_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.53,
+      "aiConfidence": 53.47,
       "threats": [
         "Overgrowth Signature Detected",
-        "High AI Confidence"
+        "Ambiguous Classification",
+        "Low AI Confidence"
       ]
     },
     {
@@ -1395,22 +1402,22 @@
       ]
     },
     {
-      "subjectId": "test_00140_tier3",
-      "image": "test_00140_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00140_tier5",
+      "image": "test_00140_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.3,
+      "aiConfidence": 99.97,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00152_tier3",
-      "image": "test_00152_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00152_tier5",
+      "image": "test_00152_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 52.59,
+      "aiConfidence": 47.27,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -1418,9 +1425,9 @@
       ]
     },
     {
-      "subjectId": "test_00077_tier3",
-      "image": "test_00077_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00077_tier5",
+      "image": "test_00077_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.87,
       "threats": [
@@ -1429,77 +1436,77 @@
       ]
     },
     {
-      "subjectId": "test_00071_tier3",
-      "image": "test_00071_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00071_tier5",
+      "image": "test_00071_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.48,
+      "aiConfidence": 99.82,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00099_tier3",
-      "image": "test_00099_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00099_tier5",
+      "image": "test_00099_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 90.93,
+      "aiConfidence": 68.96,
       "threats": [
         "No Vital Signs Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00195_tier6",
-      "image": "test_00195_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 65.95,
-      "threats": [
-        "No Anomalies Detected",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00072_tier6",
-      "image": "test_00072_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00195_tier10",
+      "image": "test_00195_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 86.83,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00168_tier6",
-      "image": "test_00168_tier6.png",
-      "tier": 6,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 86.01,
+      "aiConfidence": 97.8,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00122_tier6",
-      "image": "test_00122_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00072_tier10",
+      "image": "test_00072_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 85.43,
+      "aiConfidence": 94.36,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00164_tier6",
-      "image": "test_00164_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00168_tier10",
+      "image": "test_00168_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 78.94,
+      "aiConfidence": 73.13,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00122_tier10",
+      "image": "test_00122_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 97.81,
+      "threats": [
+        "No Vital Signs Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00164_tier10",
+      "image": "test_00164_tier10.png",
+      "tier": 10,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 80.2,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1510,7 +1517,7 @@
       "image": "test_00107_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 84.24,
+      "aiConfidence": 92.49,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1521,7 +1528,7 @@
       "image": "test_00052_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.28,
+      "aiConfidence": 99.34,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1532,7 +1539,7 @@
       "image": "test_00136_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.26,
+      "aiConfidence": 97.99,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1543,7 +1550,7 @@
       "image": "test_00163_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.05,
+      "aiConfidence": 97.59,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1554,7 +1561,7 @@
       "image": "test_00158_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 64.26,
+      "aiConfidence": 68.34,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -1565,7 +1572,7 @@
       "image": "test_00143_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 85.83,
+      "aiConfidence": 83.78,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1576,7 +1583,7 @@
       "image": "test_00083_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 78.76,
+      "aiConfidence": 87.64,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1587,7 +1594,7 @@
       "image": "test_00040_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 71.89,
+      "aiConfidence": 84.64,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1598,7 +1605,7 @@
       "image": "test_00056_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.71,
+      "aiConfidence": 99.38,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1609,18 +1616,18 @@
       "image": "test_00162_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 62.58,
+      "aiConfidence": 62.92,
       "threats": [
         "No Anomalies Detected",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00155_tier0",
-      "image": "test_00155_tier0.png",
+      "subjectId": "test_00155_tier0_tilt",
+      "image": "test_00155_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.95,
+      "aiConfidence": 84.56,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1677,7 +1684,7 @@
       "image": "test_00027_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.45,
+      "aiConfidence": 89.91,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1688,7 +1695,7 @@
       "image": "test_00137_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.98,
+      "aiConfidence": 86.82,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1699,7 +1706,7 @@
       "image": "test_00105_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.72,
+      "aiConfidence": 83.43,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1710,7 +1717,7 @@
       "image": "test_00192_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.89,
+      "aiConfidence": 95.42,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1721,63 +1728,64 @@
       "image": "test_00097_tier1.png",
       "tier": 1,
       "groundTruthIsHuman": false,
-      "aiConfidence": 97.67,
+      "aiConfidence": 97.45,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00088_tier3",
-      "image": "test_00088_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00088_tier5",
+      "image": "test_00088_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.54,
-      "threats": [
-        "Overgrowth Signature Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00181_tier3",
-      "image": "test_00181_tier3.png",
-      "tier": 3,
-      "groundTruthIsHuman": false,
-      "aiConfidence": 59.68,
+      "aiConfidence": 95.52,
       "threats": [
         "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00181_tier5",
+      "image": "test_00181_tier5.png",
+      "tier": 5,
+      "groundTruthIsHuman": false,
+      "aiConfidence": 55.38,
+      "threats": [
+        "Overgrowth Signature Detected",
         "Ambiguous Classification",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00079_tier3",
-      "image": "test_00079_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00079_tier5",
+      "image": "test_00079_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.62,
+      "aiConfidence": 93.2,
       "threats": [
-        "Overgrowth Signature Detected",
+        "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00108_tier3",
-      "image": "test_00108_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00108_tier5",
+      "image": "test_00108_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.97,
+      "aiConfidence": 54.46,
       "threats": [
         "Overgrowth Signature Detected",
-        "High AI Confidence"
+        "Ambiguous Classification",
+        "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00034_tier3",
-      "image": "test_00034_tier3.png",
-      "tier": 3,
+      "subjectId": "test_00034_tier5",
+      "image": "test_00034_tier5.png",
+      "tier": 5,
       "groundTruthIsHuman": false,
-      "aiConfidence": 60.14,
+      "aiConfidence": 57.2,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -1785,11 +1793,11 @@
       ]
     },
     {
-      "subjectId": "test_00076_tier6",
-      "image": "test_00076_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00076_tier10",
+      "image": "test_00076_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 45.16,
+      "aiConfidence": 40.42,
       "threats": [
         "Trauma Indicators Present",
         "Ambiguous Classification",
@@ -1797,49 +1805,47 @@
       ]
     },
     {
-      "subjectId": "test_00086_tier6",
-      "image": "test_00086_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00086_tier10",
+      "image": "test_00086_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 98.7,
+      "aiConfidence": 98.93,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00032_tier6",
-      "image": "test_00032_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00032_tier10",
+      "image": "test_00032_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 99.37,
+      "aiConfidence": 99.44,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00042_tier6",
-      "image": "test_00042_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00042_tier10",
+      "image": "test_00042_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 54.24,
+      "aiConfidence": 97.78,
       "threats": [
         "No Anomalies Detected",
-        "Ambiguous Classification",
-        "Low AI Confidence"
+        "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00080_tier6",
-      "image": "test_00080_tier6.png",
-      "tier": 6,
+      "subjectId": "test_00080_tier10",
+      "image": "test_00080_tier10.png",
+      "tier": 10,
       "groundTruthIsHuman": false,
-      "aiConfidence": 31.96,
+      "aiConfidence": 85.79,
       "threats": [
-        "Trauma Indicators Present",
-        "Ambiguous Classification",
-        "Low AI Confidence"
+        "No Anomalies Detected",
+        "High AI Confidence"
       ]
     },
     {
@@ -1847,7 +1853,7 @@
       "image": "test_00131_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 47.04,
+      "aiConfidence": 42.72,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -1859,7 +1865,7 @@
       "image": "test_00081_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 95.02,
+      "aiConfidence": 96.53,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1870,7 +1876,7 @@
       "image": "test_00129_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 97.72,
+      "aiConfidence": 97.88,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1881,7 +1887,7 @@
       "image": "test_00001_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 98.86,
+      "aiConfidence": 98.77,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1892,7 +1898,7 @@
       "image": "test_00035_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 40.51,
+      "aiConfidence": 35.62,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -1904,7 +1910,7 @@
       "image": "test_00153_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.27,
+      "aiConfidence": 99.08,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1915,7 +1921,7 @@
       "image": "test_00084_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 84.88,
+      "aiConfidence": 90.0,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1926,87 +1932,89 @@
       "image": "test_00189_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 85.54,
+      "aiConfidence": 83.33,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00193_tier0",
-      "image": "test_00193_tier0.png",
+      "subjectId": "test_00193_tier0_tilt",
+      "image": "test_00193_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 63.76,
+      "aiConfidence": 71.14,
       "threats": [
         "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00068_tier0_tilt",
+      "image": "test_00068_tier0_tilt.png",
+      "tier": 0,
+      "groundTruthIsHuman": true,
+      "aiConfidence": 98.1,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00021_tier0_tilt",
+      "image": "test_00021_tier0_tilt.png",
+      "tier": 0,
+      "groundTruthIsHuman": true,
+      "aiConfidence": 92.98,
+      "threats": [
+        "No Anomalies Detected",
+        "High AI Confidence"
+      ]
+    },
+    {
+      "subjectId": "test_00174_tier0_tilt",
+      "image": "test_00174_tier0_tilt.png",
+      "tier": 0,
+      "groundTruthIsHuman": true,
+      "aiConfidence": 46.73,
+      "threats": [
+        "No Anomalies Detected",
+        "Ambiguous Classification",
         "Low AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00068_tier0",
-      "image": "test_00068_tier0.png",
+      "subjectId": "test_00096_tier0_tilt",
+      "image": "test_00096_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 99.99,
+      "aiConfidence": 91.85,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00021_tier0",
-      "image": "test_00021_tier0.png",
+      "subjectId": "test_00123_tier0_tilt",
+      "image": "test_00123_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 78.17,
+      "aiConfidence": 98.78,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
       ]
     },
     {
-      "subjectId": "test_00174_tier0",
-      "image": "test_00174_tier0.png",
+      "subjectId": "test_00025_tier0_tilt",
+      "image": "test_00025_tier0_tilt.png",
       "tier": 0,
       "groundTruthIsHuman": true,
-      "aiConfidence": 98.85,
-      "threats": [
-        "Trauma Indicators Present",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00096_tier0",
-      "image": "test_00096_tier0.png",
-      "tier": 0,
-      "groundTruthIsHuman": true,
-      "aiConfidence": 99.98,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00123_tier0",
-      "image": "test_00123_tier0.png",
-      "tier": 0,
-      "groundTruthIsHuman": true,
-      "aiConfidence": 99.79,
-      "threats": [
-        "No Anomalies Detected",
-        "High AI Confidence"
-      ]
-    },
-    {
-      "subjectId": "test_00025_tier0",
-      "image": "test_00025_tier0.png",
-      "tier": 0,
-      "groundTruthIsHuman": true,
-      "aiConfidence": 79.56,
+      "aiConfidence": 37.79,
       "threats": [
         "No Vital Signs Detected",
-        "High AI Confidence"
+        "Ambiguous Classification",
+        "Low AI Confidence"
       ]
     }
   ]
