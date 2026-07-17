@@ -5,6 +5,10 @@ accuracy-vs-tier and human-alone-vs-human+AI comparison described in
 docs/trial-protocol.md. Run directly against an exported trial log:
 
     python -m analysis.analyze_results path/to/trials.csv
+
+Prints two tables: the PRIMARY result (each participant's first session only
+— see filter_first_session()) and an EXPLORATORY one pooling every session,
+including repeats.
 """
 
 from __future__ import annotations
@@ -27,6 +31,38 @@ def load_trials(path: str) -> pd.DataFrame:
     """
     df = pd.read_csv(path)
     return flag_trials(df)
+
+
+def filter_first_session(df: pd.DataFrame) -> pd.DataFrame:
+    """Restrict to each participant's earliest session — the primary analysis set.
+
+    Repeat sessions from the same ``participant_id`` are kept in the raw log
+    (useful exploratory data — e.g. "does practice beat the disguise?") but
+    must be excluded from the primary accuracy/response-time comparison:
+    pooling every repeat session at the trial level would silently overweight
+    whoever replayed the most. See "Participant tracking" in
+    docs/data-logging-schema.md.
+
+    Args:
+        df: Trial-level DataFrame with ``participant_id``, ``session_id``,
+            and ``timestamp`` columns.
+
+    Returns:
+        The subset of df whose ``session_id`` is that participant's earliest
+        (by ``timestamp``).
+    """
+    session_starts = (
+        df.assign(_ts=pd.to_datetime(df["timestamp"]))
+        .groupby(["participant_id", "session_id"])["_ts"]
+        .min()
+        .reset_index()
+    )
+    first_sessions = (
+        session_starts.sort_values("_ts")
+        .groupby("participant_id", as_index=False)
+        .first()[["participant_id", "session_id"]]
+    )
+    return df.merge(first_sessions, on=["participant_id", "session_id"], how="inner")
 
 
 def summarize_by_tier_and_condition(df: pd.DataFrame) -> pd.DataFrame:
@@ -77,8 +113,13 @@ def main(argv: list[str]) -> None:
         print("Usage: python -m analysis.analyze_results <trials.csv>")
         sys.exit(1)
     df = load_trials(argv[1])
-    summary = summarize_by_tier_and_condition(df)
-    print(summary.to_string(index=False))
+
+    print("=== PRIMARY (first session per participant) ===")
+    primary = filter_first_session(df)
+    print(summarize_by_tier_and_condition(primary).to_string(index=False))
+
+    print("\n=== EXPLORATORY (all sessions, including repeats) ===")
+    print(summarize_by_tier_and_condition(df).to_string(index=False))
 
 
 if __name__ == "__main__":
