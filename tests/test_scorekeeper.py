@@ -667,6 +667,7 @@ LOG_COLUMNS = {
     "humanoid_predicted_class",
     "recommended_action",
     "confidence",
+    "confidence_score",
     "humanoid_fp",
     "action",
     "remaining_time",

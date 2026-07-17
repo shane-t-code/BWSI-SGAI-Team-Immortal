@@ -1,3 +1,5 @@
+# hello
+
 """Image transformation functions for adversarial generation.
 
 All transformations follow the 5 rules:
@@ -132,7 +134,19 @@ class RotationTransform(ImageTransform):
         angle = (intensity - 0.5) * 30.0
         if abs(angle) < 0.1:
             return image
-        return image.rotate(angle, expand=False, fillcolor=(128, 128, 128))
+        # Fill the corners that open up with MIRRORED scene content, not flat grey.
+        # Flat grey wedges make the frame look tampered-with rather than "shot at an
+        # angle" (Rule 5), and they advertise that an edit happened.
+        # Verified the CNN reacts to the TILT, not the fill: grey wedges painted on an
+        # upright image move P(healthy) 0.093 -> 0.089 (i.e. nothing), while a
+        # wedge-free tilt reproduces the whole effect (0.639 vs 0.627 grey-filled).
+        arr = np.array(image.convert("RGB"))
+        h, w = arr.shape[:2]
+        padded = np.pad(arr, ((h // 2, h // 2), (w // 2, w // 2), (0, 0)), mode="reflect")
+        rotated = Image.fromarray(padded).rotate(angle, expand=False)
+        big_w, big_h = rotated.size
+        left, top = (big_w - w) // 2, (big_h - h) // 2
+        return rotated.crop((left, top, left + w, top + h))
 
 
 class CropTransform(ImageTransform):
@@ -297,6 +311,51 @@ class OcclusionTransform(ImageTransform):
         return img
 
 
+class RecolorTransform(ImageTransform):
+    """Recolor the character's green skin toward human skin tone (Rule 3).
+
+    The bright-green skin is the single strongest human-visible tell in these scenes.
+    Unlike a global edit, this changes ONLY the figure's pixels and leaves the scene
+    intact, so it fools a human while the CNN — which ignores color — still catches it. Validated in a pilot: human accuracy falls 100% -> ~50% -> 0%
+    across intensity 0.4 / 0.75 / 1.0, while CNN P(healthy) stays ~0.
+
+    Rule 2: keeps the figure present (it stays a figure, just skin-colored).
+    Rule 4: tunable via intensity — this is the "malice budget" dial for the human.
+    """
+
+    def apply(self, image: Image.Image, intensity: float) -> Image.Image:
+        """Blend the character's green pixels toward skin tone.
+
+        Args:
+            image: Input PIL Image.
+            intensity: Recolor amount in [0, 1] (0 = untouched green, 1 = full skin).
+
+        Returns:
+            Recolored image (scene unchanged, figure skin-toned).
+        """
+        arr = np.array(image.convert("RGB")).astype(np.float32)
+        r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
+
+        # Ratio-based green-dominance mask: green must lead BOTH other channels by
+        # >12%. This catches vivid AND shadowed green on the figure while ignoring
+        # faint gray-green ground tints (which barely exceed the other channels).
+        # Green is the only green-dominant thing in-scene, so the scene stays safe.
+        mask = (g > 1.12 * r) & (g > 1.12 * b) & (g > 25)
+
+        # Target skin tone built from each pixel's own brightness, so the figure keeps
+        # its light/dark shading (folds, shadows) instead of going flat. Skin: R>G>B.
+        lum = 0.299 * r + 0.587 * g + 0.114 * b
+        tr = np.clip(lum * 1.12, 0, 255)
+        tg = np.clip(lum * 0.80, 0, 255)
+        tb = np.clip(lum * 0.66, 0, 255)
+
+        out = arr.copy()
+        out[..., 0] = np.where(mask, r * (1 - intensity) + tr * intensity, r)
+        out[..., 1] = np.where(mask, g * (1 - intensity) + tg * intensity, g)
+        out[..., 2] = np.where(mask, b * (1 - intensity) + tb * intensity, b)
+        return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
+
+
 class CompositeTransform:
     """Combines multiple transformations with controlled intensity.
 
@@ -344,6 +403,7 @@ TRANSFORM_REGISTRY = {
     "saturation": SaturationTransform(),
     "shadow": ShadowTransform(),
     "occlusion": OcclusionTransform(),
+    "recolor": RecolorTransform(),  # Red Team human channel — skin-tones the green tell
 }
 
 
@@ -390,3 +450,88 @@ def apply_random_transform(
     transform_name = random.choice(available)
     transform = get_transform(transform_name)
     return transform.apply(image, intensity), transform_name
+
+
+# ---------------------------------------------------------------------------
+# Human-plausibility perception ("does the character still look green?")
+#
+# These two functions are NOT image edits — they MEASURE an image. Together they
+# form the "fool the human" half of the Red Team reward: green_mask finds the
+# character's green pixels on the ORIGINAL zombie, and hue_proxy scores how green
+# those same pixels still look after editing. Prajwal's tier-verification script
+# imports hue_proxy too — this is the single shared definition, so the reward the
+# agent optimizes and the metric he reports can never silently disagree.
+# ---------------------------------------------------------------------------
+
+
+def green_mask(
+    image: Image.Image,
+    hue_low: int = 45,
+    hue_high: int = 115,
+    sat_min: int = 60,
+) -> np.ndarray:
+    """Find the zombie-green pixels in an image.
+
+    "Green" is easiest to detect in HSV color space, where a color is described by
+    Hue (which color on the rainbow), Saturation (how vivid vs. gray), and Value
+    (how bright) — instead of RGB. A pixel counts as zombie-green if its hue is in
+    the green band AND it is saturated enough to be real green (not a washed-out
+    gray that merely leans green).
+
+    Args:
+        image: Input PIL Image.
+        hue_low: Lower edge of the green hue band (PIL's 0-255 hue scale).
+        hue_high: Upper edge of the green hue band.
+        sat_min: Minimum saturation to count as vivid green (filters out gray).
+
+    Returns:
+        A boolean array of shape (height, width): True where the pixel is
+        zombie-green, False elsewhere. Use this as a mask to select those pixels.
+    """
+    # Convert to HSV and split into the three channels. int16 (not uint8) so later
+    # arithmetic in hue_proxy can't overflow or wrap around.
+    hsv = np.array(image.convert("HSV")).astype(np.int16)
+    h, s = hsv[..., 0], hsv[..., 1]
+
+    # Green pixel = hue inside the green band AND saturated enough to be real green.
+    return (h > hue_low) & (h < hue_high) & (s > sat_min)
+
+
+def hue_proxy(image: Image.Image, mask: np.ndarray) -> float:
+    """Score how human (non-green) the masked pixels look, in [0, 1].
+
+    This is a stand-in ("proxy") for human perception: 1.0 means the character's
+    original-green pixels now show no green at all (reads as a normal person),
+    and low values mean they are still vividly green (reads as a zombie).
+
+    IMPORTANT: the mask must be computed ONCE on the ORIGINAL image and then reused
+    on every edited version. If you recomputed the mask on the edited image, the green
+    would already be gone, the mask would be empty, and this would trivially return
+    1.0 — measuring nothing. Freezing the mask forces the honest question: did the
+    edit actually push the character's pixels away from green?
+
+    Args:
+        image: The (possibly edited) PIL Image to score.
+        mask: Boolean array from green_mask(original), same H×W as the image.
+
+    Returns:
+        Float in [0, 1]. Higher = less green = more human-looking.
+    """
+    arr = np.array(image.convert("RGB")).astype(np.float32)
+
+    # No green pixels to begin with (e.g. a human image) → nothing to hide → looks human.
+    if mask.sum() == 0:
+        return 1.0
+
+    # Pull out just the character's original-green pixels (mask selects them).
+    r, g, b = arr[..., 0][mask], arr[..., 1][mask], arr[..., 2][mask]
+
+    # "Green excess": how much the green channel dominates the other two.
+    #   vivid green → g >> r and g >> b → large positive number (still a zombie)
+    #   skin / gray → r, g, b close together → near zero (looks human)
+    # Divide by 255 to land in ~[0, 1], average over all masked pixels, and multiply
+    # by 4 so a fully-green character scores ~1.0 (the ×4 was calibrated on real data).
+    green_excess = np.clip(((g - np.maximum(r, b)) / 255.0).mean() * 4.0, 0.0, 1.0)
+
+    # Flip it so the reward points the right way: high = not green = human-plausible.
+    return float(1.0 - green_excess)
