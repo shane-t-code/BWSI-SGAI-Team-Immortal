@@ -2,7 +2,7 @@
 
 import pandas as pd
 
-from analysis.analyze_results import summarize_by_tier_and_condition
+from analysis.analyze_results import filter_first_session, summarize_by_tier_and_condition
 from analysis.data_quality import flag_trials
 
 
@@ -81,3 +81,32 @@ def test_summarize_keeps_a_cell_visible_when_every_trial_is_flagged():
     assert row["n_trials"] == 0
     assert row["n_flagged"] == 2
     assert pd.isna(row["accuracy"])
+
+
+def _sample_trials_with_sessions() -> pd.DataFrame:
+    return pd.DataFrame(
+        [
+            # participant A: two sessions, first one earlier -> only this row should survive
+            {"participant_id": "A", "session_id": "A-s1", "timestamp": "2026-07-17T10:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2000, "player_answer_human": True},
+            {"participant_id": "A", "session_id": "A-s2", "timestamp": "2026-07-17T11:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": False, "reaction_time_ms": 1900, "player_answer_human": False},
+            # participant B: single session
+            {"participant_id": "B", "session_id": "B-s1", "timestamp": "2026-07-17T09:30:00Z", "malice_tier": 0, "condition": "human_ai", "correct": True, "reaction_time_ms": 1700, "player_answer_human": True},
+        ]
+    )
+
+
+def test_filter_first_session_keeps_only_each_participants_earliest_session():
+    """Assert repeat sessions from the same participant are dropped, keeping only the earliest by timestamp."""
+    df = _sample_trials_with_sessions()
+    filtered = filter_first_session(df)
+
+    assert set(filtered["session_id"]) == {"A-s1", "B-s1"}
+    assert len(filtered) == 2
+
+
+def test_filter_first_session_is_a_no_op_when_no_repeats_exist():
+    """Assert a dataset with one session per participant is unchanged in row count."""
+    df = _sample_trials_with_sessions()
+    df = df[df["session_id"] != "A-s2"]  # drop the repeat, leaving one row per participant
+    filtered = filter_first_session(df)
+    assert len(filtered) == len(df)

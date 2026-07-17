@@ -250,6 +250,54 @@
 import * as THREE from 'three';
 
 // ---------------------------------------------------------------------
+// Participant tracking (data lead: Smit) — see "Participant tracking" in
+// docs/data-logging-schema.md for the full design rationale. Summary:
+//   participant_id — one per browser, persisted in localStorage, so repeat
+//     plays from the same person are attributable (crucial now that ~30-40
+//     people are expected to play, many replaying).
+//   condition      — assigned ONCE the first time a participant_id is
+//     created, and never changes on repeat visits. Between-subjects by
+//     design (Shane, PR #7): seeing AI advice teaches you what a disguise
+//     looks like, so a participant must never experience both conditions.
+//   session_id     — fresh every page load/game start; identifies one
+//     sitting. One participant_id can have many session_ids.
+// ---------------------------------------------------------------------
+function getOrCreateParticipantId() {
+  let id = localStorage.getItem('participant_id');
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem('participant_id', id);
+  }
+  return id;
+}
+
+// Assigns condition once per participant, keyed by a hash of participant_id,
+// since this static page has no backend/shared counter to assign from.
+// NOTE: this is NOT equivalent to analysis/trial_protocol.py's
+// assign_condition(). That version alternates on an enrollment index and
+// guarantees a ~50/50 split; hashing a random UUID mod 2 is only 50/50 in
+// expectation, so with ~30-40 participants the split can come out lopsided.
+// Guaranteeing balance would need a shared enrollment counter (backend or
+// manual signup), which the MVP doesn't have — so check the realized split
+// after collection and report it. See docs/data-logging-schema.md
+// "Participant tracking -> Balance caveat".
+function assignCondition(participantId) {
+  const stored = localStorage.getItem('condition');
+  if (stored) return stored;
+  let hash = 0;
+  for (let i = 0; i < participantId.length; i++) {
+    hash = (hash * 31 + participantId.charCodeAt(i)) >>> 0;
+  }
+  const condition = (hash % 2 === 0) ? 'human_alone' : 'human_ai';
+  localStorage.setItem('condition', condition);
+  return condition;
+}
+
+const PARTICIPANT_ID = getOrCreateParticipantId();
+const CONDITION = assignCondition(PARTICIPANT_ID);
+const SESSION_ID = crypto.randomUUID();
+
+// ---------------------------------------------------------------------
 // Tick ruler (purely decorative, matches the mockup's top strip)
 // ---------------------------------------------------------------------
 const ruler = document.getElementById('tick-ruler');
@@ -547,6 +595,9 @@ function recordAnswer(saysHuman) {
   const correct = saysHuman === currentRound.groundTruthIsHuman;
 
   const entry = {
+    participant_id: PARTICIPANT_ID,
+    session_id: SESSION_ID,
+    condition: CONDITION,
     subject: currentRound.subjectId,
     tier: currentRound.tier,
     ground_truth_human: currentRound.groundTruthIsHuman,
@@ -580,14 +631,10 @@ function recordAnswer(saysHuman) {
 // that maps internal field names to the schema everyone else (analysis,
 // Shane's tier manifest) agrees on, so a future rename of the internal
 // variable doesn't have to also become a schema change.
-// participant_id / session_id are left blank for now — there's no
-// participant-identification step in this prototype yet (see Open Question 2
-// in docs/data-logging-schema.md). Fill them in once that's added.
-// `condition` is INFERRED from ai_assist_used as a placeholder so this export
-// isn't empty — it is NOT a real assigned condition. Per Open Question 1 in
-// docs/data-logging-schema.md, condition needs to be fixed per session (or
-// block) rather than left up to whether the player happened to click AI
-// ASSIST that round. Replace this line once that assignment mechanism exists.
+// participant_id, session_id, and condition now come from the real
+// getOrCreateParticipantId()/assignCondition() bootstrap above (resolved —
+// these used to be blank/inferred placeholders; see "Participant tracking"
+// in docs/data-logging-schema.md for the full design).
 function exportResultsCSV(sessionResults) {
   if (!sessionResults.length) return;
   const headers = [
@@ -597,7 +644,7 @@ function exportResultsCSV(sessionResults) {
     'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
   ];
   const rows = sessionResults.map((r) => [
-    '', '', r.subject, r.tier, r.ai_assist_used ? 'human_ai' : 'human_alone',
+    r.participant_id, r.session_id, r.subject, r.tier, r.condition,
     r.ground_truth_human, r.player_answer_human, r.correct,
     r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
     r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
