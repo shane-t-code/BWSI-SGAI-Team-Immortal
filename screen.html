@@ -579,6 +579,13 @@ function startRound() {
   waveNumEl.textContent = waveNum;
   waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
   subjectNumEl.textContent = currentRound.subjectId;
+  // Load this round's actual image onto the kiosk screen
+  const texLoader = new THREE.TextureLoader();
+  texLoader.load(`data/game_sets/images/${currentRound.image}`, (tex) => {
+    screen.material.map = tex;
+    screen.material.color.set(0xffffff); // stop tinting the texture with the placeholder navy
+    screen.material.needsUpdate = true;
+  });
   renderThreats(currentRound.threats);
   aiConfFill.style.width = `${currentRound.aiConfidence}%`;
   aiConfValue.textContent = currentRound.aiConfidence;
@@ -716,6 +723,7 @@ actZoom.addEventListener('click', () => {
 // AI ASSIST — reveals the AI confidence panel. Logging when this happens
 // (relative to round start) matters for your AI-assistance research question.
 actAssist.addEventListener('click', () => {
+  if (CONDITION === 'human_alone') return; // hard block, not just visual
   if (!aiAssistUsed) {
     aiAssistClickTime = Math.round(performance.now() - roundStartTime);
   }
