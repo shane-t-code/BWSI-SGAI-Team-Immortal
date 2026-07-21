@@ -255,7 +255,7 @@
     const MAP_PATH = "threeD_player/mapRework2.glb";
 
     const SPAWN = { x: 11.456, y: 1.539, z: 10.938, yaw: 0.020 };
-    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 9, gravity: -30 };
+    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 8, gravity: -45 };
 
     const KIOSK_TRIGGER_RADIUS = 4;
 
@@ -589,6 +589,83 @@
     const rayOrigin = new THREE.Vector3();
     const down = new THREE.Vector3(0, -1, 0);
     let verticalVelocity = 0;
+
+    // Collision detection constants and helpers (from map (1).html)
+    const PLAYER_RADIUS = 0.34;
+    const wallRaycaster = new THREE.Raycaster();
+    const _rightVec = new THREE.Vector3();
+    const _forwardVec = new THREE.Vector3();
+    const _rayOriginVec = new THREE.Vector3();
+    const _rayDirVec = new THREE.Vector3();
+
+    function isBlocked(originHeight, dirX, dirY, dirZ, distance) {
+      if (distance <= 0) {
+        return false;
+      }
+
+      _rayOriginVec.set(
+        camera.position.x,
+        originHeight,
+        camera.position.z
+      );
+
+      _rayDirVec.set(dirX, dirY, dirZ);
+
+      wallRaycaster.set(_rayOriginVec, _rayDirVec);
+      wallRaycaster.far = distance + PLAYER_RADIUS;
+
+      const hits = wallRaycaster.intersectObjects(
+        collidables,
+        false
+      );
+
+      return hits.length > 0;
+    }
+
+    function tryMove(rightAmount, forwardAmount) {
+      // Match PointerLockControls' internal basis vectors exactly so the
+      // collision check lines up with the actual movement it will perform.
+      _rightVec.setFromMatrixColumn(camera.matrix, 0);
+      _forwardVec.crossVectors(camera.up, _rightVec);
+
+      // Single ray at chest height — catches walls without doubling raycast cost.
+      const chestY =
+        camera.position.y -
+        PLAYER.eyeHeight +
+        PLAYER.eyeHeight * 0.65;
+
+      if (rightAmount !== 0) {
+        const sign = Math.sign(rightAmount);
+
+        const blocked = isBlocked(
+          chestY,
+          _rightVec.x * sign,
+          _rightVec.y * sign,
+          _rightVec.z * sign,
+          Math.abs(rightAmount)
+        );
+
+        if (!blocked) {
+          controls.moveRight(rightAmount);
+        }
+      }
+
+      if (forwardAmount !== 0) {
+        const sign = Math.sign(forwardAmount);
+
+        const blocked = isBlocked(
+          chestY,
+          _forwardVec.x * sign,
+          _forwardVec.y * sign,
+          _forwardVec.z * sign,
+          Math.abs(forwardAmount)
+        );
+
+        if (!blocked) {
+          controls.moveForward(forwardAmount);
+        }
+      }
+    }
 
     function findGroundHeight(x, feetY, z) {
       rayOrigin.set(x, feetY + 0.4, z);
@@ -1124,8 +1201,11 @@
         if (length > 0) {
           horizontal /= length;
           forward /= length;
-          controls.moveRight(horizontal * PLAYER.moveSpeed * delta);
-          controls.moveForward(forward * PLAYER.moveSpeed * delta);
+
+          tryMove(
+            horizontal * PLAYER.moveSpeed * delta,
+            forward * PLAYER.moveSpeed * delta
+          );
         }
 
         const feetY = camera.position.y - PLAYER.eyeHeight;
