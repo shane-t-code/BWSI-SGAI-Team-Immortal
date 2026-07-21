@@ -12,8 +12,7 @@ import pandas as pd
 from pathlib import Path
 
 _root = Path(__file__).resolve().parent.parent
-POOL_DIR = _root / "data" / "rl_pool"
-POOL_METADATA = POOL_DIR / "pool_metadata.csv"
+POOL_METADATA = _root / "data" / "game_sets" / "game_manifest.csv"
 
 def verify_tiers():
     """Load pool metadata and verify tier progression."""
@@ -70,14 +69,19 @@ def verify_tiers():
             print(f"  assistant_correct change: {correct_diff:+.3f} (should be positive)")
             print()
     
-    # Show sample threat lines per tier
+    # Show sample threat lines per tier (from game_manifest.csv if available)
     print("=" * 80)
     print("SAMPLE THREAT LINES:")
     print("=" * 80)
-    for tier in sorted(meta.malice_tier.unique()):
-        r = meta[meta.malice_tier == tier].iloc[0]
-        truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
-        print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
+    game_manifest = _root / "data" / "game_sets" / "game_manifest.csv"
+    if game_manifest.exists():
+        game_meta = pd.read_csv(game_manifest)
+        for tier in sorted(game_meta.malice_tier.unique()):
+            r = game_meta[game_meta.malice_tier == tier].iloc[0]
+            truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
+            print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
+    else:
+        print("  (game_manifest.csv not found - threat lines unavailable)")
 
 if __name__ == "__main__":
     verify_tiers()

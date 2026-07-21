@@ -92,6 +92,8 @@
       <small>
         WASD = move · Mouse = look · SPACE = jump
         <br />
+        F = toggle drone mode (SPACE/SHIFT = up/down while flying)
+        <br />
         ESC = release mouse
       </small>
     </div>
@@ -139,6 +141,11 @@
       moveSpeed: 4.2,
       jumpSpeed: 7,
       gravity: -20
+    };
+
+    const DRONE = {
+      speed: 16,
+      verticalSpeed: 11
     };
 
     const LIGHT_PREVIEW = {
@@ -691,10 +698,13 @@
       forward: false,
       backward: false,
       left: false,
-      right: false
+      right: false,
+      ascend: false,
+      descend: false
     };
 
     let wantsJump = false;
+    let droneMode = false;
 
     document.addEventListener("keydown", (event) => {
       switch (event.code) {
@@ -716,6 +726,23 @@
 
         case "Space":
           wantsJump = true;
+          keys.ascend = true;
+          break;
+
+        case "ShiftLeft":
+        case "ShiftRight":
+          keys.descend = true;
+          break;
+
+        case "KeyF":
+          if (!event.repeat) {
+            droneMode = !droneMode;
+            verticalVelocity = 0;
+
+            showTemporaryMessage(
+              droneMode ? "Drone mode ON — F to land" : "Drone mode OFF"
+            );
+          }
           break;
       }
     });
@@ -740,6 +767,12 @@
 
         case "Space":
           wantsJump = false;
+          keys.ascend = false;
+          break;
+
+        case "ShiftLeft":
+        case "ShiftRight":
+          keys.descend = false;
           break;
       }
     });
@@ -1100,6 +1133,9 @@
     const _forwardVec = new THREE.Vector3();
     const _rayOriginVec = new THREE.Vector3();
     const _rayDirVec = new THREE.Vector3();
+    const _droneForward = new THREE.Vector3();
+    const _droneRight = new THREE.Vector3();
+    const _droneMove = new THREE.Vector3();
 
     function isBlocked(originHeight, dirX, dirY, dirZ, distance) {
       if (distance <= 0) {
@@ -1404,7 +1440,46 @@ distance: ${LIGHT_PREVIEW.distance}`;
           THREE.MathUtils.clamp(flicker, 0.15, 1.15);
       }
 
-      if (controls.isLocked) {
+      if (controls.isLocked && droneMode) {
+        // --- Drone / free-fly mode: full 3D movement, no gravity, no collision. ---
+        camera.getWorldDirection(_droneForward);
+        _droneRight.crossVectors(_droneForward, camera.up).normalize();
+
+        _droneMove.set(0, 0, 0);
+
+        if (keys.forward) {
+          _droneMove.addScaledVector(_droneForward, 1);
+        }
+
+        if (keys.backward) {
+          _droneMove.addScaledVector(_droneForward, -1);
+        }
+
+        if (keys.right) {
+          _droneMove.addScaledVector(_droneRight, 1);
+        }
+
+        if (keys.left) {
+          _droneMove.addScaledVector(_droneRight, -1);
+        }
+
+        if (_droneMove.lengthSq() > 0) {
+          _droneMove.normalize().multiplyScalar(DRONE.speed * delta);
+          camera.position.add(_droneMove);
+        }
+
+        if (keys.ascend) {
+          camera.position.y += DRONE.verticalSpeed * delta;
+        }
+
+        if (keys.descend) {
+          camera.position.y -= DRONE.verticalSpeed * delta;
+        }
+
+        // Keep this zeroed so landing (toggling drone mode off) doesn't
+        // inherit stale fall speed from before you took off.
+        verticalVelocity = 0;
+      } else if (controls.isLocked) {
         let horizontal = 0;
         let forward = 0;
 

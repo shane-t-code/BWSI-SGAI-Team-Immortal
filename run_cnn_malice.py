@@ -25,6 +25,16 @@ def main():
     classifier = CNNClassifier(img_data_root="data")
     print("CNN loaded successfully!\n")
     
+    # Load game_manifest.csv to get malice_tier mapping
+    manifest_path = Path("data/game_sets/game_manifest.csv")
+    if manifest_path.exists():
+        manifest = pd.read_csv(manifest_path)
+        tier_map = dict(zip(manifest["filename"], manifest["malice_tier"]))
+        print(f"Loaded tier mapping from game_manifest.csv ({len(tier_map)} entries)\n")
+    else:
+        print("Warning: game_manifest.csv not found, will parse tiers from filenames")
+        tier_map = {}
+    
     # Get all malice budget images
     malice_dir = Path("data/game_sets/images")
     if not malice_dir.exists():
@@ -49,18 +59,26 @@ def main():
         # Get classification
         probs = classifier.classify(temp_humanoid)
         
-        # Parse tier level from filename
+        # Get tier from game_manifest.csv if available, otherwise parse from filename
         filename = img_path.name
-        if "tier10" in filename:
-            tier = 10
-        elif "tier5" in filename:
-            tier = 5
-        elif "tier1" in filename:
-            tier = 1
-        elif "tier0" in filename:
-            tier = 0
+        if filename in tier_map:
+            tier = tier_map[filename]
         else:
-            tier = "unknown"
+            # Fallback: parse tier level from filename (old tier set)
+            if "tier10" in filename:
+                tier = 10
+            elif "tier8" in filename:
+                tier = 8
+            elif "tier5" in filename:
+                tier = 5
+            elif "tier2" in filename:
+                tier = 2
+            elif "tier1" in filename:
+                tier = 1
+            elif "tier0" in filename:
+                tier = 0
+            else:
+                tier = "unknown"
         
         # Get predicted class and confidence
         predicted_class_idx = int(np.argmax(probs))
