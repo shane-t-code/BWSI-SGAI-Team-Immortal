@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Map Viewer V3</title>
+
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #020309;
+      font-family: Arial, sans-serif;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    #blocker {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.66);
+      color: white;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    #blocker.hidden {
+      display: none;
+    }
+
+    #instructions {
+      padding: 26px 34px;
+      border-radius: 12px;
+      background: rgba(12, 15, 24, 0.9);
+      backdrop-filter: blur(6px);
+      font-size: 19px;
+      line-height: 1.7;
+    }
+
+    #instructions small {
+      color: #d4d4d4;
+      font-size: 13px;
+    }
+
+    #crosshair {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      margin-left: -3px;
+      margin-top: -3px;
+      z-index: 5;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      pointer-events: none;
+    }
+
+    #status {
+      display:none;
+      position: fixed;
+      left: 12px;
+      bottom: 12px;
+      z-index: 5;
+      padding: 9px 11px;
+      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.58);
+      color: white;
+      font-family: monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-line;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="blocker">
+    <div id="instructions">
+      Click to start
+      <br />
+      <small>
+        WASD = move · Mouse = look · SPACE = jump
+        <br />
+        ESC = release mouse
+      </small>
+    </div>
+  </div>
+
+  <div id="crosshair"></div>
+  <div id="status">Loading map...</div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+
+    import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+    import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+    import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+    // ============================================================
+    // CONFIG
+    // ============================================================
+
+    const MAP_PATH = "mapRework2.glb";
+
+    const SPAWN = {
+      x: 11.456,
+      y: 1.539,
+      z: 10.938,
+      yaw: 0.020
+    };
+
+    const PLAYER = {
+      eyeHeight: 0.75,
+      moveSpeed: 4.2,
+      jumpSpeed: 7,
+      gravity: -20
+    };
+
+    const LIGHT_PREVIEW = {
+      color: 0xffffff,
+      intensity: 18,
+      distance: 12,
+      ballSize: 0.14,
+      secondsVisible: 8
+    };
+
+    // ============================================================
+    // DOM
+    // ============================================================
+
+    const blocker = document.getElementById("blocker");
+    const statusEl = document.getElementById("status");
+
+    let loadingText = `Loading ${MAP_PATH}...`;
+    let temporaryText = "";
+    let temporaryTimer = null;
+
+    function showTemporaryMessage(message, milliseconds = 2600) {
+      temporaryText = message;
+
+      if (temporaryTimer) {
+        clearTimeout(temporaryTimer);
+      }
+
+      temporaryTimer = setTimeout(() => {
+        temporaryText = "";
+      }, milliseconds);
+    }
+
+    // ============================================================
+    // SCENE
+    // ============================================================
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020309);
+    // Low, sickly fog for a night-time zombie atmosphere (short view distance = tension).
+    scene.fog = new THREE.FogExp2(0x070b07, 0.026);
+
+    // ============================================================
+    // CAMERA
+    // ============================================================
+
+    const camera = new THREE.PerspectiveCamera(
+      70,
+      window.innerWidth / window.innerHeight,
+      0.05,
+      650
+    );
+
+    camera.position.set(
+      SPAWN.x,
+      SPAWN.y,
+      SPAWN.z
+    );
+
+    camera.rotation.order = "YXZ";
+    camera.rotation.y = SPAWN.yaw;
+
+    // ============================================================
+    // RENDERER
+    // ============================================================
+
+    const renderer = new THREE.WebGLRenderer({
+      antialias: false,
+      powerPreference: "high-performance"
+    });
+
+    const BASE_PIXEL_RATIO = Math.min(window.devicePixelRatio, 1.5);
+    renderer.setPixelRatio(BASE_PIXEL_RATIO);
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.AgXToneMapping;
+    renderer.toneMappingExposure = 1.30;
+
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+
+    document.body.appendChild(renderer.domElement);
+
+    // ============================================================
+    // DYNAMIC RESOLUTION (auto-tunes for smooth FPS)
+    // ============================================================
+    // The canvas's CSS display size stays fixed at the window size, but the
+    // actual pixels rendered into it (the drawing buffer) can shrink under
+    // load and grow back when there's headroom. The browser upscales the
+    // smaller buffer to fill the screen, which is far cheaper than dropping
+    // frames and barely visible in motion.
+
+    let renderScale = 1.0;
+    const MIN_RENDER_SCALE = 0.5;
+    const MAX_RENDER_SCALE = 1.0;
+
+    function applyRenderScale(scale) {
+      const w = Math.max(1, Math.floor(window.innerWidth * scale));
+      const h = Math.max(1, Math.floor(window.innerHeight * scale));
+
+      // updateStyle = false: only the internal buffer resizes, CSS size stays put.
+      renderer.setSize(w, h, false);
+      composer.setSize(w, h);
+
+      bloomPass.setSize(
+        Math.floor(w / 3),
+        Math.floor(h / 3)
+      );
+    }
+
+    // ============================================================
+    // CONTROLS
+    // ============================================================
+
+    const controls = new PointerLockControls(
+      camera,
+      document.body
+    );
+
+    blocker.addEventListener("click", () => {
+      controls.lock();
+    });
+
+    controls.addEventListener("lock", () => {
+      blocker.classList.add("hidden");
+    });
+
+    controls.addEventListener("unlock", () => {
+      blocker.classList.remove("hidden");
+    });
+
+    // ============================================================
+    // SPACE BACKGROUND
+    // ============================================================
+
+    function createStarField() {
+      const count = 1400;
+      const positions = new Float32Array(count * 3);
+
+      for (let i = 0; i < count; i++) {
+        const radius = THREE.MathUtils.randFloat(190, 490);
+        const theta = THREE.MathUtils.randFloat(0, Math.PI * 2);
+        const phi = Math.acos(
+          THREE.MathUtils.randFloat(-1, 1)
+        );
+
+        positions[i * 3] =
+          radius *
+          Math.sin(phi) *
+          Math.cos(theta);
+
+        positions[i * 3 + 1] =
+          radius *
+          Math.cos(phi);
+
+        positions[i * 3 + 2] =
+          radius *
+          Math.sin(phi) *
+          Math.sin(theta);
+      }
+
+      const geometry = new THREE.BufferGeometry();
+
+      geometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(
+          positions,
+          3
+        )
+      );
+
+      const material = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.62,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.88,
+        depthWrite: false,
+        fog: false
+      });
+
+      scene.add(
+        new THREE.Points(
+          geometry,
+          material
+        )
+      );
+    }
+
+    createStarField();
+
+    // ============================================================
+    // LIGHTING
+    // ============================================================
+
+    const sunTarget = new THREE.Object3D();
+    sunTarget.position.set(0, 0, 0);
+    scene.add(sunTarget);
+
+    // Cool moonlit sky, sickly green ground bounce — night, but bright enough to see.
+    const hemisphereLight = new THREE.HemisphereLight(
+      0xaecdff,
+      0x1c2a18,
+      2.10
+    );
+
+    scene.add(hemisphereLight);
+
+    // Lifts blacks and midtones so the scene does not look dull, cool-toned.
+    const ambientLight = new THREE.AmbientLight(
+      0x9fb8ff,
+      0.85
+    );
+
+    scene.add(ambientLight);
+
+    // Main "moon" light — cold blue-white, brighter than before so the map actually reads at night.
+    const sunLight = new THREE.DirectionalLight(
+      0xcfe0ff,
+      2.6
+    );
+
+    sunLight.position.set(60, 90, 40);
+    sunLight.target = sunTarget;
+    sunLight.castShadow = true;
+
+    sunLight.shadow.mapSize.set(768, 768);
+
+    sunLight.shadow.camera.left = -80;
+    sunLight.shadow.camera.right = 80;
+    sunLight.shadow.camera.top = 80;
+    sunLight.shadow.camera.bottom = -80;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 300;
+
+    sunLight.shadow.bias = -0.00002;
+    sunLight.shadow.normalBias = 0.10;
+    sunLight.shadow.radius = 12;
+
+    scene.add(sunLight);
+
+    // Cool opposite-side fill, moonlight bounce.
+    const oppositeFillLight = new THREE.DirectionalLight(
+      0xdfefff,
+      1.3
+    );
+
+    oppositeFillLight.position.set(-55, 40, -50);
+    oppositeFillLight.target = sunTarget;
+    oppositeFillLight.castShadow = false;
+
+    scene.add(oppositeFillLight);
+
+    // Sickly green-tinted front fill — reads as "infected" ambient light.
+    const frontFillLight = new THREE.DirectionalLight(
+      0xbfe8c8,
+      0.9
+    );
+
+    frontFillLight.position.set(12, 30, 60);
+    frontFillLight.target = sunTarget;
+    frontFillLight.castShadow = false;
+
+    scene.add(frontFillLight);
+
+    // Toxic green bounce from below, flickers slightly at runtime for unease.
+    const bounceLight = new THREE.PointLight(
+      0x5eff7a,
+      0.5,
+      90,
+      2
+    );
+
+    bounceLight.position.set(0, -12, 0);
+    bounceLight.castShadow = false;
+
+    scene.add(bounceLight);
+
+    // Permanent lights placed from captured coordinates — shifted to a flickering,
+    // sickly green "infection glow" instead of clean white, for zombie atmosphere.
+    const permanentWhiteLights = [
+      { x: -4.310, y: 2.834, z: 11.516, intensity: 22, distance: 13 },
+      { x: -7.161, y: 2.044, z: -1.477, intensity: 22, distance: 13 },
+      { x: -4.056, y: 2.375, z: -25.507, intensity: 22, distance: 13 },
+      { x: 10.747, y: 2.577, z: -29.512, intensity: 22, distance: 13 }
+    ];
+
+    const flickeringLights = [];
+
+    for (const config of permanentWhiteLights) {
+      const light = new THREE.PointLight(
+        0x8fffb0,
+        config.intensity,
+        config.distance,
+        2
+      );
+
+      light.position.set(
+        config.x,
+        config.y,
+        config.z
+      );
+
+      light.castShadow = false;
+      light.userData.baseIntensity = config.intensity;
+      light.userData.flickerSeed = Math.random() * 100;
+
+      scene.add(light);
+      flickeringLights.push(light);
+    }
+
+    // ============================================================
+    // FALLBACK GROUND
+    // ============================================================
+
+    const fallbackGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(260, 260),
+      new THREE.MeshStandardMaterial({
+        color: 0xee875e,
+        roughness: 0.9,
+        metalness: 0
+      })
+    );
+
+    fallbackGround.rotation.x = -Math.PI / 2;
+    fallbackGround.position.y = -0.05;
+    fallbackGround.receiveShadow = true;
+
+    scene.add(fallbackGround);
+
+    // ============================================================
+    // MATERIAL HANDLING
+    // ============================================================
+
+    function configureMaterial(material) {
+      if (!material) {
+        return;
+      }
+
+      // Keep Blender-exported colors and PBR properties unchanged.
+      const textures = [
+        material.map,
+        material.normalMap,
+        material.roughnessMap,
+        material.metalnessMap,
+        material.aoMap,
+        material.emissiveMap
+      ];
+
+      const maxAnisotropy =
+        renderer.capabilities.getMaxAnisotropy();
+
+      for (const texture of textures) {
+        if (!texture) {
+          continue;
+        }
+
+        texture.anisotropy = Math.min(
+          8,
+          maxAnisotropy
+        );
+
+        texture.needsUpdate = true;
+      }
+
+      material.needsUpdate = true;
+    }
+
+    // ============================================================
+    // MAP LOADING
+    // ============================================================
+
+    const collidables = [fallbackGround];
+
+    const loader = new GLTFLoader();
+
+    loader.load(
+      MAP_PATH,
+
+      (gltf) => {
+        const map = gltf.scene;
+        scene.add(map);
+
+        map.traverse((child) => {
+          if (!child.isMesh) {
+            return;
+          }
+
+          child.castShadow = true;
+          child.receiveShadow = true;
+          collidables.push(child);
+
+          if (Array.isArray(child.material)) {
+            child.material.forEach(configureMaterial);
+          } else {
+            configureMaterial(child.material);
+          }
+        });
+
+        loadingText = `Loaded ${MAP_PATH}`;
+        showTemporaryMessage("Map loaded");
+
+        console.log("Loaded map:", map);
+      },
+
+      (progress) => {
+        if (progress.total > 0) {
+          const percent = Math.round(
+            progress.loaded /
+            progress.total *
+            100
+          );
+
+          loadingText =
+            `Loading ${MAP_PATH}: ${percent}%`;
+        } else {
+          loadingText =
+            `Loading ${MAP_PATH}...`;
+        }
+      },
+
+      (error) => {
+        loadingText =
+          `Could not load ${MAP_PATH}`;
+
+        console.error(
+          "GLB loading error:",
+          error
+        );
+      }
+    );
+
+    // ============================================================
+    // POST-PROCESSING
+    // ============================================================
+
+    const composer = new EffectComposer(renderer);
+
+    const renderPass = new RenderPass(
+      scene,
+      camera
+    );
+
+    composer.addPass(renderPass);
+
+    // SSAO removed — it was by far the most expensive pass in this chain
+    // (a full-screen, multi-sample effect run every frame). The directional
+    // moonlight + shadow map already give enough depth cueing without it.
+    // If you want it back for a screenshot/showcase build, re-add an
+    // SSAOPass here at a small resolution (e.g. innerWidth/3).
+
+    // Bloom, rendered at a fraction of screen res — cheap and still reads fine
+    // since bloom is a soft, low-frequency effect anyway.
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(
+        Math.floor(window.innerWidth / 3),
+        Math.floor(window.innerHeight / 3)
+      ),
+      0.06,
+      0.18,
+      0.97
+    );
+
+    composer.addPass(bloomPass);
+
+    // Final color lift. This affects the entire image evenly and does not
+    // modify any individual material or texture.
+    const VividColorShader = {
+      uniforms: {
+        tDiffuse: { value: null },
+        saturation: { value: 1.10 },
+        contrast: { value: 1.015 },
+        vignetteStrength: { value: 0.55 },
+        shadowTint: { value: new THREE.Color(0x0a1a10) }
+      },
+
+      vertexShader: `
+        varying vec2 vUv;
+
+        void main() {
+          vUv = uv;
+          gl_Position =
+            projectionMatrix *
+            modelViewMatrix *
+            vec4(position, 1.0);
+        }
+      `,
+
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float saturation;
+        uniform float contrast;
+        uniform float vignetteStrength;
+        uniform vec3 shadowTint;
+
+        varying vec2 vUv;
+
+        void main() {
+          vec4 texel = texture2D(tDiffuse, vUv);
+          vec3 color = texel.rgb;
+
+          float luminance = dot(
+            color,
+            vec3(0.2126, 0.7152, 0.0722)
+          );
+
+          color = mix(
+            vec3(luminance),
+            color,
+            saturation
+          );
+
+          color = (color - 0.5) * contrast + 0.5;
+
+          // Push dark areas toward a sickly green-black instead of neutral black.
+          float shadowMask = 1.0 - smoothstep(0.0, 0.35, luminance);
+          color = mix(color, color * shadowTint * 3.0, shadowMask * 0.35);
+
+          // Dark, uneven vignette — tightens the player's view for tension.
+          vec2 centered = vUv - 0.5;
+          float vignette = 1.0 - dot(centered, centered) * vignetteStrength;
+          color *= clamp(vignette, 0.0, 1.0);
+
+          gl_FragColor = vec4(
+            clamp(color, 0.0, 1.0),
+            texel.a
+          );
+        }
+      `
+    };
+
+    const vividColorPass =
+      new ShaderPass(VividColorShader);
+
+    composer.addPass(vividColorPass);
+
+    const outputPass = new OutputPass();
+    composer.addPass(outputPass);
+
+    // ============================================================
+    // MOVEMENT INPUT
+    // ============================================================
+
+    const keys = {
+      forward: false,
+      backward: false,
+      left: false,
+      right: false
+    };
+
+    let wantsJump = false;
+
+    document.addEventListener("keydown", (event) => {
+      switch (event.code) {
+        case "KeyW":
+          keys.forward = true;
+          break;
+
+        case "KeyS":
+          keys.backward = true;
+          break;
+
+        case "KeyA":
+          keys.left = true;
+          break;
+
+        case "KeyD":
+          keys.right = true;
+          break;
+
+        case "Space":
+          wantsJump = true;
+          break;
+      }
+    });
+
+    document.addEventListener("keyup", (event) => {
+      switch (event.code) {
+        case "KeyW":
+          keys.forward = false;
+          break;
+
+        case "KeyS":
+          keys.backward = false;
+          break;
+
+        case "KeyA":
+          keys.left = false;
+          break;
+
+        case "KeyD":
+          keys.right = false;
+          break;
+
+        case "Space":
+          wantsJump = false;
+          break;
+      }
+    });
+
+    // ============================================================
+    // GROUND DETECTION
+    // ============================================================
+
+    const raycaster = new THREE.Raycaster();
+    const rayOrigin = new THREE.Vector3();
+    const down = new THREE.Vector3(0, -1, 0);
+
+    let verticalVelocity = 0;
+
+    function findGroundHeight(x, feetY, z) {
+      rayOrigin.set(
+        x,
+        feetY + 0.4,
+        z
+      );
+
+      raycaster.set(
+        rayOrigin,
+        down
+      );
+
+      raycaster.far = 3.4;
+
+      const hits = raycaster.intersectObjects(
+        collidables,
+        false
+      );
+
+      if (hits.length === 0) {
+        return null;
+      }
+
+      return hits[0].point.y;
+    }
+
+    // ============================================================
+    // GUIDANCE ARROWS — blue floor arrows pointing to the objective
+    // ============================================================
+    // A short chain of flat arrow markers is laid along the straight-line
+    // path from the player to GUIDANCE_TARGET. They re-lay themselves
+    // periodically as the player moves, so the trail always originates at
+    // the player's current position and points toward the target. Once the
+    // player gets within GUIDANCE.arriveDistance, the arrows disappear for
+    // good.
+    //
+    // >>> SET THIS: walk to the station entrance in-game, press "P" (this
+    // file already has that shortcut — see COPY SPAWN below), then paste
+    // the x/y/z it copies to your clipboard in here. <<<
+    const GUIDANCE_TARGET = new THREE.Vector3(10.639, 2.285, -28.245);
+
+    const GUIDANCE = {
+      arrowCount: 10,
+      minSpacing: 1.4,
+      maxSpacing: 4.5,
+      hoverHeight: 0.06,
+      arriveDistance: 4.0,   // player is considered "arrived" inside this radius
+      updateInterval: 0.15,  // seconds between re-laying the trail (perf-friendly)
+      color: new THREE.Color(0x2fc8ff)
+    };
+
+    // Flat chevron/arrow outline, authored in a 2D plane then laid flat on
+    // the ground so its tip points along local +Z ("forward").
+    const arrowShape = new THREE.Shape();
+    arrowShape.moveTo(0, 0.5);
+    arrowShape.lineTo(0.26, 0.02);
+    arrowShape.lineTo(0.11, 0.02);
+    arrowShape.lineTo(0.11, -0.4);
+    arrowShape.lineTo(-0.11, -0.4);
+    arrowShape.lineTo(-0.11, 0.02);
+    arrowShape.lineTo(-0.26, 0.02);
+    arrowShape.closePath();
+
+    const arrowGeometry = new THREE.ShapeGeometry(arrowShape);
+    arrowGeometry.rotateX(Math.PI / 2);
+
+    const arrowMaterial = new THREE.MeshBasicMaterial({
+      color: GUIDANCE.color,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
+      side: THREE.DoubleSide
+    });
+
+    // InstancedMesh = one draw call for the whole trail, regardless of arrow count.
+    const guidanceArrows = new THREE.InstancedMesh(
+      arrowGeometry,
+      arrowMaterial,
+      GUIDANCE.arrowCount
+    );
+
+    guidanceArrows.frustumCulled = false;
+    scene.add(guidanceArrows);
+
+    const _arrowDummy = new THREE.Object3D();
+    const _arrowGroundOrigin = new THREE.Vector3();
+    const _arrowDown = new THREE.Vector3(0, -1, 0);
+    const _arrowPulseColor = new THREE.Color();
+    const arrowGroundRaycaster = new THREE.Raycaster();
+
+    let guidanceTimer = 0;
+    let guidanceActive = true;
+
+    function findArrowGroundHeight(x, z, fallbackY) {
+      _arrowGroundOrigin.set(x, fallbackY + 6, z);
+      arrowGroundRaycaster.set(_arrowGroundOrigin, _arrowDown);
+      arrowGroundRaycaster.far = 20;
+
+      const hits = arrowGroundRaycaster.intersectObjects(
+        collidables,
+        false
+      );
+
+      return hits.length > 0 ? hits[0].point.y : fallbackY;
+    }
+
+    // --- Obstacle avoidance: line-of-sight raycasts + a fan search ---
+    // This is a lightweight "tangent bug" style router, not a full navmesh:
+    // it checks a horizontal ray between two points; if blocked, it fans
+    // out left/right from the direct bearing until it finds a clear step,
+    // moves there, and repeats until it has a clear shot at the target (or
+    // runs out of waypoint budget). Good enough for walking around walls
+    // and building corners; it won't solve a maze perfectly.
+    const OBSTACLE_AVOID = {
+      probeDistance: 8,
+      maxWaypoints: 6,
+      angleStepDeg: 12,
+      maxAngleDeg: 84
+    };
+
+    const pathRaycaster = new THREE.Raycaster();
+    const _pathOrigin = new THREE.Vector3();
+    const _pathDir = new THREE.Vector3();
+
+    function hasClearPath(x1, z1, x2, z2, height) {
+      const dx = x2 - x1;
+      const dz = z2 - z1;
+      const dist = Math.hypot(dx, dz);
+
+      if (dist < 0.05) {
+        return true;
+      }
+
+      _pathOrigin.set(x1, height, z1);
+      _pathDir.set(dx / dist, 0, dz / dist);
+
+      pathRaycaster.set(_pathOrigin, _pathDir);
+      // Small buffer so the target/step point itself doesn't self-block.
+      pathRaycaster.far = Math.max(0.1, dist - 0.3);
+
+      const hits = pathRaycaster.intersectObjects(
+        collidables,
+        false
+      );
+
+      return hits.length === 0;
+    }
+
+    function computeGuidancePath(startX, startZ, targetX, targetZ, height) {
+      const path = [{ x: startX, z: startZ }];
+      let curX = startX;
+      let curZ = startZ;
+
+      for (let i = 0; i < OBSTACLE_AVOID.maxWaypoints; i++) {
+        if (hasClearPath(curX, curZ, targetX, targetZ, height)) {
+          path.push({ x: targetX, z: targetZ });
+          return path;
+        }
+
+        const bearing = Math.atan2(targetX - curX, targetZ - curZ);
+        let step = null;
+
+        for (
+          let a = 0;
+          a <= OBSTACLE_AVOID.maxAngleDeg;
+          a += OBSTACLE_AVOID.angleStepDeg
+        ) {
+          const angles = a === 0 ? [0] : [a, -a];
+
+          for (const angleDeg of angles) {
+            const rad = bearing + THREE.MathUtils.degToRad(angleDeg);
+            const dirX = Math.sin(rad);
+            const dirZ = Math.cos(rad);
+            const probeX = curX + dirX * OBSTACLE_AVOID.probeDistance;
+            const probeZ = curZ + dirZ * OBSTACLE_AVOID.probeDistance;
+
+            if (hasClearPath(curX, curZ, probeX, probeZ, height)) {
+              step = { x: probeX, z: probeZ };
+              break;
+            }
+          }
+
+          if (step) {
+            break;
+          }
+        }
+
+        if (!step) {
+          // Boxed in on all sides — fall back to a direct line rather than getting stuck.
+          path.push({ x: targetX, z: targetZ });
+          return path;
+        }
+
+        path.push(step);
+        curX = step.x;
+        curZ = step.z;
+      }
+
+      // Ran out of waypoint budget — finish with a direct segment anyway.
+      path.push({ x: targetX, z: targetZ });
+      return path;
+    }
+
+    let guidancePath = null;
+    let pathTimer = 0;
+    const PATH_UPDATE_INTERVAL = 0.6; // path search is pricier than a straight line, so recompute less often
+
+    function updateGuidanceArrows(delta, elapsed) {
+      if (!guidanceActive) {
+        return;
+      }
+
+      guidanceTimer += delta;
+      pathTimer += delta;
+
+      if (guidanceTimer < GUIDANCE.updateInterval) {
+        return;
+      }
+
+      guidanceTimer = 0;
+
+      const dx = GUIDANCE_TARGET.x - camera.position.x;
+      const dz = GUIDANCE_TARGET.z - camera.position.z;
+      const straightDistance = Math.hypot(dx, dz);
+
+      // Player reached the station — remove the trail for good.
+      if (straightDistance < GUIDANCE.arriveDistance) {
+        guidanceArrows.visible = false;
+        guidanceActive = false;
+        return;
+      }
+
+      guidanceArrows.visible = true;
+
+      if (!guidancePath || pathTimer >= PATH_UPDATE_INTERVAL) {
+        pathTimer = 0;
+        guidancePath = computeGuidancePath(
+          camera.position.x,
+          camera.position.z,
+          GUIDANCE_TARGET.x,
+          GUIDANCE_TARGET.z,
+          camera.position.y
+        );
+      }
+
+      const path = guidancePath;
+      const segLengths = [];
+      let totalLength = 0;
+
+      for (let i = 0; i < path.length - 1; i++) {
+        const segLen = Math.hypot(
+          path[i + 1].x - path[i].x,
+          path[i + 1].z - path[i].z
+        );
+        segLengths.push(segLen);
+        totalLength += segLen;
+      }
+
+      if (totalLength < 0.05) {
+        return;
+      }
+
+      const spacing = THREE.MathUtils.clamp(
+        totalLength / (GUIDANCE.arrowCount + 1),
+        GUIDANCE.minSpacing,
+        GUIDANCE.maxSpacing
+      );
+
+      for (let i = 0; i < GUIDANCE.arrowCount; i++) {
+        const dAlong = spacing * (i + 1.4);
+
+        if (dAlong >= totalLength - 1.0) {
+          // Beyond the target (or trail longer than the remaining path) — tuck it away.
+          _arrowDummy.position.set(0, -1000, 0);
+          _arrowDummy.updateMatrix();
+          guidanceArrows.setMatrixAt(i, _arrowDummy.matrix);
+          continue;
+        }
+
+        // Walk the polyline to find which segment this distance falls on.
+        let remaining = dAlong;
+        let segIndex = 0;
+
+        while (
+          segIndex < segLengths.length - 1 &&
+          remaining > segLengths[segIndex]
+        ) {
+          remaining -= segLengths[segIndex];
+          segIndex++;
+        }
+
+        const p0 = path[segIndex];
+        const p1 = path[segIndex + 1];
+        const segLen = Math.max(0.0001, segLengths[segIndex]);
+        const t = THREE.MathUtils.clamp(remaining / segLen, 0, 1);
+
+        const px = p0.x + (p1.x - p0.x) * t;
+        const pz = p0.z + (p1.z - p0.z) * t;
+        const dirX = (p1.x - p0.x) / segLen;
+        const dirZ = (p1.z - p0.z) / segLen;
+        const yaw = Math.atan2(dirX, dirZ);
+
+        const groundY = findArrowGroundHeight(
+          px,
+          pz,
+          camera.position.y - PLAYER.eyeHeight
+        );
+
+        _arrowDummy.position.set(px, groundY + GUIDANCE.hoverHeight, pz);
+        _arrowDummy.rotation.set(0, yaw, 0);
+        _arrowDummy.scale.setScalar(1);
+        _arrowDummy.updateMatrix();
+
+        guidanceArrows.setMatrixAt(i, _arrowDummy.matrix);
+
+        // Chasing pulse toward the target so the trail reads as "flowing" that way.
+        const pulse = 0.55 + 0.45 * Math.sin(elapsed * 3.2 - i * 0.6);
+        _arrowPulseColor.copy(GUIDANCE.color).multiplyScalar(pulse);
+        guidanceArrows.setColorAt(i, _arrowPulseColor);
+      }
+
+      guidanceArrows.instanceMatrix.needsUpdate = true;
+
+      if (guidanceArrows.instanceColor) {
+        guidanceArrows.instanceColor.needsUpdate = true;
+      }
+    }
+
+    // ============================================================
+    // WALL COLLISION
+    // ============================================================
+    // Casts a ray from the player's body in the exact direction they're
+    // trying to move. If a wall/collidable is closer than the player's
+    // radius plus the distance they'd travel this frame, that movement
+    // component is blocked (the other axis still resolves, so the player
+    // slides along walls instead of stopping dead).
+
+    const PLAYER_RADIUS = 0.34;
+    const wallRaycaster = new THREE.Raycaster();
+    const _rightVec = new THREE.Vector3();
+    const _forwardVec = new THREE.Vector3();
+    const _rayOriginVec = new THREE.Vector3();
+    const _rayDirVec = new THREE.Vector3();
+
+    function isBlocked(originHeight, dirX, dirY, dirZ, distance) {
+      if (distance <= 0) {
+        return false;
+      }
+
+      _rayOriginVec.set(
+        camera.position.x,
+        originHeight,
+        camera.position.z
+      );
+
+      _rayDirVec.set(dirX, dirY, dirZ);
+
+      wallRaycaster.set(_rayOriginVec, _rayDirVec);
+      wallRaycaster.far = distance + PLAYER_RADIUS;
+
+      const hits = wallRaycaster.intersectObjects(
+        collidables,
+        false
+      );
+
+      return hits.length > 0;
+    }
+
+    function tryMove(rightAmount, forwardAmount) {
+      // Match PointerLockControls' internal basis vectors exactly so the
+      // collision check lines up with the actual movement it will perform.
+      _rightVec.setFromMatrixColumn(camera.matrix, 0);
+      _forwardVec.crossVectors(camera.up, _rightVec);
+
+      // Single ray at chest height — catches walls without doubling raycast cost.
+      const chestY =
+        camera.position.y -
+        PLAYER.eyeHeight +
+        PLAYER.eyeHeight * 0.65;
+
+      if (rightAmount !== 0) {
+        const sign = Math.sign(rightAmount);
+
+        const blocked = isBlocked(
+          chestY,
+          _rightVec.x * sign,
+          _rightVec.y * sign,
+          _rightVec.z * sign,
+          Math.abs(rightAmount)
+        );
+
+        if (!blocked) {
+          controls.moveRight(rightAmount);
+        }
+      }
+
+      if (forwardAmount !== 0) {
+        const sign = Math.sign(forwardAmount);
+
+        const blocked = isBlocked(
+          chestY,
+          _forwardVec.x * sign,
+          _forwardVec.y * sign,
+          _forwardVec.z * sign,
+          Math.abs(forwardAmount)
+        );
+
+        if (!blocked) {
+          controls.moveForward(forwardAmount);
+        }
+      }
+    }
+
+    // ============================================================
+    // COPY SPAWN — P
+    // ============================================================
+
+    async function copySpawnCoordinates() {
+      const rotation = new THREE.Euler()
+        .setFromQuaternion(
+          camera.quaternion,
+          "YXZ"
+        );
+
+      const text =
+`const SPAWN = {
+  x: ${camera.position.x.toFixed(3)},
+  y: ${camera.position.y.toFixed(3)},
+  z: ${camera.position.z.toFixed(3)},
+  yaw: ${rotation.y.toFixed(3)}
+};`;
+
+      console.log(
+        "SPAWN:\n" +
+        text
+      );
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        showTemporaryMessage(
+          "Spawn coordinates copied"
+        );
+      } catch (error) {
+        console.warn(error);
+
+        showTemporaryMessage(
+          "Spawn printed in console"
+        );
+      }
+    }
+
+    // ============================================================
+    // WHITE-LIGHT PREVIEW — L
+    // ============================================================
+
+    let previewGroup = null;
+    let previewTimer = null;
+
+    function clearLightPreview() {
+      if (!previewGroup) {
+        return;
+      }
+
+      scene.remove(previewGroup);
+
+      previewGroup.traverse((child) => {
+        if (child.geometry) {
+          child.geometry.dispose();
+        }
+
+        if (child.material) {
+          child.material.dispose();
+        }
+      });
+
+      previewGroup = null;
+    }
+
+    async function previewWhiteLight() {
+      clearLightPreview();
+
+      const position =
+        camera.position.clone();
+
+      position.y += 0.30;
+
+      previewGroup = new THREE.Group();
+
+      const pointLight =
+        new THREE.PointLight(
+          LIGHT_PREVIEW.color,
+          LIGHT_PREVIEW.intensity,
+          LIGHT_PREVIEW.distance,
+          2
+        );
+
+      pointLight.position.copy(position);
+      pointLight.castShadow = false;
+
+      previewGroup.add(pointLight);
+      scene.add(previewGroup);
+
+      if (previewTimer) {
+        clearTimeout(previewTimer);
+      }
+
+      previewTimer = setTimeout(() => {
+        clearLightPreview();
+      }, LIGHT_PREVIEW.secondsVisible * 1000);
+
+      const text =
+`WHITE LIGHT COORDINATES:
+x: ${position.x.toFixed(3)}
+y: ${position.y.toFixed(3)}
+z: ${position.z.toFixed(3)}
+color: 0xffffff
+intensity: ${LIGHT_PREVIEW.intensity}
+distance: ${LIGHT_PREVIEW.distance}`;
+
+      console.log(text);
+
+      try {
+        await navigator.clipboard.writeText(text);
+
+        showTemporaryMessage(
+          "Invisible test light added; coordinates copied"
+        );
+      } catch (error) {
+        console.warn(error);
+
+        showTemporaryMessage(
+          "White-light coordinates printed in console"
+        );
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.repeat) {
+          return;
+        }
+
+        if (event.code === "KeyP") {
+          copySpawnCoordinates();
+        }
+
+        if (event.code === "KeyL") {
+          previewWhiteLight();
+        }
+      }
+    );
+
+    // ============================================================
+    // STATUS
+    // ============================================================
+
+    function updateStatus() {
+      const lines = [
+        loadingText,
+        "",
+        `X: ${camera.position.x.toFixed(2)}`,
+        `Y: ${camera.position.y.toFixed(2)}`,
+        `Z: ${camera.position.z.toFixed(2)}`,
+        "",
+        "L: test/copy white light",
+        "P: copy spawn"
+      ];
+
+      if (temporaryText) {
+        lines.push(
+          "",
+          temporaryText
+        );
+      }
+
+      statusEl.textContent =
+        lines.join("\n");
+    }
+
+    // ============================================================
+    // ANIMATION
+    // ============================================================
+
+    const clock = new THREE.Clock();
+
+    let fpsCheckTimer = 0;
+    let fpsCheckFrames = 0;
+    let lastScaleChangeTime = 0;
+
+    function updateDynamicResolution(delta, elapsed) {
+      fpsCheckTimer += delta;
+      fpsCheckFrames += 1;
+
+      // Sample over half-second windows so single-frame hitches don't cause thrashing.
+      if (fpsCheckTimer < 0.5) {
+        return;
+      }
+
+      const avgFps = fpsCheckFrames / fpsCheckTimer;
+      fpsCheckTimer = 0;
+      fpsCheckFrames = 0;
+
+      // Cooldown between adjustments so scale doesn't oscillate every window.
+      if (elapsed - lastScaleChangeTime < 1.0) {
+        return;
+      }
+
+      if (avgFps < 45 && renderScale > MIN_RENDER_SCALE) {
+        renderScale = Math.max(MIN_RENDER_SCALE, renderScale - 0.1);
+        applyRenderScale(renderScale);
+        lastScaleChangeTime = elapsed;
+      } else if (avgFps > 58 && renderScale < MAX_RENDER_SCALE) {
+        renderScale = Math.min(MAX_RENDER_SCALE, renderScale + 0.05);
+        applyRenderScale(renderScale);
+        lastScaleChangeTime = elapsed;
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const delta = Math.min(
+        clock.getDelta(),
+        0.05
+      );
+
+      const elapsed = clock.getElapsedTime();
+
+      updateDynamicResolution(delta, elapsed);
+      updateGuidanceArrows(delta, elapsed);
+
+      // Uneven, sputtering flicker on the green infection-glow lights.
+      for (const light of flickeringLights) {
+        const t = elapsed * 6 + light.userData.flickerSeed;
+        const flicker =
+          0.72 +
+          0.18 * Math.sin(t) +
+          0.10 * Math.sin(t * 4.3) +
+          (Math.random() < 0.02 ? -0.4 : 0);
+
+        light.intensity =
+          light.userData.baseIntensity *
+          THREE.MathUtils.clamp(flicker, 0.15, 1.15);
+      }
+
+      if (controls.isLocked) {
+        let horizontal = 0;
+        let forward = 0;
+
+        if (keys.right) {
+          horizontal += 1;
+        }
+
+        if (keys.left) {
+          horizontal -= 1;
+        }
+
+        if (keys.forward) {
+          forward += 1;
+        }
+
+        if (keys.backward) {
+          forward -= 1;
+        }
+
+        const length = Math.hypot(
+          horizontal,
+          forward
+        );
+
+        if (length > 0) {
+          horizontal /= length;
+          forward /= length;
+
+          tryMove(
+            horizontal * PLAYER.moveSpeed * delta,
+            forward * PLAYER.moveSpeed * delta
+          );
+        }
+
+        const feetY =
+          camera.position.y -
+          PLAYER.eyeHeight;
+
+        const groundY =
+          findGroundHeight(
+            camera.position.x,
+            feetY,
+            camera.position.z
+          );
+
+        const grounded =
+          groundY !== null &&
+          feetY <= groundY + 0.05 &&
+          verticalVelocity <= 0;
+
+        if (grounded) {
+          verticalVelocity = 0;
+
+          camera.position.y =
+            groundY +
+            PLAYER.eyeHeight;
+
+          if (wantsJump) {
+            verticalVelocity =
+              PLAYER.jumpSpeed;
+
+            wantsJump = false;
+          }
+        } else {
+          verticalVelocity +=
+            PLAYER.gravity *
+            delta;
+
+          camera.position.y +=
+            verticalVelocity *
+            delta;
+        }
+      }
+
+      updateStatus();
+      composer.render();
+    }
+
+    animate();
+
+    // ============================================================
+    // RESIZE
+    // ============================================================
+
+    window.addEventListener("resize", () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+
+      // Sets CSS display size back to full window (updateStyle defaults to true).
+      renderer.setSize(width, height);
+
+      // Then reapply whatever render scale dynamic resolution had settled on,
+      // instead of snapping back to full resolution on every resize.
+      applyRenderScale(renderScale);
+    });
+  </script>
+</body>
+</html>
