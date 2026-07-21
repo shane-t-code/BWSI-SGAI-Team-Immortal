@@ -20,7 +20,7 @@ the one that already exists so it doesn't drift as the UI is wired up further.
 | `ground_truth_human` | bool | `currentRound.groundTruthIsHuman` | True if the subject is actually a healthy human, false if overgrown/zombie. |
 | `player_answer_human` | bool \| null | argument to `recordAnswer()` | `null` = timed out, no decision made. |
 | `correct` | bool \| null | computed: `player_answer_human === ground_truth_human` | `null` when `player_answer_human` is `null`. |
-| `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, from the CNN's actual `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary instead of past it. |
+| `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, the CNN's `max_prob` — its probability for whichever class it predicted, not `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary, so its winning-class probability falls toward 50%. |
 | `reaction_time_ms` | int | `performance.now() - roundStartTime` | Primary dependent variable alongside `correct`. |
 | `scanned` | bool | `scanned` toggle | Did the player open the Threat Advisory panel. |
 | `zoomed` | bool | `zoomed` toggle | Did the player use zoom. |
