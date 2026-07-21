@@ -4,14 +4,15 @@ The raw pool (training/generate_rl_pool.py) is a catalog: every zombie at every 
 every human in both forms. This turns it into game-ready sessions, closing three
 threats to the experiment by construction:
 
-  1. BASE RATE. Tier 0 IS the humans and tiers 1/3/6 are the zombies, so equal trials
+  1. BASE RATE. Tier 0 IS the humans and tiers 2/8/10 are the zombies, so equal trials
      per tier would be 25% human -- a player who always says "zombie" scores 75%
      without looking. We emit 50/50, which makes always-guessing worth exactly nothing.
 
-  2. TILT LEAK. The agent tilts more as budget rises (~30% of tier-1 zombies are
-     tilted, 100% of tier-6). If humans aren't tilted at a matching rate, "tilted =
-     zombie" is free information -- a total giveaway at tier 6. We match the human
-     tilt rate to the measured zombie tilt rate, so with 50/50 classes:
+  2. TILT LEAK. The agent tilts more as budget rises (0% of tier-2 zombies are tilted,
+     ~95% of tier-8 and tier-10). If humans aren't tilted at a matching rate AND
+     magnitude, "tilted = zombie" is free information. We match the human tilt rate to
+     the measured zombie tilt rate per session, and human tilt ANGLES are sampled from
+     the zombie tilt distribution (generate_rl_pool.py), so with 50/50 classes:
          P(zombie | tilted) == P(zombie | upright) == 0.5
      i.e. tilt carries ZERO information. Not reduced -- eliminated.
 
@@ -162,7 +163,11 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     # Copy the chosen images in, so this folder is self-contained and the game needs
     # nothing else. The raw pool (~81MB, 490 images) stays a regenerable intermediate
     # and is NOT committed — it rebuilds from the agent weights + generate_rl_pool.py.
+    # Wipe the folder first: if the tiers change (e.g. 1/5/10 -> 2/8/10), the old tier
+    # images would otherwise linger here as orphans, unreferenced but committed.
     img_dir = os.path.join(out_dir, "images")
+    if os.path.isdir(img_dir):
+        shutil.rmtree(img_dir)
     os.makedirs(img_dir, exist_ok=True)
     for fname in sets.filename:
         shutil.copy2(os.path.join(pool_dir, fname), os.path.join(img_dir, fname))
