@@ -5,9 +5,11 @@ Owner: Smit (data lead). Companion to `docs/data-logging-schema.md`.
 ## Design
 
 - **Independent variable:** `malice_tier` — 4 levels: `0` (real human, control),
-  `1`, `5`, `10` (malice-budget edit counts — updated by Shane in PR #7 after
-  retraining the two-channel recolor+rotation agent; supersedes the earlier
-  `{0, 1, 3, 6}` from PR #6).
+  `2`, `8`, `10` (the RL agent's malice budgets — Shane, PR #13's reward
+  redesign, in which the disguise drives the AI to its decision boundary so it
+  grows *uncertain* rather than confidently wrong; supersedes `{0, 1, 5, 10}`
+  from PR #7 and `{0, 1, 3, 6}` from PR #6). See "Tier definition" in
+  `docs/data-logging-schema.md` and Shane's `docs/rl-red-team-design.md`.
 - **Between-subjects factor:** `condition` — `human_alone` vs. `human_ai`,
   **resolved as between-subjects per participant** (not per session): a
   participant is assigned one condition the first time they're seen and keeps
