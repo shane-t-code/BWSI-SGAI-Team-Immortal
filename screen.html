@@ -28,6 +28,29 @@
     }
     #instructions small { color: #d4d4d4; font-size: 13px; }
 
+    /* Shown once, before anything else, if no condition is stored yet
+       for this participant. Sits ABOVE #blocker (z-index 11 vs 10) so
+       the player can't start walking around until they've picked one. */
+    #condition-select {
+      position: fixed; inset: 0; z-index: 11;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 24px;
+      background: rgba(2, 3, 9, 0.95);
+      color: white; text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+    #condition-select.visible { display: flex; }
+    #condition-select h2 {
+      font-size: 18px; letter-spacing: 3px; margin: 0; color: #6fd6e8;
+    }
+    #condition-select .mode-buttons { display: flex; gap: 20px; }
+    #condition-select button {
+      padding: 16px 34px; font-size: 13px; letter-spacing: 2px;
+      background: rgba(8, 18, 28, 0.9); border: 1px solid #6fd6e8; color: #6fd6e8;
+      cursor: pointer; font-family: inherit; transition: filter 0.1s ease;
+    }
+    #condition-select button:hover { filter: brightness(1.35); }
+
     #crosshair {
       position: fixed; left: 50%; top: 50%;
       width: 6px; height: 6px; margin-left: -3px; margin-top: -3px;
@@ -144,6 +167,14 @@
 </head>
 
 <body>
+  <div id="condition-select">
+    <h2>SELECT MODE FOR THIS SESSION</h2>
+    <div class="mode-buttons">
+      <button id="choose-ai-assist">AI ASSIST</button>
+      <button id="choose-human-only">HUMAN ONLY</button>
+    </div>
+  </div>
+
   <div id="blocker">
     <div id="instructions">
       Click to start
@@ -221,7 +252,7 @@
     // ============================================================
     // CONFIG
     // ============================================================
-    const MAP_PATH = "mapRework2.glb";
+    const MAP_PATH = "threeD_player/mapRework2.glb";
 
     const SPAWN = { x: 11.456, y: 1.539, z: 10.938, yaw: 0.020 };
     const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 7, gravity: -20 };
@@ -229,15 +260,19 @@
     const KIOSK_TRIGGER_RADIUS = 4;
 
     // STATION_CONFIGS: one entry per physical screen. "screenMain" is the
-    // one you confirmed by name. The other two are a GUESS — if you
-    // duplicated screenMain in Blender before renaming it, glTF export
-    // typically auto-suffixes the copies as screenMain.001 / screenMain.002.
-    // If these don't match, press "M" while looking at each of the other
-    // two screens, and swap the meshName values below for whatever prints.
+    // one you confirmed by name. cliff_diagonal_stone001/002 are almost
+    // certainly WRONG -- those read as rock/cliff terrain meshes, not
+    // screens. Press "M" while looking at each of the other two real
+    // screens and swap these meshName values for whatever prints.
+    //
+    // NOTE: stations no longer carry their own `condition`. Condition is
+    // chosen ONCE per session (see CONDITION_SELECT below) and applies to
+    // every screen identically -- see that section for why a per-screen
+    // condition was wrong in the first place.
     const STATION_CONFIGS = [
-      { meshName: "screenMain",              condition: "human_ai" },
-      { meshName: "cliff_diagonal_stone001", condition: "human_ai" },     // left screen
-      { meshName: "cliff_diagonal_stone002", condition: "human_alone" },  // right screen
+      { meshName: "screenMain" },
+      { meshName: "cliff_diagonal_stone001" }, // left screen -- VERIFY with "M"
+      { meshName: "cliff_diagonal_stone002" }, // right screen -- VERIFY with "M"
     ];
 
     // ============================================================
@@ -389,7 +424,6 @@
       return {
         index,
         meshName: config.meshName,
-        condition: config.condition,           // 'human_ai' or 'human_alone', fixed per screen
         mesh: null,                             // resolved once the map loads
         position: new THREE.Vector3(),
         roundIndex: 0,
@@ -626,6 +660,36 @@
     const PARTICIPANT_ID = getOrCreateParticipantId();
     const SESSION_ID = crypto.randomUUID();
 
+    // ---------------------------------------------------------------------
+    // CONDITION — chosen ONCE per participant, applies to every screen for
+    // the rest of the session. This is NOT per-screen: seeing AI advice on
+    // one screen teaches you what a disguise looks like, so the same
+    // participant must never experience both conditions, no matter how
+    // many screens they walk between. (This replaces an earlier, broken
+    // version where each physical screen had its own fixed condition --
+    // that let one person get both human_ai and human_alone in a single
+    // session just by walking to a different screen.)
+    // ---------------------------------------------------------------------
+    let CONDITION = localStorage.getItem('condition'); // null until chosen
+
+    const conditionSelectEl = document.getElementById('condition-select');
+
+    function chooseCondition(value) {
+      CONDITION = value;
+      localStorage.setItem('condition', value);
+      conditionSelectEl.classList.remove('visible');
+    }
+
+    if (!CONDITION) {
+      // First time this participant_id has been seen: block everything
+      // else (walking, screens, all of it) behind this choice. Sits above
+      // #blocker (higher z-index) so "Click to start" isn't reachable
+      // until a mode is picked.
+      conditionSelectEl.classList.add('visible');
+    }
+    document.getElementById('choose-ai-assist').addEventListener('click', () => chooseCondition('human_ai'));
+    document.getElementById('choose-human-only').addEventListener('click', () => chooseCondition('human_alone'));
+
     function getNextContentSession(participantId) {
       const countKey = 'session_count_' + participantId;
       const playCount = parseInt(localStorage.getItem(countKey) || '0', 10);
@@ -783,7 +847,7 @@
       waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
 
       stationNameEl.textContent = station.meshName;
-      stationModeEl.textContent = station.condition === 'human_ai' ? 'AI ASSIST' : 'HUMAN ONLY';
+      stationModeEl.textContent = CONDITION === 'human_ai' ? 'AI ASSIST' : 'HUMAN ONLY';
 
       applyScreenTexture(station, `data/game_sets/images/${station.currentRound.image}`);
       renderThreats(station.currentRound.threats);
@@ -805,7 +869,7 @@
 
       // This screen's condition is fixed by which physical screen it is —
       // two screens are always 'human_ai', one is always 'human_alone'.
-      const infoChannelsBlocked = station.condition === 'human_alone';
+      const infoChannelsBlocked = CONDITION === 'human_alone';
       actScan.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
       actScan.style.opacity = infoChannelsBlocked ? '0.3' : '';
       actAssist.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
@@ -827,7 +891,7 @@
         content_session_key: CONTENT_SESSION_KEY,
         play_count: PLAY_COUNT,
         station: station.meshName,
-        condition: station.condition,
+        condition: CONDITION,
         subject: station.currentRound.subjectId,
         tier: station.currentRound.tier,
         ground_truth_human: station.currentRound.groundTruthIsHuman,
@@ -858,7 +922,7 @@
       if (!station.results.length) return;
       const headers = [
         'participant_id', 'session_id', 'content_session_key', 'play_count',
-        'station', 'subject', 'malice_tier', 'condition',
+        'station', 'subject_id', 'malice_tier', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
         'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
         'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
@@ -893,7 +957,7 @@
 
     actScan.addEventListener('click', () => {
       const st = stations[activeStationIndex];
-      if (!st || st.condition === 'human_alone') return;
+      if (!st || CONDITION === 'human_alone') return;
       st.scanned = true;
       actScan.classList.add('toggled');
       threatPanelEl.classList.add('revealed');
@@ -906,7 +970,7 @@
     });
     actAssist.addEventListener('click', () => {
       const st = stations[activeStationIndex];
-      if (!st || st.condition === 'human_alone') return;
+      if (!st || CONDITION === 'human_alone') return;
       if (!st.aiAssistUsed) {
         st.aiAssistClickTime = Math.round(performance.now() - st.roundStartTime);
       }
@@ -935,7 +999,7 @@
     function activateStation(index) {
       activeStationIndex = index;
       const st = stations[index];
-      console.log(`Station activated: "${st.meshName}" (condition: ${st.condition})`);
+      console.log(`Station activated: "${st.meshName}" (condition: ${CONDITION})`);
       hudRoot.classList.add('active');
       walkPrompt.classList.add('hidden');
       blocker.classList.add('hidden');
