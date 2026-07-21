@@ -12,7 +12,7 @@ import pandas as pd
 from pathlib import Path
 
 _root = Path(__file__).resolve().parent.parent
-POOL_METADATA = _root / "data" / "game_sets" / "game_manifest.csv"
+POOL_METADATA = _root / "data" / "rl_pool" / "pool_metadata.csv"
 
 def verify_tiers():
     """Load pool metadata and verify tier progression."""
