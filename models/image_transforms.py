@@ -326,6 +326,15 @@ class RecolorTransform(ImageTransform):
     def apply(self, image: Image.Image, intensity: float) -> Image.Image:
         """Blend the character's green pixels toward skin tone.
 
+        Uses skin_weight() (see the perception section below) to decide HOW MUCH to
+        repaint each pixel, rather than an in/out mask. Two reasons that matters:
+
+          * A hard mask mottles. Neighbouring fabric pixels land on opposite sides of
+            the threshold, so a khaki vest comes out speckled brown. A continuous
+            weight ramps instead of cliffs, so there is nothing to speckle.
+          * A hard mask leaves a rim. Anti-aliased silhouette pixels are part figure,
+            part background; a weight feathers them instead of leaving a green outline.
+
         Args:
             image: Input PIL Image.
             intensity: Recolor amount in [0, 1] (0 = untouched green, 1 = full skin).
@@ -336,12 +345,6 @@ class RecolorTransform(ImageTransform):
         arr = np.array(image.convert("RGB")).astype(np.float32)
         r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
 
-        # Ratio-based green-dominance mask: green must lead BOTH other channels by
-        # >12%. This catches vivid AND shadowed green on the figure while ignoring
-        # faint gray-green ground tints (which barely exceed the other channels).
-        # Green is the only green-dominant thing in-scene, so the scene stays safe.
-        mask = (g > 1.12 * r) & (g > 1.12 * b) & (g > 25)
-
         # Target skin tone built from each pixel's own brightness, so the figure keeps
         # its light/dark shading (folds, shadows) instead of going flat. Skin: R>G>B.
         lum = 0.299 * r + 0.587 * g + 0.114 * b
@@ -349,10 +352,13 @@ class RecolorTransform(ImageTransform):
         tg = np.clip(lum * 0.80, 0, 255)
         tb = np.clip(lum * 0.66, 0, 255)
 
+        # Per-pixel blend factor: how confidently this is skin, times how hard we edit.
+        alpha = skin_weight(image) * intensity
+
         out = arr.copy()
-        out[..., 0] = np.where(mask, r * (1 - intensity) + tr * intensity, r)
-        out[..., 1] = np.where(mask, g * (1 - intensity) + tg * intensity, g)
-        out[..., 2] = np.where(mask, b * (1 - intensity) + tb * intensity, b)
+        out[..., 0] = r * (1.0 - alpha) + tr * alpha
+        out[..., 1] = g * (1.0 - alpha) + tg * alpha
+        out[..., 2] = b * (1.0 - alpha) + tb * alpha
         return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8))
 
 
@@ -464,6 +470,80 @@ def apply_random_transform(
 # ---------------------------------------------------------------------------
 
 
+# --- tuning constants for skin_weight, all measured rather than guessed -------------
+# (diagnostics that produced them are described inline; see git history for the scripts)
+_DEG = 360.0 / 255.0        # PIL packs hue into 0-255; convert to degrees for clarity
+
+# Path 1 -- vivid zombie skin, by ABSOLUTE green dominance (g minus the larger of r/b).
+# Absolute, not a ratio: a ratio test demands a bigger green lead from bright pixels
+# than from dark ones, so it caught dark olive fabric (~7 levels of lead) while missing
+# bright pale skin (~18 levels). One brightness bug, two symptoms -- speckled clothing
+# AND green streaks left on skin. Measured clusters: fabric 5-9, pale skin 15-18,
+# vivid skin 24-159. A sweep put the best split at 6.0 (0.2% skin missed, 0% fabric hit).
+_DOM_LO, _DOM_RAMP = 6.0, 12.0
+
+# Path 2 -- pale MINT skin, which path 1 physically cannot see: on ~17 of the 90 zombies
+# the skin sits at dominance 5-11, identical to olive fabric, so no dominance threshold
+# separates them. Those figures do differ in hue (mint skin 150-171 deg vs olive fabric
+# 70-150). Ceiling is 170 because a blue prop staff in test_00089 starts at 179 deg and
+# was being recoloured to skin tone; mint skin's 99th percentile is 171, so 170 excludes
+# the staff without losing a single skin pixel.
+_MINT_LO, _MINT_HI, _MINT_EDGE = 140.0, 170.0, 8.0
+_MINT_SAT_LO, _MINT_SAT_RAMP = 50.0, 12.0
+
+# Saturation gate applied to BOTH paths. The pale gray-green street sits below sat 35 and
+# is the single most persistent false positive in this scene — it wrecked three separate
+# diagnostics during development by masquerading as figure green. This is the guard.
+_STREET_LO, _STREET_RAMP = 25.0, 20.0
+
+_MASK_MIN_WEIGHT = 0.15     # weight above which green_mask() calls a pixel "the figure"
+_HUE_PROXY_SCALE = 6.67     # calibrated so an untouched zombie scores ~1.0 (see hue_proxy)
+
+
+def _ramp(x: np.ndarray, lo: float, width: float) -> np.ndarray:
+    """Linear 0->1 ramp: 0 at or below `lo`, 1 at or above `lo + width`."""
+    return np.clip((x - lo) / width, 0.0, 1.0)
+
+
+def skin_weight(image: Image.Image) -> np.ndarray:
+    """How confidently each pixel is zombie SKIN, as a float in [0, 1].
+
+    This is the single shared definition of "the character's green": RecolorTransform
+    uses it to decide how hard to repaint each pixel, and green_mask() thresholds it to
+    decide which pixels hue_proxy scores. Deriving both from one function is deliberate
+    — when the transform and the metric each had their own idea of "green" they
+    disagreed, and the reward ended up grading pixels the transform could not change.
+
+    Two detection paths, combined with max() so a pixel only needs to satisfy one:
+      1. green dominance -> vivid zombie skin
+      2. mint hue band   -> pale skin that dominance is blind to
+    Then a saturation gate over both, to keep the gray-green street out.
+
+    Args:
+        image: Input PIL Image.
+
+    Returns:
+        Float array of shape (height, width), 0.0 = definitely not skin, 1.0 = certainly.
+    """
+    arr = np.array(image.convert("RGB")).astype(np.float32)
+    hsv = np.array(image.convert("HSV")).astype(np.float32)
+    r, g, b = arr[..., 0], arr[..., 1], arr[..., 2]
+    hue, sat = hsv[..., 0] * _DEG, hsv[..., 1]
+
+    # Path 1: how far green leads the strongest of the other two channels.
+    w_dominance = _ramp(g - np.maximum(r, b), _DOM_LO, _DOM_RAMP)
+
+    # Path 2: inside the mint hue band (soft on both edges) and saturated enough to be
+    # a real colour rather than a grey that happens to lean green.
+    w_mint = (
+        _ramp(hue, _MINT_LO, _MINT_EDGE)
+        * (1.0 - _ramp(hue, _MINT_HI, _MINT_EDGE))
+        * _ramp(sat, _MINT_SAT_LO, _MINT_SAT_RAMP)
+    )
+
+    return np.maximum(w_dominance, w_mint) * _ramp(sat, _STREET_LO, _STREET_RAMP)
+
+
 def green_mask(
     image: Image.Image,
     hue_low: int = 45,
@@ -472,29 +552,22 @@ def green_mask(
 ) -> np.ndarray:
     """Find the zombie-green pixels in an image.
 
-    "Green" is easiest to detect in HSV color space, where a color is described by
-    Hue (which color on the rainbow), Saturation (how vivid vs. gray), and Value
-    (how bright) — instead of RGB. A pixel counts as zombie-green if its hue is in
-    the green band AND it is saturated enough to be real green (not a washed-out
-    gray that merely leans green).
+    Now a thresholded view of skin_weight(), so the pixels the reward SCORES are exactly
+    the pixels the recolor transform can CHANGE. The previous version was an independent
+    HSV band (~63-162 deg) which missed mint skin at 160-171 — meaning on pale figures
+    the agent was being graded on pixels it had no action for.
 
     Args:
         image: Input PIL Image.
-        hue_low: Lower edge of the green hue band (PIL's 0-255 hue scale).
-        hue_high: Upper edge of the green hue band.
-        sat_min: Minimum saturation to count as vivid green (filters out gray).
+        hue_low: Unused. Kept so existing callers passing it keep working.
+        hue_high: Unused. Kept for backward compatibility.
+        sat_min: Unused. Kept for backward compatibility.
 
     Returns:
         A boolean array of shape (height, width): True where the pixel is
         zombie-green, False elsewhere. Use this as a mask to select those pixels.
     """
-    # Convert to HSV and split into the three channels. int16 (not uint8) so later
-    # arithmetic in hue_proxy can't overflow or wrap around.
-    hsv = np.array(image.convert("HSV")).astype(np.int16)
-    h, s = hsv[..., 0], hsv[..., 1]
-
-    # Green pixel = hue inside the green band AND saturated enough to be real green.
-    return (h > hue_low) & (h < hue_high) & (s > sat_min)
+    return skin_weight(image) > _MASK_MIN_WEIGHT
 
 
 def hue_proxy(image: Image.Image, mask: np.ndarray) -> float:
@@ -529,9 +602,19 @@ def hue_proxy(image: Image.Image, mask: np.ndarray) -> float:
     # "Green excess": how much the green channel dominates the other two.
     #   vivid green → g >> r and g >> b → large positive number (still a zombie)
     #   skin / gray → r, g, b close together → near zero (looks human)
-    # Divide by 255 to land in ~[0, 1], average over all masked pixels, and multiply
-    # by 4 so a fully-green character scores ~1.0 (the ×4 was calibrated on real data).
-    green_excess = np.clip(((g - np.maximum(r, b)) / 255.0).mean() * 4.0, 0.0, 1.0)
+    #
+    # The per-pixel clamp at 0 is the important part. Skin-toned pixels have NEGATIVE
+    # excess (r > g), so without it a well-recoloured region cancels out a region that
+    # is still green — the average hides blotches instead of reporting them. That bug
+    # scored one image a perfect 1.0000 while 766 of its pixels were still visibly
+    # green, and it flattened the reward above 0.75 recolor, so the agent correctly
+    # concluded there was nothing left to gain and stopped early. Clamping first means
+    # leftover green can only ever push the score DOWN.
+    per_pixel = np.clip((g - np.maximum(r, b)) / 255.0, 0.0, None)
+
+    # Scale so an untouched zombie lands at ~1.0. Re-derived after the clamp changed
+    # the mean (the old ×4 was calibrated against the signed version).
+    green_excess = np.clip(per_pixel.mean() * _HUE_PROXY_SCALE, 0.0, 1.0)
 
     # Flip it so the reward points the right way: high = not green = human-plausible.
     return float(1.0 - green_excess)

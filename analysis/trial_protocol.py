@@ -23,7 +23,7 @@ def build_trial_order(
     """Build a shuffled trial presentation order for one participant.
 
     Args:
-        tiers: Malice tiers to include, e.g. [0, 1, 3, 6].
+        tiers: Malice tiers to include, e.g. [0, 2, 8, 10].
         repeats_per_tier: How many trials of each tier the participant sees.
         seed: Seed for reproducible shuffling. None means non-deterministic.
 

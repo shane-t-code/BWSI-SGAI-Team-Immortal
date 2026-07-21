@@ -103,6 +103,7 @@ def _save_adversarial_plots(
     epsilon_log: list[float],
     phealthy_log: list[float],
     hue_log: list[float],
+    aiscore_log: list[float],
     log_dir: str,
 ) -> None:
     """Save adversarial training curves to log_dir.
@@ -110,8 +111,9 @@ def _save_adversarial_plots(
     Args:
         episode_rewards: Total reward per episode, in order.
         epsilon_log: Epsilon value at the end of each episode, in order.
-        phealthy_log: Final P(healthy) per episode (how much the CNN was fooled).
+        phealthy_log: Final P(healthy) per episode (informational — where the CNN landed).
         hue_log: Final hue_proxy per episode (how human the color looks).
+        aiscore_log: Final CNN uncertainty per episode (1 - max_prob; the AI objective).
         log_dir: Directory to write plot files into.
     """
     os.makedirs(log_dir, exist_ok=True)
@@ -156,14 +158,19 @@ def _save_adversarial_plots(
     ax2.grid(True, alpha=0.3)
 
     # ── Bottom: disguise progression — both channels ──────────────────────
-    ax3.plot(episodes_range, phealthy_log, color="crimson", linewidth=1.5,
-             label="P(healthy) — fools the CNN")
+    # hue_proxy aims UP to 1.0 (fully skin-toned, fools the human). The AI tent aims UP to
+    # 1.0 too, which happens when P(healthy) sits on the 0.45 boundary line — so P(healthy)
+    # should land NEAR 0.45, not at the top. A P(healthy) near 1.0 means the agent overshot.
+    ax3.plot(episodes_range, aiscore_log, color="crimson", linewidth=1.5,
+             label="AI tent — parked at boundary (aim 1.0)")
     ax3.plot(episodes_range, hue_log, color="seagreen", linewidth=1.5,
-             label="hue_proxy — fools the human")
-    ax3.axhline(0.5, color="gray", linewidth=0.8, linestyle="--", label="0.5 boundary")
+             label="hue_proxy — fools the human (aim 1.0)")
+    ax3.plot(episodes_range, phealthy_log, color="lightgray", linewidth=1.0,
+             label="P(healthy) — should land near 0.45")
+    ax3.axhline(0.45, color="gray", linewidth=0.8, linestyle="--", label="AI target 0.45")
     ax3.set_xlabel("Episode")
     ax3.set_ylabel("Final disguise level")
-    ax3.set_title("How Disguised the Final Image Is (both channels)")
+    ax3.set_title("Where the Final Image Lands (tent pulls P(healthy) to 0.45, hue to 1.0)")
     ax3.set_ylim(0, 1)
     ax3.legend()
     ax3.grid(True, alpha=0.3)
@@ -224,8 +231,11 @@ def train(
     weights_saved = False
     episode_rewards: list[float] = []
     epsilon_log: list[float] = []
-    phealthy_log: list[float] = []  # final P(healthy) per episode (CNN-fool metric)
-    hue_log: list[float] = []       # final hue_proxy per episode (human-fool metric)
+    phealthy_log: list[float] = []  # final P(healthy) per episode — TARGET is ~0.45 (the
+                                    # CNN's boundary), NOT 1.0. Near 0.45 = bullseye; near
+                                    # 1.0 means the agent overshot into "confident healthy".
+    hue_log: list[float] = []       # final hue_proxy per episode (human-fool, aim 1.0)
+    aiscore_log: list[float] = []   # final tent score (1.0 = parked at the boundary).
 
     for episode in range(1, episodes + 1):
         obs, info = env.reset()
@@ -262,10 +272,12 @@ def train(
         episode_rewards.append(episode_reward)
         epsilon_log.append(agent.epsilon)
 
-        # Record how disguised the final image ended up: how much the CNN was
-        # fooled (P(healthy)) and how human the color looks (hue_proxy).
+        # Record how disguised the final image ended up: where the CNN landed
+        # (P(healthy), target ~0.45), how close to the boundary (ai_score, target 1.0),
+        # and how human the color looks (hue_proxy, target 1.0).
         phealthy_log.append(info.get("p_healthy", 0.0))
         hue_log.append(info.get("hue", 0.0))
+        aiscore_log.append(info.get("ai_score", 0.0))
 
         # Save best weights
         if episode_reward > best_reward and agent.epsilon < 0.5:
@@ -284,6 +296,7 @@ def train(
             avg_loss = episode_loss / steps if steps > 0 else 0.0
             avg_ph = sum(phealthy_log[-LOG_INTERVAL:]) / len(phealthy_log[-LOG_INTERVAL:])
             avg_hue = sum(hue_log[-LOG_INTERVAL:]) / len(hue_log[-LOG_INTERVAL:])
+            avg_ai = sum(aiscore_log[-LOG_INTERVAL:]) / len(aiscore_log[-LOG_INTERVAL:])
             target_flag = " [target updated]" if target_updated else ""
             print(
                 f"Episode {episode:4d}/{episodes}  "
@@ -291,7 +304,8 @@ def train(
                 f"avg(last {LOG_INTERVAL}): {avg:+.2f}  "
                 f"loss(ep): {avg_loss:.4f}  "
                 f"epsilon: {agent.epsilon:.3f}  "
-                f"P(healthy): {avg_ph:.3f}  "
+                f"P(healthy)->0.45: {avg_ph:.3f}  "
+                f"at-boundary(1=best): {avg_ai:.3f}  "
                 f"hue: {avg_hue:.3f}  "
                 f"steps: {steps}"
                 f"{target_flag}"
@@ -308,7 +322,8 @@ def train(
         )
         print("Try increasing NUM_EPISODES or decreasing EPSILON_DECAY.")
 
-    _save_adversarial_plots(episode_rewards, epsilon_log, phealthy_log, hue_log, log_dir)
+    _save_adversarial_plots(episode_rewards, epsilon_log, phealthy_log, hue_log,
+                            aiscore_log, log_dir)
 
 
 if __name__ == "__main__":
