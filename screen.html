@@ -255,7 +255,7 @@
     const MAP_PATH = "threeD_player/mapRework2.glb";
 
     const SPAWN = { x: 11.456, y: 1.539, z: 10.938, yaw: 0.020 };
-    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 7, gravity: -20 };
+    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 9, gravity: -30 };
 
     const KIOSK_TRIGGER_RADIUS = 4;
 
@@ -303,14 +303,16 @@
     camera.rotation.order = "YXZ";
     camera.rotation.y = SPAWN.yaw;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", stencil: false, depth: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.AgXToneMapping;
     renderer.toneMappingExposure = 1.14;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.BasicShadowMap;
+    renderer.sortObjects = false;
+    renderer.autoClear = true;
     document.body.appendChild(renderer.domElement);
 
     const controls = new PointerLockControls(camera, document.body);
@@ -323,7 +325,7 @@
     });
 
     function createStarField() {
-      const count = 3200;
+      const count = 1200;
       const positions = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
         const radius = THREE.MathUtils.randFloat(190, 490);
@@ -336,8 +338,8 @@
       const geometry = new THREE.BufferGeometry();
       geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       const material = new THREE.PointsMaterial({
-        color: 0xffffff, size: 0.62, sizeAttenuation: true,
-        transparent: true, opacity: 0.88, depthWrite: false, fog: false
+        color: 0xffffff, size: 0.5, sizeAttenuation: false,
+        transparent: true, opacity: 0.7, depthWrite: false, fog: false
       });
       scene.add(new THREE.Points(geometry, material));
     }
@@ -347,14 +349,14 @@
     sunTarget.position.set(0, 0, 0);
     scene.add(sunTarget);
 
-    scene.add(new THREE.HemisphereLight(0xfffaf5, 0x806055, 1.50));
-    scene.add(new THREE.AmbientLight(0xffffff, 0.66));
+    scene.add(new THREE.HemisphereLight(0xfffaf5, 0x806055, 0.8));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
 
-    const sunLight = new THREE.DirectionalLight(0xffd2a6, 1.75);
+    const sunLight = new THREE.DirectionalLight(0xffd2a6, 1.2);
     sunLight.position.set(60, 90, 40);
     sunLight.target = sunTarget;
     sunLight.castShadow = true;
-    sunLight.shadow.mapSize.set(1536, 1536);
+    sunLight.shadow.mapSize.set(1024, 1024);
     sunLight.shadow.camera.left = -80;
     sunLight.shadow.camera.right = 80;
     sunLight.shadow.camera.top = 80;
@@ -366,25 +368,25 @@
     sunLight.shadow.radius = 12;
     scene.add(sunLight);
 
-    const oppositeFillLight = new THREE.DirectionalLight(0xeaf6ff, 0.98);
+    const oppositeFillLight = new THREE.DirectionalLight(0xeaf6ff, 0.5);
     oppositeFillLight.position.set(-55, 40, -50);
     oppositeFillLight.target = sunTarget;
     scene.add(oppositeFillLight);
 
-    const frontFillLight = new THREE.DirectionalLight(0xffeddc, 0.62);
+    const frontFillLight = new THREE.DirectionalLight(0xffeddc, 0.3);
     frontFillLight.position.set(12, 30, 60);
     frontFillLight.target = sunTarget;
     scene.add(frontFillLight);
 
-    const bounceLight = new THREE.PointLight(0xff9a72, 0.28, 90, 2);
+    const bounceLight = new THREE.PointLight(0xff9a72, 0.15, 90, 2);
     bounceLight.position.set(0, -12, 0);
     scene.add(bounceLight);
 
     const permanentWhiteLights = [
-      { x: -4.310, y: 2.834, z: 11.516, intensity: 18, distance: 12 },
-      { x: -7.161, y: 2.044, z: -1.477, intensity: 18, distance: 12 },
-      { x: -4.056, y: 2.375, z: -25.507, intensity: 18, distance: 12 },
-      { x: 10.747, y: 2.577, z: -29.512, intensity: 18, distance: 12 }
+      { x: -4.310, y: 2.834, z: 11.516, intensity: 10, distance: 12 },
+      { x: -7.161, y: 2.044, z: -1.477, intensity: 10, distance: 12 },
+      { x: -4.056, y: 2.375, z: -25.507, intensity: 10, distance: 12 },
+      { x: 10.747, y: 2.577, z: -29.512, intensity: 10, distance: 12 }
     ];
     for (const c of permanentWhiteLights) {
       const light = new THREE.PointLight(0xffffff, c.intensity, c.distance, 2);
@@ -410,7 +412,10 @@
       const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
       for (const texture of textures) {
         if (!texture) continue;
-        texture.anisotropy = Math.min(8, maxAnisotropy);
+        texture.anisotropy = Math.min(2, maxAnisotropy);
+        texture.minFilter = THREE.LinearFilter;
+        texture.magFilter = THREE.LinearFilter;
+        texture.generateMipmaps = false;
         texture.needsUpdate = true;
       }
       material.needsUpdate = true;
@@ -513,19 +518,20 @@
     const composer = new EffectComposer(renderer);
     composer.addPass(new RenderPass(scene, camera));
 
-    const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
-    ssaoPass.kernelRadius = 3;
-    ssaoPass.minDistance = 0.001;
-    ssaoPass.maxDistance = 0.045;
-    composer.addPass(ssaoPass);
+    // SSAO disabled for performance - biggest FPS gain
+    // const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+    // ssaoPass.kernelRadius = 3;
+    // ssaoPass.minDistance = 0.001;
+    // ssaoPass.maxDistance = 0.045;
+    // composer.addPass(ssaoPass);
 
     const bloomPass = new UnrealBloomPass(
-      new THREE.Vector2(window.innerWidth, window.innerHeight), 0.06, 0.18, 0.97
+      new THREE.Vector2(window.innerWidth, window.innerHeight), 0.04, 0.12, 0.85
     );
     composer.addPass(bloomPass);
 
     const VividColorShader = {
-      uniforms: { tDiffuse: { value: null }, saturation: { value: 1.10 }, contrast: { value: 1.015 } },
+      uniforms: { tDiffuse: { value: null }, saturation: { value: 1.05 }, contrast: { value: 1.01 } },
       vertexShader: `
         varying vec2 vUv;
         void main() {
@@ -1100,9 +1106,12 @@
     // ANIMATION
     // ============================================================
     const clock = new THREE.Clock();
+    let frameCount = 0;
+    let lastStatusUpdate = 0;
     function animate() {
       requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
+      frameCount++;
 
       if (controls.isLocked) {
         let horizontal = 0, forward = 0;
@@ -1120,7 +1129,10 @@
         }
 
         const feetY = camera.position.y - PLAYER.eyeHeight;
-        const groundY = findGroundHeight(camera.position.x, feetY, camera.position.z);
+        // Cache ground check every other frame
+        const groundY = (frameCount % 2 === 0 || !grounded)
+          ? findGroundHeight(camera.position.x, feetY, camera.position.z)
+          : groundY;
         const grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
 
         if (grounded) {
@@ -1157,9 +1169,8 @@
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
       composer.setSize(width, height);
-      ssaoPass.setSize(width, height);
       bloomPass.setSize(width, height);
     });
   </script>
