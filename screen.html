@@ -1,758 +1,950 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Checkpoint Terminal — prototype</title>
-<style>
-  :root {
-    --bg: #060b12;
-    --panel-bg: rgba(8, 18, 28, 0.75);
-    --cyan: #6fd6e8;
-    --cyan-dim: #3a6b78;
-    --orange: #e8845a;
-    --text-dim: #7d95a0;
-    --line: rgba(111, 214, 232, 0.25);
-  }
-  html, body {
-    margin: 0; height: 100%; overflow: hidden;
-    background: radial-gradient(ellipse at center, #0a141e 0%, var(--bg) 70%);
-    font-family: 'Courier New', monospace;
-    color: var(--cyan);
-  }
-  canvas { display: block; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkpoint Terminal — Map V3</title>
 
-  .hud-label {
-    font-size: 11px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: var(--cyan);
-  }
-
-  /* Top tick-mark ruler */
-  #tick-ruler {
-    position: fixed; top: 0; left: 0; right: 0; height: 14px;
-    display: flex; justify-content: space-between; padding: 0 8px;
-    pointer-events: none;
-  }
-  #tick-ruler span { width: 1px; height: 8px; background: var(--line); }
-
-  /* Top-left: wave progress */
-  #wave-panel { position: fixed; top: 20px; left: 20px; width: 220px; }
-  #wave-bar-track {
-    width: 100%; height: 3px; background: rgba(111,214,232,0.15);
-    margin-bottom: 8px; position: relative;
-  }
-  #wave-bar-fill {
-    height: 100%; background: var(--cyan);
-    box-shadow: 0 0 6px var(--cyan);
-    transition: width 0.3s ease;
-  }
-  #wave-text { font-size: 11px; letter-spacing: 2px; color: var(--cyan); }
-
-  /* Top-center: timer */
-  #timer-panel {
-    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
-  }
-  #timer-circle {
-    width: 60px; height: 60px; border-radius: 50%;
-    border: 1.5px solid var(--orange);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--orange); font-size: 20px; letter-spacing: 1px;
-    box-shadow: 0 0 10px rgba(232,132,90,0.25) inset;
-  }
-
-  /* Top-right: threat advisory */
-  #threat-panel {
-    position: fixed; top: 20px; right: 20px; width: 230px;
-    background: var(--panel-bg); border: 1px solid var(--line);
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  #threat-panel.revealed { opacity: 1; pointer-events: auto; }
-  #threat-header {
-    background: rgba(111,214,232,0.12);
-    padding: 8px 12px; font-size: 11px; letter-spacing: 3px;
-    border-bottom: 1px solid var(--line);
-  }
-  #threat-list { list-style: none; margin: 0; padding: 10px 12px; }
-  #threat-list li {
-    font-size: 12px; color: #b9cdd4; padding: 4px 0;
-    position: relative; padding-left: 14px;
-  }
-  #threat-list li::before {
-    content: '▪'; position: absolute; left: 0; color: var(--cyan); font-size: 9px; top: 6px;
-  }
-
-  /* Center reticle */
-  #reticle {
-    position: fixed; top: 50%; left: 50%; transform: translate(-50%, -55%);
-    display: flex; flex-direction: column; align-items: center;
-    pointer-events: none;
-    z-index: 2;
-  }
-  .tick-v { width: 1px; height: 22px; background: var(--cyan-dim); }
-  #reticle-mid { display: flex; align-items: center; gap: 14px; margin: 6px 0; }
-  .tick-h { width: 22px; height: 1px; background: var(--cyan-dim); }
-  #diamond {
-    width: 14px; height: 14px; border: 1.5px solid var(--cyan);
-    transform: rotate(45deg);
-  }
-  #subject-id {
-    margin-top: 14px; font-size: 11px; letter-spacing: 3px; color: var(--cyan);
-  }
-
-  /* Bottom-left: actions panel */
-  #actions-panel {
-    position: fixed; bottom: 30px; left: 20px; width: 190px;
-    border: 1px solid var(--line);
-  }
-  #actions-header {
-    background: rgba(111,214,232,0.12);
-    padding: 8px 12px; font-size: 11px; letter-spacing: 3px;
-    text-align: center; border-bottom: 1px solid var(--line);
-  }
-  .action-item {
-    padding: 10px 14px; font-size: 12px; letter-spacing: 1px;
-    color: #b9cdd4; cursor: pointer; background: var(--panel-bg);
-    border-bottom: 1px solid rgba(111,214,232,0.08);
-  }
-  .action-item:hover { background: rgba(111,214,232,0.1); color: var(--cyan); }
-  .action-item.toggled { background: rgba(111,214,232,0.18); color: var(--cyan); }
-  #act-flag.toggled { background: rgba(232,132,90,0.18); color: var(--orange); }
-
-  /* Bottom-center: decision buttons */
-  #decision-panel {
-    position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 14px;
-  }
-  .decision-btn {
-    padding: 13px 30px; font-size: 12px; letter-spacing: 2px;
-    background: var(--panel-bg); cursor: pointer;
-    font-family: inherit; transition: filter 0.1s ease;
-  }
-  #btn-permit { border: 1px solid var(--cyan); color: var(--cyan); }
-  #btn-reject { border: 1px solid var(--orange); color: var(--orange); }
-  .decision-btn:hover { filter: brightness(1.3); }
-
-  /* Bottom-right: AI assistant confidence */
-  #ai-panel {
-    position: fixed; bottom: 30px; right: 20px; width: 200px;
-    border: 1px solid var(--line); background: var(--panel-bg);
-    padding: 10px 14px;
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-  #ai-panel.revealed { opacity: 1; pointer-events: auto; }
-  #ai-header { font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
-  #ai-conf-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
-  #ai-conf-track {
-    flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative;
-  }
-  #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
-
-  #feedback {
-    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; letter-spacing: 1px; color: var(--cyan);
-    opacity: 0; transition: opacity 0.2s ease;
-  }
-  #feedback.show { opacity: 1; }
-
-  /* HUD only appears once the player is near the kiosk */
-  #hud-root { display: none; }
-  #hud-root.active { display: contents; }
-
-  #walk-prompt {
-    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
-    font-size: 12px; letter-spacing: 2px; color: var(--text-dim);
-  }
-  #walk-prompt.hidden { display: none; }
-
-  #click-to-play {
-    position: fixed; inset: 0; background: rgba(6,11,18,0.9);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; letter-spacing: 3px; color: var(--cyan);
-    cursor: pointer; z-index: 10;
-  }
-  #click-to-play.hidden { display: none; }
-</style>
-</head>
-<body>
-
-<div id="click-to-play">CLICK TO ENTER CHECKPOINT — WASD TO MOVE, MOUSE TO LOOK</div>
-
-<div id="walk-prompt">WALK TO THE KIOSK TO BEGIN INSPECTION</div>
-
-<div id="hud-root">
-
-<div id="tick-ruler"></div>
-
-<div id="wave-panel">
-  <div id="wave-bar-track"><div id="wave-bar-fill" style="width: 55%;"></div></div>
-  <div id="wave-text">WAVE: <span id="wave-num">6</span>/<span id="wave-total">10</span></div>
-</div>
-
-<div id="timer-panel">
-  <div class="hud-label" style="color:var(--text-dim)">TIME REMAINING</div>
-  <div id="timer-circle"><span id="timer-value">45</span></div>
-</div>
-
-<div id="threat-panel">
-  <div id="threat-header">THREAT ADVISORY</div>
-  <ul id="threat-list"></ul>
-</div>
-
-<div id="reticle">
-  <div class="tick-v"></div>
-  <div id="reticle-mid">
-    <div class="tick-h"></div>
-    <div id="diamond"></div>
-    <div class="tick-h"></div>
-  </div>
-  <div class="tick-v"></div>
-  <div id="subject-id">SUBJECT <span id="subject-num">0417</span></div>
-</div>
-
-<div id="actions-panel">
-  <div id="actions-header">ACTIONS</div>
-  <div class="action-item" id="act-scan">SCAN</div>
-  <div class="action-item" id="act-zoom">ZOOM</div>
-  <div class="action-item" id="act-assist">AI ASSIST</div>
-  <div class="action-item" id="act-flag">FLAG</div>
-</div>
-
-<div id="decision-panel">
-  <button class="decision-btn" id="btn-permit">PERMIT</button>
-  <button class="decision-btn" id="btn-reject">REJECT</button>
-</div>
-
-<div id="ai-panel">
-  <div id="ai-header">AI ASSISTANT</div>
-  <div id="ai-conf-row">
-    <span>CONF</span>
-    <div id="ai-conf-track"><div id="ai-conf-fill" style="width: 82%;"></div></div>
-    <span id="ai-conf-value">82</span>
-  </div>
-</div>
-
-<div id="feedback"></div>
-
-</div><!-- /hud-root -->
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js"
-  }
-}
-</script>
-<script type="module">
-import * as THREE from 'three';
-
-// ---------------------------------------------------------------------
-// Participant tracking (data lead: Smit) — see "Participant tracking" in
-// docs/data-logging-schema.md for the full design rationale. Summary:
-//   participant_id — one per browser, persisted in localStorage, so repeat
-//     plays from the same person are attributable (crucial now that ~30-40
-//     people are expected to play, many replaying).
-//   condition      — assigned ONCE the first time a participant_id is
-//     created, and never changes on repeat visits. Between-subjects by
-//     design (Shane, PR #7): seeing AI advice teaches you what a disguise
-//     looks like, so a participant must never experience both conditions.
-//   session_id     — fresh every page load/game start; identifies one
-//     sitting. One participant_id can have many session_ids.
-// ---------------------------------------------------------------------
-function getOrCreateParticipantId() {
-  let id = localStorage.getItem('participant_id');
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem('participant_id', id);
-  }
-  return id;
-}
-
-// Assigns condition once per participant, keyed by a hash of participant_id,
-// since this static page has no backend/shared counter to assign from.
-// NOTE: this is NOT equivalent to analysis/trial_protocol.py's
-// assign_condition(). That version alternates on an enrollment index and
-// guarantees a ~50/50 split; hashing a random UUID mod 2 is only 50/50 in
-// expectation, so with ~30-40 participants the split can come out lopsided.
-// Guaranteeing balance would need a shared enrollment counter (backend or
-// manual signup), which the MVP doesn't have — so check the realized split
-// after collection and report it. See docs/data-logging-schema.md
-// "Participant tracking -> Balance caveat".
-function assignCondition(participantId) {
-  const stored = localStorage.getItem('condition');
-  if (stored) return stored;
-  let hash = 0;
-  for (let i = 0; i < participantId.length; i++) {
-    hash = (hash * 31 + participantId.charCodeAt(i)) >>> 0;
-  }
-  const condition = (hash % 2 === 0) ? 'human_alone' : 'human_ai';
-  localStorage.setItem('condition', condition);
-  return condition;
-}
-
-const PARTICIPANT_ID = getOrCreateParticipantId();
-const CONDITION = assignCondition(PARTICIPANT_ID);
-const SESSION_ID = crypto.randomUUID();
-
-// Which of the 6 curated 30-round sets (rounds.json keys "1".."6") this
-// playthrough uses, and how many times this participant has played before.
-// playCount = 0 means this is their first-ever session — Smit's primary
-// analysis pools only first sessions per participant, so this field is
-// what analyze_results.py filters on. Cycles back to key "1" after 6 plays
-// rather than erroring on repeat visits.
-function getNextContentSession(participantId) {
-  const countKey = 'session_count_' + participantId;
-  const playCount = parseInt(localStorage.getItem(countKey) || '0', 10);
-  localStorage.setItem(countKey, String(playCount + 1));
-  const sessionKey = String((playCount % 6) + 1);
-  return { sessionKey, playCount };
-}
-const { sessionKey: CONTENT_SESSION_KEY, playCount: PLAY_COUNT } = getNextContentSession(PARTICIPANT_ID);
-
-// ---------------------------------------------------------------------
-// Tick ruler (purely decorative, matches the mockup's top strip)
-// ---------------------------------------------------------------------
-const ruler = document.getElementById('tick-ruler');
-for (let i = 0; i < 90; i++) {
-  const tick = document.createElement('span');
-  ruler.appendChild(tick);
-}
-
-// ---------------------------------------------------------------------
-// Scene setup — a simple placeholder room + kiosk box. Swap the block
-// marked below for the real glTF checkpoint hall once it's uploaded;
-// nothing else in this file (movement, proximity check, HUD/round logic)
-// needs to change when that swap happens.
-// ---------------------------------------------------------------------
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x060b12);
-scene.fog = new THREE.Fog(0x060b12, 10, 40);
-
-const camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.6, 10); // start well back from the kiosk, walk toward it
-
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.insertBefore(renderer.domElement, document.body.firstChild);
-
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-scene.add(new THREE.AmbientLight(0x1a2a33, 2));
-const rim = new THREE.DirectionalLight(0x6fd6e8, 0.5);
-rim.position.set(2, 6, 4);
-scene.add(rim);
-
-// --- Placeholder room: floor + 4 walls forming a simple hallway ---
-const ROOM_WIDTH = 8;
-const ROOM_LENGTH = 24;
-const WALL_HEIGHT = 4;
-
-const floorMat = new THREE.MeshStandardMaterial({ color: 0x11161d });
-const floor = new THREE.Mesh(new THREE.PlaneGeometry(ROOM_WIDTH, ROOM_LENGTH), floorMat);
-floor.rotation.x = -Math.PI / 2;
-floor.position.set(0, 0, 0);
-scene.add(floor);
-
-const wallMat = new THREE.MeshStandardMaterial({ color: 0x1c232c });
-function makeWall(w, h, x, z, rotY = 0) {
-  const wall = new THREE.Mesh(new THREE.PlaneGeometry(w, h), wallMat);
-  wall.position.set(x, h / 2, z);
-  wall.rotation.y = rotY;
-  scene.add(wall);
-  return wall;
-}
-makeWall(ROOM_LENGTH, WALL_HEIGHT, -ROOM_WIDTH / 2, 0, Math.PI / 2);  // left wall
-makeWall(ROOM_LENGTH, WALL_HEIGHT, ROOM_WIDTH / 2, 0, -Math.PI / 2);  // right wall
-makeWall(ROOM_WIDTH, WALL_HEIGHT, 0, -ROOM_LENGTH / 2, 0);            // far wall
-
-// --- Placeholder kiosk (swap for gltf.scene.getObjectByName('kiosk') later) ---
-const kiosk = new THREE.Group();
-const standMat = new THREE.MeshStandardMaterial({ color: 0x2a2d33 });
-const stand = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.6, 0.4), standMat);
-stand.position.set(0, 0.8, 0);
-kiosk.add(stand);
-const screenMat = new THREE.MeshBasicMaterial({ color: 0x0d3a42 });
-const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.7), screenMat);
-screen.position.set(0, 1.65, 0.21);
-kiosk.add(screen);
-kiosk.position.set(0, 0, -ROOM_LENGTH / 2 + 3); // near the far wall
-scene.add(kiosk);
-
-// --- When the real scene lands, replace the room+kiosk block above with: ---
-//   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-//   const loader = new GLTFLoader();
-//   let kiosk;
-//   loader.load('models/checkpoint_hall.glb', (gltf) => {
-//     scene.add(gltf.scene);
-//     kiosk = gltf.scene.getObjectByName('kiosk');
-//   });
-// Everything below (movement, proximity check, HUD) reads `kiosk.position`
-// and doesn't care whether it came from a placeholder or a loaded model.
-
-// ---------------------------------------------------------------------
-// Movement: WASD + pointer-lock mouse look
-// ---------------------------------------------------------------------
-const clickOverlay = document.getElementById('click-to-play');
-const keys = { w: false, a: false, s: false, d: false };
-let isNearKiosk = false; // set by checkProximity(); also controls pointer-lock release
-
-clickOverlay.addEventListener('click', () => {
-  if (!isNearKiosk) renderer.domElement.requestPointerLock();
-});
-function refreshClickOverlay() {
-  const locked = document.pointerLockElement === renderer.domElement;
-  // Hide the "click to enter" prompt whenever we're locked OR standing at
-  // the kiosk — near the kiosk we want the normal cursor free to click
-  // HUD buttons, not another full-screen overlay in the way.
-  clickOverlay.classList.toggle('hidden', locked || isNearKiosk);
-}
-document.addEventListener('pointerlockchange', refreshClickOverlay);
-
-let yaw = 0;
-let pitch = 0;
-document.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement !== renderer.domElement) return;
-  yaw -= e.movementX * 0.002;
-  pitch -= e.movementY * 0.002;
-  pitch = Math.max(-1.3, Math.min(1.3, pitch));
-  camera.rotation.set(pitch, yaw, 0, 'YXZ');
-});
-
-document.addEventListener('keydown', (e) => {
-  const k = e.key.toLowerCase();
-  if (k in keys) keys[k] = true;
-});
-document.addEventListener('keyup', (e) => {
-  const k = e.key.toLowerCase();
-  if (k in keys) keys[k] = false;
-});
-
-const MOVE_SPEED = 4.5; // units/sec
-const HALF_ROOM = ROOM_WIDTH / 2 - 0.5; // keep the player from walking through walls
-
-function updateMovement(dt) {
-  // Derive forward/right from the camera's actual look direction rather than
-  // recomputing yaw trig by hand — avoids sign errors like a flipped A/D.
-  const forward = new THREE.Vector3();
-  camera.getWorldDirection(forward);
-  forward.y = 0;
-  forward.normalize();
-  const right = new THREE.Vector3().crossVectors(forward, camera.up).normalize();
-
-  const move = new THREE.Vector3();
-  if (keys.w) move.add(forward);
-  if (keys.s) move.sub(forward);
-  if (keys.d) move.add(right);
-  if (keys.a) move.sub(right);
-  if (move.lengthSq() > 0) {
-    move.normalize().multiplyScalar(MOVE_SPEED * dt);
-    camera.position.add(move);
-  }
-  // Simple wall clamp so the placeholder room actually stops you
-  camera.position.x = Math.max(-HALF_ROOM, Math.min(HALF_ROOM, camera.position.x));
-  camera.position.z = Math.max(-ROOM_LENGTH / 2 + 0.5, Math.min(ROOM_LENGTH / 2 - 0.5, camera.position.z));
-}
-
-// ---------------------------------------------------------------------
-// Proximity gate: HUD only appears (and a round only starts) when the
-// player is standing near the kiosk.
-// ---------------------------------------------------------------------
-const hudRoot = document.getElementById('hud-root');
-const walkPrompt = document.getElementById('walk-prompt');
-const KIOSK_TRIGGER_RADIUS = 4;
-let roundActive = false;
-
-function checkProximity() {
-  if (!kiosk) return; // guards the async-load case once you swap in the real glTF
-  const dist = camera.position.distanceTo(kiosk.position);
-  const near = dist < KIOSK_TRIGGER_RADIUS;
-
-  if (near && !isNearKiosk && document.pointerLockElement === renderer.domElement) {
-    // Just arrived at the kiosk while still mouse-look-locked — release the
-    // lock so the cursor is free and clicks land on the HUD buttons normally.
-    document.exitPointerLock();
-  }
-  isNearKiosk = near;
-  refreshClickOverlay();
-
-  hudRoot.classList.toggle('active', near);
-  walkPrompt.classList.toggle('hidden', near);
-
-  if (near && !roundActive && ROUNDS.length > 0) {
-    roundActive = true;
-    roundIndex = 0; // fresh run each time they approach, for easy repeat testing
-    startRound();
-  } else if (!near && roundActive) {
-    roundActive = false;
-    clearInterval(timerInterval);
-  }
-}
-
-// ---------------------------------------------------------------------
-// Round data loads from data/game_sets/rounds.json, generated by
-// training/curate_game_sets.py. NOTE: that file's actual tiers are
-// {0, 1, 5, 10}, not {0, 1, 3, 6} as earlier noted — flagged to the team,
-// using the real file's tiers here rather than the stale comment.
-// rounds.json is keyed "1".."6", each already a curated, balanced 30-round
-// set — CONTENT_SESSION_KEY picks which one, no slicing/shuffling needed.
-// ---------------------------------------------------------------------
-let ROUNDS = []; // populated by loadRounds() before checkProximity() can start a round
-
-async function loadRounds() {
-  const res = await fetch('data/game_sets/rounds.json');
-  const sessionsByKey = await res.json();
-  ROUNDS = sessionsByKey[CONTENT_SESSION_KEY];
-}
-let roundIndex = 0;
-let waveNum = 6;
-const WAVE_TOTAL = 10;
-let roundStartTime = null;
-let currentRound = null;
-let timerInterval = null;
-let timeRemaining = 45;
-const results = [];
-
-const waveNumEl = document.getElementById('wave-num');
-const waveBarFill = document.getElementById('wave-bar-fill');
-const timerValueEl = document.getElementById('timer-value');
-const threatListEl = document.getElementById('threat-list');
-const threatPanelEl = document.getElementById('threat-panel');
-const subjectNumEl = document.getElementById('subject-num');
-const aiPanelEl = document.getElementById('ai-panel');
-const aiConfFill = document.getElementById('ai-conf-fill');
-const aiConfValue = document.getElementById('ai-conf-value');
-const feedbackEl = document.getElementById('feedback');
-const actScan = document.getElementById('act-scan');
-const actZoom = document.getElementById('act-zoom');
-const actAssist = document.getElementById('act-assist');
-const actFlag = document.getElementById('act-flag');
-
-// Per-round interaction state — reset at the top of every startRound()
-let scanned = false;
-let zoomed = false;
-let aiAssistUsed = false;
-let flagged = false;
-let aiAssistClickTime = null; // used to log how long into the round they asked for help
-
-document.getElementById('wave-total').textContent = WAVE_TOTAL;
-
-function renderThreats(threats) {
-  threatListEl.innerHTML = '';
-  threats.forEach((t) => {
-    const li = document.createElement('li');
-    li.textContent = t;
-    threatListEl.appendChild(li);
-  });
-}
-
-function startTimer() {
-  clearInterval(timerInterval);
-  timeRemaining = 45;
-  timerValueEl.textContent = timeRemaining;
-  timerInterval = setInterval(() => {
-    timeRemaining -= 1;
-    timerValueEl.textContent = Math.max(timeRemaining, 0);
-    if (timeRemaining <= 0) {
-      clearInterval(timerInterval);
-      recordAnswer(null); // timeout — no answer given
+  <style>
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: #020309;
+      font-family: Arial, sans-serif;
     }
-  }, 1000);
-}
+    canvas { display: block; }
 
-function startRound() {
-  if (roundIndex >= ROUNDS.length) {
-    feedbackEl.textContent = 'ALL ROUNDS COMPLETE — results exported to CSV';
-    feedbackEl.classList.add('show');
-    console.log('Final results:', results);
-    exportResultsCSV(results);
-    return;
-  }
-  currentRound = ROUNDS[roundIndex];
-  waveNum = 6 + roundIndex;
-  waveNumEl.textContent = waveNum;
-  waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
-  subjectNumEl.textContent = currentRound.subjectId;
-  // Load this round's actual image onto the kiosk screen
-  const texLoader = new THREE.TextureLoader();
-  texLoader.load(`data/game_sets/images/${currentRound.image}`, (tex) => {
-    screen.material.map = tex;
-    screen.material.color.set(0xffffff); // stop tinting the texture with the placeholder navy
-    screen.material.needsUpdate = true;
-  });
-  renderThreats(currentRound.threats);
-  aiConfFill.style.width = `${currentRound.aiConfidence}%`;
-  aiConfValue.textContent = currentRound.aiConfidence;
-  feedbackEl.classList.remove('show');
+    #blocker {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0, 0, 0, 0.66);
+      color: white; text-align: center; cursor: pointer;
+    }
+    #blocker.hidden { display: none; }
+    #instructions {
+      padding: 26px 34px; border-radius: 12px;
+      background: rgba(12, 15, 24, 0.9);
+      backdrop-filter: blur(6px);
+      font-size: 19px; line-height: 1.7;
+    }
+    #instructions small { color: #d4d4d4; font-size: 13px; }
 
-  // Reset every per-round toggle so nothing carries over from the last subject
-  scanned = false;
-  zoomed = false;
-  aiAssistUsed = false;
-  flagged = false;
-  aiAssistClickTime = null;
-  threatPanelEl.classList.remove('revealed');
-  aiPanelEl.classList.remove('revealed');
-  actScan.classList.remove('toggled');
-  actZoom.classList.remove('toggled');
-  actAssist.classList.remove('toggled');
-  actFlag.classList.remove('toggled');
+    #crosshair {
+      position: fixed; left: 50%; top: 50%;
+      width: 6px; height: 6px; margin-left: -3px; margin-top: -3px;
+      z-index: 5; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.92);
+      pointer-events: none;
+    }
 
-  // In human_alone, SCAN and AI ASSIST are fully disabled — any info
-  // channel beyond the raw image breaks the alone-vs-assisted comparison.
-  const infoChannelsBlocked = CONDITION === 'human_alone';
-  actScan.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
-  actScan.style.opacity = infoChannelsBlocked ? '0.3' : '';
-  actAssist.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
-  actAssist.style.opacity = infoChannelsBlocked ? '0.3' : '';
+    #status {
+      position: fixed; left: 12px; bottom: 12px; z-index: 5;
+      padding: 9px 11px; border-radius: 7px;
+      background: rgba(0, 0, 0, 0.58);
+      color: white; font-family: monospace; font-size: 12px;
+      line-height: 1.5; white-space: pre-line; pointer-events: none;
+    }
 
-  roundStartTime = performance.now();
-  startTimer();
-}
+    /* ---------------- Checkpoint HUD --------------- */
+    :root {
+      --panel-bg: rgba(8, 18, 28, 0.75);
+      --cyan: #6fd6e8;
+      --cyan-dim: #3a6b78;
+      --orange: #e8845a;
+      --text-dim: #7d95a0;
+      --line: rgba(111, 214, 232, 0.25);
+    }
+    .hud-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); }
 
-function recordAnswer(saysHuman) {
-  if (!currentRound) return;
-  clearInterval(timerInterval);
-  const reactionMs = Math.round(performance.now() - roundStartTime);
-  const correct = saysHuman === currentRound.groundTruthIsHuman;
+    #tick-ruler {
+      position: fixed; top: 0; left: 0; right: 0; height: 14px;
+      display: flex; justify-content: space-between; padding: 0 8px;
+      pointer-events: none; z-index: 4;
+    }
+    #tick-ruler span { width: 1px; height: 8px; background: var(--line); }
 
-  const entry = {
-    participant_id: PARTICIPANT_ID,
-    session_id: SESSION_ID,
-    content_session_key: CONTENT_SESSION_KEY,
-    play_count: PLAY_COUNT,
-    condition: CONDITION,
-    subject: currentRound.subjectId,
-    tier: currentRound.tier,
-    ground_truth_human: currentRound.groundTruthIsHuman,
-    player_answer_human: saysHuman, // null = timed out, no answer
-    correct: saysHuman === null ? null : correct,
-    ai_confidence_shown: currentRound.aiConfidence,
-    reaction_time_ms: reactionMs,
-    scanned,
-    zoomed,
-    ai_assist_used: aiAssistUsed,
-    ai_assist_time_ms: aiAssistClickTime, // null if never opened
-    flagged,
-    timestamp: new Date().toISOString(),
-  };
-  results.push(entry);
+    #wave-panel { position: fixed; top: 20px; left: 20px; width: 220px; z-index: 4; color: var(--cyan); font-family: 'Courier New', monospace; }
+    #wave-bar-track { width: 100%; height: 3px; background: rgba(111,214,232,0.15); margin-bottom: 8px; position: relative; }
+    #wave-bar-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); transition: width 0.3s ease; }
+    #wave-text { font-size: 11px; letter-spacing: 2px; color: var(--cyan); }
 
-  feedbackEl.textContent = saysHuman === null
-    ? 'TIMED OUT — NO DECISION'
-    : 'DECISION LOGGED';
-  feedbackEl.classList.add('show');
-  console.log('Round result:', entry);
+    #station-panel {
+      position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 4;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      font-family: 'Courier New', monospace;
+    }
+    #station-label {
+      font-size: 11px; letter-spacing: 3px; color: var(--orange);
+    }
+    #timer-circle {
+      width: 60px; height: 60px; border-radius: 50%; border: 1.5px solid var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--orange); font-size: 20px; letter-spacing: 1px;
+      box-shadow: 0 0 10px rgba(232,132,90,0.25) inset;
+    }
 
-  roundIndex += 1;
-  setTimeout(startRound, 700);
-}
+    #threat-panel {
+      position: fixed; top: 20px; right: 20px; width: 230px; z-index: 4;
+      background: var(--panel-bg); border: 1px solid var(--line);
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      font-family: 'Courier New', monospace; color: var(--cyan);
+    }
+    #threat-panel.revealed { opacity: 1; pointer-events: auto; }
+    #threat-header { background: rgba(111,214,232,0.12); padding: 8px 12px; font-size: 11px; letter-spacing: 3px; border-bottom: 1px solid var(--line); }
+    #threat-list { list-style: none; margin: 0; padding: 10px 12px; }
+    #threat-list li { font-size: 12px; color: #b9cdd4; padding: 4px 0; position: relative; padding-left: 14px; }
+    #threat-list li::before { content: '▪'; position: absolute; left: 0; color: var(--cyan); font-size: 9px; top: 6px; }
 
-// Exports the session's logged trials as a downloadable CSV, matching the
-// canonical schema in docs/data-logging-schema.md. Column names here differ
-// slightly from the in-memory `entry` object above (e.g. `subject` ->
-// `subject_id`, `tier` -> `malice_tier`) — this function is the single place
-// that maps internal field names to the schema everyone else (analysis,
-// Shane's tier manifest) agrees on, so a future rename of the internal
-// variable doesn't have to also become a schema change.
-// participant_id, session_id, and condition now come from the real
-// getOrCreateParticipantId()/assignCondition() bootstrap above (resolved —
-// these used to be blank/inferred placeholders; see "Participant tracking"
-// in docs/data-logging-schema.md for the full design).
-function exportResultsCSV(sessionResults) {
-  if (!sessionResults.length) return;
-  const headers = [
-    'participant_id', 'session_id', 'content_session_key', 'play_count',
-    'subject_id', 'malice_tier', 'condition',
-    'ground_truth_human', 'player_answer_human', 'correct',
-    'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
-    'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
-  ];
-  const rows = sessionResults.map((r) => [
-    r.participant_id, r.session_id, r.content_session_key, r.play_count,
-    r.subject, r.tier, r.condition,
-    r.ground_truth_human, r.player_answer_human, r.correct,
-    r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
-    r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
-  ]);
-  const csv = [headers, ...rows]
-    .map((row) => row.map((v) => (v === null || v === undefined) ? '' : v).join(','))
-    .join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `trial-results-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+    #actions-panel { position: fixed; bottom: 30px; left: 20px; width: 190px; border: 1px solid var(--line); z-index: 4; font-family: 'Courier New', monospace; }
+    #actions-header { background: rgba(111,214,232,0.12); padding: 8px 12px; font-size: 11px; letter-spacing: 3px; text-align: center; border-bottom: 1px solid var(--line); color: var(--cyan); }
+    .action-item { padding: 10px 14px; font-size: 12px; letter-spacing: 1px; color: #b9cdd4; cursor: pointer; background: var(--panel-bg); border-bottom: 1px solid rgba(111,214,232,0.08); }
+    .action-item:hover { background: rgba(111,214,232,0.1); color: var(--cyan); }
+    .action-item.toggled { background: rgba(111,214,232,0.18); color: var(--cyan); }
+    #act-flag.toggled { background: rgba(232,132,90,0.18); color: var(--orange); }
 
-// PERMIT / REJECT — intentionally do nothing yet. There's no real image or
-// ground truth to judge against until the generated images are wired in, so
-// wiring these to recordAnswer() now would just log meaningless test data.
-document.getElementById('btn-permit').addEventListener('click', () => {
-  console.log('PERMIT clicked — not wired up yet (waiting on real images/ground truth)');
-});
-document.getElementById('btn-reject').addEventListener('click', () => {
-  console.log('REJECT clicked — not wired up yet (waiting on real images/ground truth)');
-});
+    #decision-panel { position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); display: flex; gap: 14px; z-index: 4; }
+    .decision-btn { padding: 13px 30px; font-size: 12px; letter-spacing: 2px; background: var(--panel-bg); cursor: pointer; font-family: 'Courier New', monospace; transition: filter 0.1s ease; }
+    #btn-permit { border: 1px solid var(--cyan); color: var(--cyan); }
+    #btn-reject { border: 1px solid var(--orange); color: var(--orange); }
+    .decision-btn:hover { filter: brightness(1.3); }
 
-// SCAN — reveals the Threat Advisory panel (hidden until inspected).
-actScan.addEventListener('click', () => {
-  if (CONDITION === 'human_alone') return; // hard block, not just visual
-  scanned = true;
-  actScan.classList.add('toggled');
-  threatPanelEl.classList.add('revealed');
-});
+    #ai-panel {
+      position: fixed; bottom: 30px; right: 20px; width: 200px; z-index: 4;
+      border: 1px solid var(--line); background: var(--panel-bg); padding: 10px 14px;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      font-family: 'Courier New', monospace; color: var(--cyan);
+    }
+    #ai-panel.revealed { opacity: 1; pointer-events: auto; }
+    #ai-header { font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
+    #ai-conf-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+    #ai-conf-track { flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative; }
+    #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
 
-// ZOOM — will magnify the subject image once images are wired in; for now
-// just tracks toggled state.
-actZoom.addEventListener('click', () => {
-  zoomed = !zoomed;
-  actZoom.classList.toggle('toggled', zoomed);
-});
+    #feedback {
+      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 4;
+      font-size: 12px; letter-spacing: 1px; color: var(--cyan);
+      opacity: 0; transition: opacity 0.2s ease; font-family: 'Courier New', monospace;
+    }
+    #feedback.show { opacity: 1; }
 
-// AI ASSIST — reveals the AI confidence panel. Logging when this happens
-// (relative to round start) matters for your AI-assistance research question.
-actAssist.addEventListener('click', () => {
-  if (CONDITION === 'human_alone') return; // hard block, not just visual
-  if (!aiAssistUsed) {
-    aiAssistClickTime = Math.round(performance.now() - roundStartTime);
-  }
-  aiAssistUsed = true;
-  actAssist.classList.add('toggled');
-  aiPanelEl.classList.add('revealed');
-});
+    #hud-root { display: none; }
+    #hud-root.active { display: contents; }
 
-// FLAG — marks this subject for review. Toggleable, purely a label on the
-// logged data; doesn't end the round or change the timer.
-actFlag.addEventListener('click', () => {
-  flagged = !flagged;
-  actFlag.classList.toggle('toggled', flagged);
-});
+    #walk-prompt {
+      position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 4;
+      font-size: 12px; letter-spacing: 2px; color: var(--text-dim); font-family: 'Courier New', monospace;
+    }
+    #walk-prompt.hidden { display: none; }
+  </style>
+</head>
 
-function animate() {
-  requestAnimationFrame(animate);
-  const now = performance.now();
-  const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
-  lastFrameTime = now;
+<body>
+  <div id="blocker">
+    <div id="instructions">
+      Click to start
+      <br />
+      <small>
+        WASD = move · Mouse = look · SPACE = jump
+        <br />
+        ESC = release mouse · M = identify mesh under crosshair
+      </small>
+    </div>
+  </div>
 
-  updateMovement(dt);
-  checkProximity();
-  renderer.render(scene, camera);
-}
-let lastFrameTime = performance.now();
-loadRounds().then(() => {
-  animate();
-});
-</script>
+  <div id="crosshair"></div>
+  <div id="status">Loading map...</div>
+
+  <div id="walk-prompt">WALK TO A SCREEN TO BEGIN INSPECTION</div>
+
+  <div id="hud-root">
+    <div id="tick-ruler"></div>
+    <div id="wave-panel">
+      <div id="wave-bar-track"><div id="wave-bar-fill" style="width: 55%;"></div></div>
+      <div id="wave-text">WAVE: <span id="wave-num">6</span>/<span id="wave-total">10</span></div>
+    </div>
+    <div id="station-panel">
+      <div id="station-label">SCREEN: <span id="station-name">—</span> (<span id="station-mode">—</span>)</div>
+      <div id="timer-circle"><span id="timer-value">45</span></div>
+    </div>
+    <div id="threat-panel">
+      <div id="threat-header">THREAT ADVISORY</div>
+      <ul id="threat-list"></ul>
+    </div>
+    <div id="actions-panel">
+      <div id="actions-header">ACTIONS</div>
+      <div class="action-item" id="act-scan">SCAN</div>
+      <div class="action-item" id="act-zoom">ZOOM</div>
+      <div class="action-item" id="act-assist">AI ASSIST</div>
+      <div class="action-item" id="act-flag">FLAG</div>
+    </div>
+    <div id="decision-panel">
+      <button class="decision-btn" id="btn-permit">PERMIT</button>
+      <button class="decision-btn" id="btn-reject">REJECT</button>
+    </div>
+    <div id="ai-panel">
+      <div id="ai-header">AI ASSISTANT</div>
+      <div id="ai-conf-row">
+        <span>CONF</span>
+        <div id="ai-conf-track"><div id="ai-conf-fill" style="width: 82%;"></div></div>
+        <span id="ai-conf-value">82</span>
+      </div>
+    </div>
+    <div id="feedback"></div>
+  </div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdnjs.cloudflare.com/ajax/libs/three.js/0.160.0/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from "three";
+    import { PointerLockControls } from "three/addons/controls/PointerLockControls.js";
+    import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+    import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
+    import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+    import { SSAOPass } from "three/addons/postprocessing/SSAOPass.js";
+    import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+    import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js";
+    import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+
+    // ============================================================
+    // CONFIG
+    // ============================================================
+    const MAP_PATH = "mapRework2.glb";
+
+    const SPAWN = { x: 11.456, y: 1.539, z: 10.938, yaw: 0.020 };
+    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 7, gravity: -20 };
+
+    const KIOSK_TRIGGER_RADIUS = 4;
+
+    // STATION_CONFIGS: one entry per physical screen. "screenMain" is the
+    // one you confirmed by name. The other two are a GUESS — if you
+    // duplicated screenMain in Blender before renaming it, glTF export
+    // typically auto-suffixes the copies as screenMain.001 / screenMain.002.
+    // If these don't match, press "M" while looking at each of the other
+    // two screens, and swap the meshName values below for whatever prints.
+    const STATION_CONFIGS = [
+      { meshName: "screenMain",     condition: "human_ai" },
+      { meshName: "screenMain.001", condition: "human_ai" },
+      { meshName: "screenMain.002", condition: "human_alone" },
+    ];
+
+    // ============================================================
+    // DOM
+    // ============================================================
+    const blocker = document.getElementById("blocker");
+    const statusEl = document.getElementById("status");
+    let loadingText = `Loading ${MAP_PATH}...`;
+    let temporaryText = "";
+    let temporaryTimer = null;
+
+    function showTemporaryMessage(message, milliseconds = 3200) {
+      temporaryText = message;
+      if (temporaryTimer) clearTimeout(temporaryTimer);
+      temporaryTimer = setTimeout(() => { temporaryText = ""; }, milliseconds);
+    }
+
+    // ============================================================
+    // SCENE / CAMERA / RENDERER
+    // ============================================================
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x020309);
+    scene.fog = null;
+
+    const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.05, 650);
+    camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+    camera.rotation.order = "YXZ";
+    camera.rotation.y = SPAWN.yaw;
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.AgXToneMapping;
+    renderer.toneMappingExposure = 1.14;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new PointerLockControls(camera, document.body);
+    blocker.addEventListener("click", () => controls.lock());
+    controls.addEventListener("lock", () => blocker.classList.add("hidden"));
+    controls.addEventListener("unlock", () => blocker.classList.remove("hidden"));
+
+    function createStarField() {
+      const count = 3200;
+      const positions = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const radius = THREE.MathUtils.randFloat(190, 490);
+        const theta = THREE.MathUtils.randFloat(0, Math.PI * 2);
+        const phi = Math.acos(THREE.MathUtils.randFloat(-1, 1));
+        positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = radius * Math.cos(phi);
+        positions[i * 3 + 2] = radius * Math.sin(phi) * Math.sin(theta);
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.PointsMaterial({
+        color: 0xffffff, size: 0.62, sizeAttenuation: true,
+        transparent: true, opacity: 0.88, depthWrite: false, fog: false
+      });
+      scene.add(new THREE.Points(geometry, material));
+    }
+    createStarField();
+
+    const sunTarget = new THREE.Object3D();
+    sunTarget.position.set(0, 0, 0);
+    scene.add(sunTarget);
+
+    scene.add(new THREE.HemisphereLight(0xfffaf5, 0x806055, 1.50));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.66));
+
+    const sunLight = new THREE.DirectionalLight(0xffd2a6, 1.75);
+    sunLight.position.set(60, 90, 40);
+    sunLight.target = sunTarget;
+    sunLight.castShadow = true;
+    sunLight.shadow.mapSize.set(1536, 1536);
+    sunLight.shadow.camera.left = -80;
+    sunLight.shadow.camera.right = 80;
+    sunLight.shadow.camera.top = 80;
+    sunLight.shadow.camera.bottom = -80;
+    sunLight.shadow.camera.near = 0.5;
+    sunLight.shadow.camera.far = 300;
+    sunLight.shadow.bias = -0.00002;
+    sunLight.shadow.normalBias = 0.10;
+    sunLight.shadow.radius = 12;
+    scene.add(sunLight);
+
+    const oppositeFillLight = new THREE.DirectionalLight(0xeaf6ff, 0.98);
+    oppositeFillLight.position.set(-55, 40, -50);
+    oppositeFillLight.target = sunTarget;
+    scene.add(oppositeFillLight);
+
+    const frontFillLight = new THREE.DirectionalLight(0xffeddc, 0.62);
+    frontFillLight.position.set(12, 30, 60);
+    frontFillLight.target = sunTarget;
+    scene.add(frontFillLight);
+
+    const bounceLight = new THREE.PointLight(0xff9a72, 0.28, 90, 2);
+    bounceLight.position.set(0, -12, 0);
+    scene.add(bounceLight);
+
+    const permanentWhiteLights = [
+      { x: -4.310, y: 2.834, z: 11.516, intensity: 18, distance: 12 },
+      { x: -7.161, y: 2.044, z: -1.477, intensity: 18, distance: 12 },
+      { x: -4.056, y: 2.375, z: -25.507, intensity: 18, distance: 12 },
+      { x: 10.747, y: 2.577, z: -29.512, intensity: 18, distance: 12 }
+    ];
+    for (const c of permanentWhiteLights) {
+      const light = new THREE.PointLight(0xffffff, c.intensity, c.distance, 2);
+      light.position.set(c.x, c.y, c.z);
+      scene.add(light);
+    }
+
+    const fallbackGround = new THREE.Mesh(
+      new THREE.PlaneGeometry(260, 260),
+      new THREE.MeshStandardMaterial({ color: 0xee875e, roughness: 0.9, metalness: 0 })
+    );
+    fallbackGround.rotation.x = -Math.PI / 2;
+    fallbackGround.position.y = -0.05;
+    fallbackGround.receiveShadow = true;
+    scene.add(fallbackGround);
+
+    function configureMaterial(material) {
+      if (!material) return;
+      const textures = [
+        material.map, material.normalMap, material.roughnessMap,
+        material.metalnessMap, material.aoMap, material.emissiveMap
+      ];
+      const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+      for (const texture of textures) {
+        if (!texture) continue;
+        texture.anisotropy = Math.min(8, maxAnisotropy);
+        texture.needsUpdate = true;
+      }
+      material.needsUpdate = true;
+    }
+
+    // ============================================================
+    // STATIONS — one per physical screen, each with its own round
+    // progress, timer, and fixed AI-assist condition.
+    // ============================================================
+    function createStationState(config, index) {
+      return {
+        index,
+        meshName: config.meshName,
+        condition: config.condition,           // 'human_ai' or 'human_alone', fixed per screen
+        mesh: null,                             // resolved once the map loads
+        position: new THREE.Vector3(),
+        roundIndex: 0,
+        currentRound: null,
+        roundStartTime: null,
+        timerInterval: null,
+        timeRemaining: 45,
+        results: [],
+        scanned: false,
+        zoomed: false,
+        aiAssistUsed: false,
+        flagged: false,
+        aiAssistClickTime: null,
+      };
+    }
+    const stations = STATION_CONFIGS.map(createStationState);
+    let activeStationIndex = -1; // -1 = not near any screen
+
+    // ============================================================
+    // MAP LOADING
+    // ============================================================
+    const collidables = [fallbackGround];
+    const loader = new GLTFLoader();
+
+    loader.load(
+      MAP_PATH,
+      (gltf) => {
+        const map = gltf.scene;
+        scene.add(map);
+        map.updateMatrixWorld(true);
+
+        const foundNames = [];
+        map.traverse((child) => {
+          if (!child.isMesh) return;
+          child.castShadow = true;
+          child.receiveShadow = true;
+          collidables.push(child);
+
+          if (Array.isArray(child.material)) {
+            child.material.forEach(configureMaterial);
+          } else {
+            configureMaterial(child.material);
+          }
+
+          const station = stations.find((s) => s.meshName === child.name);
+          if (station) {
+            station.mesh = child;
+            child.getWorldPosition(station.position);
+            foundNames.push(child.name);
+          }
+        });
+
+        const missing = stations.filter((s) => !s.mesh).map((s) => s.meshName);
+        if (missing.length > 0) {
+          console.warn(
+            `Could not find these station mesh names in ${MAP_PATH}: ${missing.join(", ")}. ` +
+            `Press "M" while looking at each real screen to get the correct name(s), ` +
+            `then update STATION_CONFIGS.`
+          );
+        }
+
+        loadingText = `Loaded ${MAP_PATH}`;
+        showTemporaryMessage(`Map loaded — found screens: ${foundNames.join(", ") || "none"}`);
+        console.log("Loaded map:", map);
+      },
+      (progress) => {
+        if (progress.total > 0) {
+          const percent = Math.round((progress.loaded / progress.total) * 100);
+          loadingText = `Loading ${MAP_PATH}: ${percent}%`;
+        } else {
+          loadingText = `Loading ${MAP_PATH}...`;
+        }
+      },
+      (error) => {
+        loadingText = `Could not load ${MAP_PATH}`;
+        console.error("GLB loading error:", error);
+      }
+    );
+
+    // ============================================================
+    // POST-PROCESSING
+    // ============================================================
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+
+    const ssaoPass = new SSAOPass(scene, camera, window.innerWidth, window.innerHeight);
+    ssaoPass.kernelRadius = 3;
+    ssaoPass.minDistance = 0.001;
+    ssaoPass.maxDistance = 0.045;
+    composer.addPass(ssaoPass);
+
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight), 0.06, 0.18, 0.97
+    );
+    composer.addPass(bloomPass);
+
+    const VividColorShader = {
+      uniforms: { tDiffuse: { value: null }, saturation: { value: 1.10 }, contrast: { value: 1.015 } },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float saturation;
+        uniform float contrast;
+        varying vec2 vUv;
+        void main() {
+          vec4 texel = texture2D(tDiffuse, vUv);
+          vec3 color = texel.rgb;
+          float luminance = dot(color, vec3(0.2126, 0.7152, 0.0722));
+          color = mix(vec3(luminance), color, saturation);
+          color = (color - 0.5) * contrast + 0.5;
+          gl_FragColor = vec4(clamp(color, 0.0, 1.0), texel.a);
+        }
+      `
+    };
+    composer.addPass(new ShaderPass(VividColorShader));
+    composer.addPass(new OutputPass());
+
+    // ============================================================
+    // MOVEMENT INPUT
+    // ============================================================
+    const keys = { forward: false, backward: false, left: false, right: false };
+    let wantsJump = false;
+
+    document.addEventListener("keydown", (event) => {
+      switch (event.code) {
+        case "KeyW": keys.forward = true; break;
+        case "KeyS": keys.backward = true; break;
+        case "KeyA": keys.left = true; break;
+        case "KeyD": keys.right = true; break;
+        case "Space": wantsJump = true; break;
+      }
+    });
+    document.addEventListener("keyup", (event) => {
+      switch (event.code) {
+        case "KeyW": keys.forward = false; break;
+        case "KeyS": keys.backward = false; break;
+        case "KeyA": keys.left = false; break;
+        case "KeyD": keys.right = false; break;
+        case "Space": wantsJump = false; break;
+      }
+    });
+
+    // ============================================================
+    // GROUND DETECTION + fall-off-map respawn safety net
+    // ============================================================
+    const raycaster = new THREE.Raycaster();
+    const rayOrigin = new THREE.Vector3();
+    const down = new THREE.Vector3(0, -1, 0);
+    let verticalVelocity = 0;
+
+    function findGroundHeight(x, feetY, z) {
+      rayOrigin.set(x, feetY + 0.4, z);
+      raycaster.set(rayOrigin, down);
+      raycaster.far = 3.4;
+      const hits = raycaster.intersectObjects(collidables, false);
+      if (hits.length === 0) return null;
+      return hits[0].point.y;
+    }
+
+    const FALL_RESPAWN_Y = -40;
+    function respawnIfFallen() {
+      if (camera.position.y < FALL_RESPAWN_Y) {
+        camera.position.set(SPAWN.x, SPAWN.y, SPAWN.z);
+        verticalVelocity = 0;
+        showTemporaryMessage("Fell off the map — respawned");
+      }
+    }
+
+    // ============================================================
+    // DEBUG: press M while looking at something to identify its mesh —
+    // use this if screenMain.001 / .002 turn out to be wrong guesses.
+    // ============================================================
+    const centerScreen = new THREE.Vector2(0, 0);
+    async function identifyMeshAtCrosshair() {
+      raycaster.setFromCamera(centerScreen, camera);
+      raycaster.far = 650;
+      const hits = raycaster.intersectObjects(collidables, false);
+      if (hits.length === 0) {
+        showTemporaryMessage("Nothing under crosshair");
+        return;
+      }
+      const hit = hits[0];
+      const mesh = hit.object;
+      console.log(`mesh.name: ${mesh.name}  |  distance: ${hit.distance.toFixed(2)}`);
+      try {
+        await navigator.clipboard.writeText(mesh.name || "");
+        showTemporaryMessage(`Mesh: "${mesh.name}" — name copied to clipboard`);
+      } catch {
+        showTemporaryMessage(`Mesh: "${mesh.name}" — see console`);
+      }
+    }
+    document.addEventListener("keydown", (event) => {
+      if (event.repeat) return;
+      if (event.code === "KeyM") identifyMeshAtCrosshair();
+    });
+
+    // ============================================================
+    // STATUS OVERLAY
+    // ============================================================
+    function updateStatus() {
+      const lines = [
+        loadingText, "",
+        `X: ${camera.position.x.toFixed(2)}`,
+        `Y: ${camera.position.y.toFixed(2)}`,
+        `Z: ${camera.position.z.toFixed(2)}`,
+        "", "M: identify mesh under crosshair"
+      ];
+      if (temporaryText) lines.push("", temporaryText);
+      statusEl.textContent = lines.join("\n");
+    }
+
+    // ============================================================
+    // CHECKPOINT GAME LOGIC
+    // ============================================================
+    function getOrCreateParticipantId() {
+      let id = localStorage.getItem('participant_id');
+      if (!id) {
+        id = crypto.randomUUID();
+        localStorage.setItem('participant_id', id);
+      }
+      return id;
+    }
+    const PARTICIPANT_ID = getOrCreateParticipantId();
+    const SESSION_ID = crypto.randomUUID();
+
+    function getNextContentSession(participantId) {
+      const countKey = 'session_count_' + participantId;
+      const playCount = parseInt(localStorage.getItem(countKey) || '0', 10);
+      localStorage.setItem(countKey, String(playCount + 1));
+      const sessionKey = String((playCount % 6) + 1);
+      return { sessionKey, playCount };
+    }
+    const { sessionKey: CONTENT_SESSION_KEY, playCount: PLAY_COUNT } = getNextContentSession(PARTICIPANT_ID);
+
+    const ruler = document.getElementById('tick-ruler');
+    for (let i = 0; i < 90; i++) ruler.appendChild(document.createElement('span'));
+
+    const hudRoot = document.getElementById('hud-root');
+    const walkPrompt = document.getElementById('walk-prompt');
+
+    let ROUNDS = [];
+    async function loadRounds() {
+      const res = await fetch('data/game_sets/rounds.json');
+      const sessionsByKey = await res.json();
+      ROUNDS = sessionsByKey[CONTENT_SESSION_KEY];
+    }
+
+    const WAVE_TOTAL = 10;
+    const waveNumEl = document.getElementById('wave-num');
+    const waveBarFill = document.getElementById('wave-bar-fill');
+    const timerValueEl = document.getElementById('timer-value');
+    const stationNameEl = document.getElementById('station-name');
+    const stationModeEl = document.getElementById('station-mode');
+    const threatListEl = document.getElementById('threat-list');
+    const threatPanelEl = document.getElementById('threat-panel');
+    const aiPanelEl = document.getElementById('ai-panel');
+    const aiConfFill = document.getElementById('ai-conf-fill');
+    const aiConfValue = document.getElementById('ai-conf-value');
+    const feedbackEl = document.getElementById('feedback');
+    const actScan = document.getElementById('act-scan');
+    const actZoom = document.getElementById('act-zoom');
+    const actAssist = document.getElementById('act-assist');
+    const actFlag = document.getElementById('act-flag');
+
+    document.getElementById('wave-total').textContent = WAVE_TOTAL;
+
+    function renderThreats(threats) {
+      threatListEl.innerHTML = '';
+      threats.forEach((t) => {
+        const li = document.createElement('li');
+        li.textContent = t;
+        threatListEl.appendChild(li);
+      });
+    }
+
+    function applyScreenTexture(station, url) {
+      if (!station.mesh) return;
+      const texLoader = new THREE.TextureLoader();
+      texLoader.load(url, (tex) => {
+        const mat = Array.isArray(station.mesh.material) ? station.mesh.material[0] : station.mesh.material;
+        mat.map = tex;
+        mat.color.set(0xffffff);
+        mat.needsUpdate = true;
+      });
+    }
+
+    function startTimer(station) {
+      clearInterval(station.timerInterval);
+      station.timeRemaining = 45;
+      timerValueEl.textContent = station.timeRemaining;
+      station.timerInterval = setInterval(() => {
+        station.timeRemaining -= 1;
+        timerValueEl.textContent = Math.max(station.timeRemaining, 0);
+        if (station.timeRemaining <= 0) {
+          clearInterval(station.timerInterval);
+          recordAnswer(station, null);
+        }
+      }, 1000);
+    }
+
+    function startRound(station) {
+      if (station.roundIndex >= ROUNDS.length) {
+        feedbackEl.textContent = `${station.meshName}: ALL ROUNDS COMPLETE — results exported`;
+        feedbackEl.classList.add('show');
+        console.log(`Final results for ${station.meshName}:`, station.results);
+        exportResultsCSV(station);
+        return;
+      }
+      station.currentRound = ROUNDS[station.roundIndex];
+      const waveNum = 6 + station.roundIndex;
+      waveNumEl.textContent = waveNum;
+      waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
+
+      stationNameEl.textContent = station.meshName;
+      stationModeEl.textContent = station.condition === 'human_ai' ? 'AI ASSIST' : 'HUMAN ONLY';
+
+      applyScreenTexture(station, `data/game_sets/images/${station.currentRound.image}`);
+      renderThreats(station.currentRound.threats);
+      aiConfFill.style.width = `${station.currentRound.aiConfidence}%`;
+      aiConfValue.textContent = station.currentRound.aiConfidence;
+      feedbackEl.classList.remove('show');
+
+      station.scanned = false;
+      station.zoomed = false;
+      station.aiAssistUsed = false;
+      station.flagged = false;
+      station.aiAssistClickTime = null;
+      threatPanelEl.classList.remove('revealed');
+      aiPanelEl.classList.remove('revealed');
+      actScan.classList.remove('toggled');
+      actZoom.classList.remove('toggled');
+      actAssist.classList.remove('toggled');
+      actFlag.classList.remove('toggled');
+
+      // This screen's condition is fixed by which physical screen it is —
+      // two screens are always 'human_ai', one is always 'human_alone'.
+      const infoChannelsBlocked = station.condition === 'human_alone';
+      actScan.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
+      actScan.style.opacity = infoChannelsBlocked ? '0.3' : '';
+      actAssist.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
+      actAssist.style.opacity = infoChannelsBlocked ? '0.3' : '';
+
+      station.roundStartTime = performance.now();
+      startTimer(station);
+    }
+
+    function recordAnswer(station, saysHuman) {
+      if (!station.currentRound) return;
+      clearInterval(station.timerInterval);
+      const reactionMs = Math.round(performance.now() - station.roundStartTime);
+      const correct = saysHuman === station.currentRound.groundTruthIsHuman;
+
+      const entry = {
+        participant_id: PARTICIPANT_ID,
+        session_id: SESSION_ID,
+        content_session_key: CONTENT_SESSION_KEY,
+        play_count: PLAY_COUNT,
+        station: station.meshName,
+        condition: station.condition,
+        subject: station.currentRound.subjectId,
+        tier: station.currentRound.tier,
+        ground_truth_human: station.currentRound.groundTruthIsHuman,
+        player_answer_human: saysHuman,
+        correct: saysHuman === null ? null : correct,
+        ai_confidence_shown: station.currentRound.aiConfidence,
+        reaction_time_ms: reactionMs,
+        scanned: station.scanned,
+        zoomed: station.zoomed,
+        ai_assist_used: station.aiAssistUsed,
+        ai_assist_time_ms: station.aiAssistClickTime,
+        flagged: station.flagged,
+        timestamp: new Date().toISOString(),
+      };
+      station.results.push(entry);
+
+      feedbackEl.textContent = saysHuman === null ? 'TIMED OUT — NO DECISION' : 'DECISION LOGGED';
+      feedbackEl.classList.add('show');
+      console.log('Round result:', entry);
+
+      station.roundIndex += 1;
+      setTimeout(() => {
+        if (activeStationIndex === station.index) startRound(station);
+      }, 700);
+    }
+
+    function exportResultsCSV(station) {
+      if (!station.results.length) return;
+      const headers = [
+        'participant_id', 'session_id', 'content_session_key', 'play_count',
+        'station', 'subject_id', 'malice_tier', 'condition',
+        'ground_truth_human', 'player_answer_human', 'correct',
+        'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
+        'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
+      ];
+      const rows = station.results.map((r) => [
+        r.participant_id, r.session_id, r.content_session_key, r.play_count,
+        r.station, r.subject, r.tier, r.condition,
+        r.ground_truth_human, r.player_answer_human, r.correct,
+        r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
+        r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
+      ]);
+      const csv = [headers, ...rows]
+        .map((row) => row.map((v) => (v === null || v === undefined) ? '' : v).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `trial-results-${station.meshName}-${new Date().toISOString().replace(/[:.]/g, '-')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('btn-permit').addEventListener('click', () => {
+      console.log('PERMIT clicked — not wired up yet (waiting on real images/ground truth)');
+    });
+    document.getElementById('btn-reject').addEventListener('click', () => {
+      console.log('REJECT clicked — not wired up yet (waiting on real images/ground truth)');
+    });
+
+    actScan.addEventListener('click', () => {
+      const st = stations[activeStationIndex];
+      if (!st || st.condition === 'human_alone') return;
+      st.scanned = true;
+      actScan.classList.add('toggled');
+      threatPanelEl.classList.add('revealed');
+    });
+    actZoom.addEventListener('click', () => {
+      const st = stations[activeStationIndex];
+      if (!st) return;
+      st.zoomed = !st.zoomed;
+      actZoom.classList.toggle('toggled', st.zoomed);
+    });
+    actAssist.addEventListener('click', () => {
+      const st = stations[activeStationIndex];
+      if (!st || st.condition === 'human_alone') return;
+      if (!st.aiAssistUsed) {
+        st.aiAssistClickTime = Math.round(performance.now() - st.roundStartTime);
+      }
+      st.aiAssistUsed = true;
+      actAssist.classList.add('toggled');
+      aiPanelEl.classList.add('revealed');
+    });
+    actFlag.addEventListener('click', () => {
+      const st = stations[activeStationIndex];
+      if (!st) return;
+      st.flagged = !st.flagged;
+      actFlag.classList.toggle('toggled', st.flagged);
+    });
+
+    // ============================================================
+    // PROXIMITY: whichever screen is nearest (within range) becomes the
+    // active station and drives the HUD. Walking away pauses its timer;
+    // walking back up restarts that screen's round sequence from 0,
+    // same "fresh run for easy repeat testing" behavior as the original
+    // single-kiosk version.
+    // ============================================================
+    function checkProximity() {
+      let nearestIndex = -1;
+      let nearestDist = Infinity;
+      stations.forEach((st, i) => {
+        if (!st.mesh) return;
+        const d = camera.position.distanceTo(st.position);
+        if (d < KIOSK_TRIGGER_RADIUS && d < nearestDist) {
+          nearestDist = d;
+          nearestIndex = i;
+        }
+      });
+
+      if (nearestIndex === activeStationIndex) return;
+
+      // Leaving whichever station was active: pause its timer, keep its
+      // progress (roundIndex, results) intact for next time.
+      if (activeStationIndex !== -1) {
+        clearInterval(stations[activeStationIndex].timerInterval);
+      }
+
+      activeStationIndex = nearestIndex;
+
+      if (activeStationIndex !== -1) {
+        const st = stations[activeStationIndex];
+        hudRoot.classList.add('active');
+        walkPrompt.classList.add('hidden');
+        if (document.pointerLockElement === renderer.domElement) {
+          document.exitPointerLock();
+        }
+        if (ROUNDS.length > 0) {
+          st.roundIndex = 0; // fresh run each time you approach
+          startRound(st);
+        }
+      } else {
+        hudRoot.classList.remove('active');
+        walkPrompt.classList.remove('hidden');
+      }
+    }
+
+    // ============================================================
+    // ANIMATION
+    // ============================================================
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = Math.min(clock.getDelta(), 0.05);
+
+      if (controls.isLocked) {
+        let horizontal = 0, forward = 0;
+        if (keys.right) horizontal += 1;
+        if (keys.left) horizontal -= 1;
+        if (keys.forward) forward += 1;
+        if (keys.backward) forward -= 1;
+
+        const length = Math.hypot(horizontal, forward);
+        if (length > 0) {
+          horizontal /= length;
+          forward /= length;
+          controls.moveRight(horizontal * PLAYER.moveSpeed * delta);
+          controls.moveForward(forward * PLAYER.moveSpeed * delta);
+        }
+
+        const feetY = camera.position.y - PLAYER.eyeHeight;
+        const groundY = findGroundHeight(camera.position.x, feetY, camera.position.z);
+        const grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
+
+        if (grounded) {
+          verticalVelocity = 0;
+          camera.position.y = groundY + PLAYER.eyeHeight;
+          if (wantsJump) {
+            verticalVelocity = PLAYER.jumpSpeed;
+            wantsJump = false;
+          }
+        } else {
+          verticalVelocity += PLAYER.gravity * delta;
+          camera.position.y += verticalVelocity * delta;
+        }
+
+        respawnIfFallen();
+      }
+
+      checkProximity(); // works whether locked or not, so walking near via mouse-free browsing still triggers it
+      updateStatus();
+      composer.render();
+    }
+
+    loadRounds().then(() => animate());
+
+    // ============================================================
+    // RESIZE
+    // ============================================================
+    window.addEventListener("resize", () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+      renderer.setSize(width, height);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      composer.setSize(width, height);
+      ssaoPass.setSize(width, height);
+      bloomPass.setSize(width, height);
+    });
+  </script>
 </body>
 </html>
