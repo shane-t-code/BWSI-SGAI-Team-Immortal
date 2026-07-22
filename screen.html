@@ -768,11 +768,26 @@
     const PARTICIPANT_ID = getOrCreateParticipantId();
     const SESSION_ID = crypto.randomUUID();
 
+    // PARTICIPANT_ID_CHAIN persists across resets (never cleared by the
+    // reset button) so we can trace "this browser played before as X,
+    // then reset and came back as Y." Each reset appends the outgoing id.
+    function getPrevParticipantId() {
+      const chain = JSON.parse(localStorage.getItem('participant_id_chain') || '[]');
+      return chain.length > 0 ? chain[chain.length - 1] : null;
+    }
+    const PREV_PARTICIPANT_ID = getPrevParticipantId();
+
     // Playtest-only reset button — always visible, no gating. Fine while
     // testing is just the team screen-sharing; remove/hide before real
     // uncontrolled data collection so participants can't reset their own
     // condition assignment.
     document.getElementById('dev-reset-btn').addEventListener('click', () => {
+      const outgoingId = localStorage.getItem('participant_id');
+      if (outgoingId) {
+        const chain = JSON.parse(localStorage.getItem('participant_id_chain') || '[]');
+        chain.push(outgoingId);
+        localStorage.setItem('participant_id_chain', JSON.stringify(chain));
+      }
       localStorage.removeItem('condition');
       localStorage.removeItem('participant_id');
       localStorage.removeItem('session_count_' + PARTICIPANT_ID);
@@ -1004,6 +1019,7 @@
 
       const entry = {
         participant_id: PARTICIPANT_ID,
+        prev_participant_id: PREV_PARTICIPANT_ID,
         session_id: SESSION_ID,
         content_session_key: CONTENT_SESSION_KEY,
         play_count: PLAY_COUNT,
@@ -1038,14 +1054,14 @@
     function exportResultsCSV(station) {
       if (!station.results.length) return;
       const headers = [
-        'participant_id', 'session_id', 'content_session_key', 'play_count',
+        'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
         'station', 'subject_id', 'malice_tier', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
         'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
         'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
       ];
       const rows = station.results.map((r) => [
-        r.participant_id, r.session_id, r.content_session_key, r.play_count,
+        r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
         r.station, r.subject, r.tier, r.condition,
         r.ground_truth_human, r.player_answer_human, r.correct,
         r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
