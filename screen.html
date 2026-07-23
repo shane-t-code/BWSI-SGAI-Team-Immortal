@@ -103,6 +103,38 @@
     }
     #directions-close:hover { filter: brightness(1.35); }
 
+    /* End-of-game debrief. Shown once a game is finished: after the post
+       survey for AI-assist players, or straight away for human-only. Same
+       overlay treatment (z-index 13, dark bg, cyan, monospace) as the survey
+       and briefing screens. Starts hidden. */
+    #end-overlay {
+      position: fixed; inset: 0; z-index: 13;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 22px; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;
+      background: rgba(2, 3, 9, 0.97);
+      color: white; text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+    #end-overlay.visible { display: flex; }
+    #end-overlay h2 { font-size: 20px; letter-spacing: 4px; margin: 0; color: var(--cyan); }
+    #end-subtitle { font-size: 12px; letter-spacing: 2px; color: var(--text-dim); margin-top: -14px; }
+    #end-stats {
+      display: grid; grid-template-columns: repeat(3, 150px); gap: 16px;
+      justify-content: center; margin: 4px 0;
+    }
+    .end-stat {
+      border: 1px solid var(--line); background: rgba(8, 18, 28, 0.6);
+      padding: 18px 10px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .end-stat-value { font-size: 26px; color: var(--cyan); }
+    .end-stat-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); }
+    #end-done {
+      padding: 16px 34px; font-size: 13px; letter-spacing: 2px;
+      background: rgba(8, 18, 28, 0.9); border: 1px solid var(--cyan); color: var(--cyan);
+      cursor: pointer; font-family: inherit; transition: filter 0.1s ease;
+    }
+    #end-done:hover { filter: brightness(1.35); }
+
     #crosshair {
       position: fixed; left: 50%; top: 50%;
       width: 6px; height: 6px; margin-left: -3px; margin-top: -3px;
@@ -303,6 +335,13 @@
       healthy human. Look carefully before you decide.
     </div>
     <button id="directions-accept">ACCEPT</button>
+  </div>
+
+  <div id="end-overlay">
+    <h2>DEBRIEF</h2>
+    <div id="end-subtitle">CHECKPOINT SHIFT COMPLETE</div>
+    <div id="end-stats"></div>
+    <button id="end-done">DONE</button>
   </div>
 
   <div id="blocker">
@@ -1070,6 +1109,11 @@
         exportSurveyCSV(answers);
         localStorage.setItem('post_survey_done_' + PARTICIPANT_ID, 'true');
         surveyOverlay.classList.remove('visible');
+        // Debrief was held behind the post survey; show it now.
+        if (pendingEndStats) {
+          showEndScreen(pendingEndStats);
+          pendingEndStats = null;
+        }
       }
     }
 
@@ -1127,6 +1171,68 @@
     surveySubmitBtn.addEventListener('click', handleSurveySubmit);
     document.getElementById('directions-close').addEventListener('click', hideDirections);
     document.getElementById('directions-accept').addEventListener('click', hideDirections);
+
+    // ---------------------------------------------------------------------
+    // END-OF-GAME DEBRIEF
+    // A per-game stats screen. It's held in pendingEndStats when the post
+    // survey needs to go first (AI-assist, first game) and shown the moment
+    // that survey is submitted; otherwise (human-only, or an AI replay whose
+    // post survey is already done) it shows straight from the completion
+    // branch. Stats come from station.results (the same rows the trial CSV
+    // exports), so they always match the logged data.
+    // ---------------------------------------------------------------------
+    const endOverlay = document.getElementById('end-overlay');
+    const endStatsEl = document.getElementById('end-stats');
+    let pendingEndStats = null;
+
+    function computeStats(station) {
+      const r = station.results;
+      const total = r.length;
+      const correct = r.filter((e) => e.correct === true).length;
+      // A null player_answer_human means the 45s timer ran out with no call.
+      const timeouts = r.filter((e) => e.player_answer_human === null).length;
+      const accuracy = total ? Math.round((correct / total) * 100) : 0;
+      // Reaction time only means something for rounds the player actually
+      // decided, so timeouts (which always read ~45s) are excluded.
+      const rts = r.filter((e) => e.player_answer_human !== null).map((e) => e.reaction_time_ms);
+      const avgRtMs = rts.length ? rts.reduce((a, b) => a + b, 0) / rts.length : null;
+      const disguisesTotal = r.filter((e) => e.ground_truth_human === false).length;
+      const disguisesCaught = r.filter((e) => e.ground_truth_human === false && e.correct === true).length;
+      const humansTotal = r.filter((e) => e.ground_truth_human === true).length;
+      const humansCleared = r.filter((e) => e.ground_truth_human === true && e.correct === true).length;
+      return { total, correct, timeouts, accuracy, avgRtMs,
+               disguisesTotal, disguisesCaught, humansTotal, humansCleared };
+    }
+
+    function showEndScreen(stats) {
+      const cells = [
+        { label: 'SCORE', value: `${stats.correct} / ${stats.total}` },
+        { label: 'ACCURACY', value: `${stats.accuracy}%` },
+        { label: 'AVG REACTION', value: stats.avgRtMs === null ? '—' : `${(stats.avgRtMs / 1000).toFixed(1)}s` },
+        { label: 'DISGUISES CAUGHT', value: `${stats.disguisesCaught} / ${stats.disguisesTotal}` },
+        { label: 'HUMANS CLEARED', value: `${stats.humansCleared} / ${stats.humansTotal}` },
+        { label: 'TIMED OUT', value: `${stats.timeouts}` },
+      ];
+      endStatsEl.innerHTML = '';
+      cells.forEach((c) => {
+        const cell = document.createElement('div');
+        cell.className = 'end-stat';
+        const v = document.createElement('div');
+        v.className = 'end-stat-value';
+        v.textContent = c.value;
+        const l = document.createElement('div');
+        l.className = 'end-stat-label';
+        l.textContent = c.label;
+        cell.appendChild(v);
+        cell.appendChild(l);
+        endStatsEl.appendChild(cell);
+      });
+      endOverlay.classList.add('visible');
+    }
+
+    document.getElementById('end-done').addEventListener('click', () => {
+      endOverlay.classList.remove('visible');
+    });
 
     function getNextContentSession(participantId) {
       const countKey = 'session_count_' + participantId;
@@ -1319,12 +1425,17 @@
         subjectPanel.classList.remove('shown'); // no more subjects to inspect
         console.log(`Final results for ${station.meshName}:`, station.results);
         exportResultsCSV(station);
+        const stats = computeStats(station);
         // POST survey, AI-assist condition only, once per participant: the
         // localStorage flag stops a replay or a second finished screen from
-        // re-prompting the same person.
+        // re-prompting the same person. When the survey runs, the debrief
+        // waits behind it (pendingEndStats); otherwise it shows right away.
         if (CONDITION === 'human_ai'
             && localStorage.getItem('post_survey_done_' + PARTICIPANT_ID) !== 'true') {
+          pendingEndStats = stats;
           showSurvey('post');
+        } else {
+          showEndScreen(stats);
         }
         return;
       }
