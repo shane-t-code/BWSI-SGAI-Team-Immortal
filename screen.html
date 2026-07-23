@@ -291,9 +291,9 @@
       <br /><br />
       You have 45 seconds per subject. Choose PERMIT to let a healthy human
       through, or REJECT to turn away a disguised survivor.
-      <br /><br />
+      <span id="directions-ai-line"><br /><br />
       In AI-assist mode you can also use SCAN (threat advisory) and AI ASSIST
-      (the AI's confidence) for extra information before you decide.
+      (the AI's confidence) for extra information before you decide.</span>
       <br /><br />
       Controls: WASD = move · Mouse = look · SPACE = jump · ESC = release mouse.
     </div>
@@ -991,7 +991,8 @@
 
     let surveyPhase = null;      // 'pre' | 'post' while a survey is open
     let surveyResponses = {};    // { pre_q1: 3, ... } for the currently open survey
-    let preSurveyAnswers = null; // retained PRE answers for the POST CSV export
+    let preSurveyAnswers = null;    // retained PRE answers for the POST CSV export
+    let preSurveyTimestamp = null;  // when the PRE survey was actually submitted
 
     // Render one question set into the reusable #survey-overlay. Each
     // question gets a 1..7 button row; clicking a button records the value
@@ -1034,7 +1035,13 @@
       surveyOverlay.classList.add('visible');
     }
 
-    function showDirections() { directionsOverlay.classList.add('visible'); }
+    function showDirections() {
+      // Only AI-assist players have SCAN / AI ASSIST, so hide that line for
+      // human-only players rather than telling them about buttons they lack.
+      document.getElementById('directions-ai-line').style.display =
+        CONDITION === 'human_ai' ? '' : 'none';
+      directionsOverlay.classList.add('visible');
+    }
     function hideDirections() { directionsOverlay.classList.remove('visible'); }
 
     // Required-answer validation on submit: every question in the current
@@ -1051,7 +1058,11 @@
 
       if (surveyPhase === 'pre') {
         preSurveyAnswers = answers;
+        // Stamp the PRE survey now, at submit -- otherwise its rows inherit the
+        // POST export time and we lose when the pre was actually taken.
+        preSurveyTimestamp = new Date().toISOString();
         localStorage.setItem('survey_pre_' + PARTICIPANT_ID, JSON.stringify(answers));
+        localStorage.setItem('survey_pre_ts_' + PARTICIPANT_ID, preSurveyTimestamp);
         surveyOverlay.classList.remove('visible');
         showDirections();
       } else {
@@ -1076,11 +1087,17 @@
         'participant_id', 'session_id', 'condition', 'phase',
         'question_id', 'question_text', 'response', 'timestamp',
       ];
-      const timestamp = new Date().toISOString();
+      const postTimestamp = new Date().toISOString();
+      // Pre rows carry the time the pre survey was actually submitted (stamped
+      // in handleSurveySubmit), not the post-export time. Fall back to the post
+      // time only if that stamp is somehow missing.
+      const preTimestamp = preSurveyTimestamp
+        || localStorage.getItem('survey_pre_ts_' + PARTICIPANT_ID)
+        || postTimestamp;
       const rows = [];
       const preAnswers = preSurveyAnswers
         || JSON.parse(localStorage.getItem('survey_pre_' + PARTICIPANT_ID) || 'null');
-      const addRows = (phase, questions, answers) => {
+      const addRows = (phase, questions, answers, timestamp) => {
         if (!answers) return;
         questions.forEach((q) => {
           if (answers[q.id] === undefined) return;
@@ -1090,8 +1107,8 @@
           ]);
         });
       };
-      addRows('pre', PRE_SURVEY_QUESTIONS, preAnswers);
-      addRows('post', POST_SURVEY_QUESTIONS, postAnswers);
+      addRows('pre', PRE_SURVEY_QUESTIONS, preAnswers, preTimestamp);
+      addRows('post', POST_SURVEY_QUESTIONS, postAnswers, postTimestamp);
 
       const csv = [headers, ...rows]
         .map((row) => row.map(csvEscape).join(','))
@@ -1100,7 +1117,7 @@
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `survey-${PARTICIPANT_ID}-${timestamp.replace(/[:/.]/g, '-')}.csv`;
+      a.download = `survey-${PARTICIPANT_ID}-${postTimestamp.replace(/[:/.]/g, '-')}.csv`;
       document.body.appendChild(a);
       a.click();
       a.remove();
