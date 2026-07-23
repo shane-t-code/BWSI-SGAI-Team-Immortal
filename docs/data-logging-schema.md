@@ -154,3 +154,33 @@ participant: `15 x 5 = 75` to `20 x 5 = 100` trials per (tier, condition) cell
    (missing `confidence_score` in `LOG_COLUMNS`) per Shane's note — unrelated
    to this pipeline, flagging here only because it's a known pre-existing
    failure noted twice now.
+
+## Survey data (pre/post AI-attitude surveys)
+
+Added in the survey PR (`screen.html`). Separate from the trial CSV — this is
+participant-level, not trial-level — but joins to it on `participant_id` +
+`session_id`. Only the **AI-assist** condition produces survey data; the
+`human_alone` condition takes no survey (there is no AI to form attitudes
+about). Both surveys are 7-point Likert (1 = strongly disagree … 7 = strongly
+agree) and are shown **once per participant**: the pre survey before the first
+game, the post survey after it. `exportSurveyCSV()` downloads
+`survey-<participant_id>-<timestamp>.csv` in **long format**, one row per
+answered question:
+
+| column | meaning |
+| --- | --- |
+| `participant_id` | joins to the trial CSV |
+| `session_id` | the play session the survey bracketed |
+| `condition` | always `human_ai` (the only condition surveyed) |
+| `phase` | `pre` or `post` |
+| `question_id` | stable id: `pre_q1`..`pre_q10`, `post_q1`..`post_q10` |
+| `question_text` | full item wording (CSV-escaped; several contain commas) |
+| `response` | integer 1–7 |
+| `timestamp` | ISO-8601, when the post survey was submitted/exported |
+
+The pre items measure general AI trust/reliance attitudes; the post items
+measure the in-game AI experience. Both are required (a participant cannot
+advance past a survey until every item is answered), so there are no partial
+rows. Analysis idea: pair `pre`/`post` per participant to measure attitude
+shift, and correlate post reliance items against that participant's trial-level
+`ai_assist_used` rate and accuracy.
