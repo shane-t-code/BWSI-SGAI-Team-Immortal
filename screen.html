@@ -98,109 +98,6 @@
     }
     .hud-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--cyan); }
 
-    #tick-ruler {
-      position: fixed; top: 0; left: 0; right: 0; height: 14px;
-      display: flex; justify-content: space-between; padding: 0 8px;
-      pointer-events: none; z-index: 4;
-    }
-    #tick-ruler span { width: 1px; height: 8px; background: var(--line); }
-
-    #wave-panel { position: fixed; top: 20px; left: 20px; width: 220px; z-index: 4; color: var(--cyan); font-family: 'Courier New', monospace; }
-    #wave-bar-track { width: 100%; height: 3px; background: rgba(111,214,232,0.15); margin-bottom: 8px; position: relative; }
-    #wave-bar-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); transition: width 0.3s ease; }
-    #wave-text { font-size: 11px; letter-spacing: 2px; color: var(--cyan); }
-
-    #station-panel {
-      position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 4;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      font-family: 'Courier New', monospace;
-    }
-    #station-label {
-      font-size: 11px; letter-spacing: 3px; color: var(--orange);
-    }
-    #exit-station-btn {
-      font-size: 10px; letter-spacing: 2px; color: var(--text-dim);
-      cursor: pointer; padding: 4px 8px; border: 1px solid var(--line);
-      background: var(--panel-bg);
-    }
-    #exit-station-btn:hover { color: var(--cyan); border-color: var(--cyan); }
-    #timer-circle {
-      width: 60px; height: 60px; border-radius: 50%; border: 1.5px solid var(--orange);
-      display: flex; align-items: center; justify-content: center;
-      color: var(--orange); font-size: 20px; letter-spacing: 1px;
-      box-shadow: 0 0 10px rgba(232,132,90,0.25) inset;
-    }
-
-    #threat-panel {
-      position: fixed; top: 20px; right: 20px; width: 230px; z-index: 4;
-      background: var(--panel-bg); border: 1px solid var(--line);
-      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
-      font-family: 'Courier New', monospace; color: var(--cyan);
-    }
-    #threat-panel.revealed { opacity: 1; pointer-events: auto; }
-    #threat-header { background: rgba(111,214,232,0.12); padding: 8px 12px; font-size: 11px; letter-spacing: 3px; border-bottom: 1px solid var(--line); }
-    #threat-list { list-style: none; margin: 0; padding: 10px 12px; }
-    #threat-list li { font-size: 12px; color: #b9cdd4; padding: 4px 0; position: relative; padding-left: 14px; }
-    #threat-list li::before { content: '▪'; position: absolute; left: 0; color: var(--cyan); font-size: 9px; top: 6px; }
-
-    #actions-panel { position: fixed; bottom: 30px; left: 20px; width: 190px; border: 1px solid var(--line); z-index: 4; font-family: 'Courier New', monospace; }
-    #actions-header { background: rgba(111,214,232,0.12); padding: 8px 12px; font-size: 11px; letter-spacing: 3px; text-align: center; border-bottom: 1px solid var(--line); color: var(--cyan); }
-    .action-item { padding: 10px 14px; font-size: 12px; letter-spacing: 1px; color: #b9cdd4; cursor: pointer; background: var(--panel-bg); border-bottom: 1px solid rgba(111,214,232,0.08); }
-    .action-item:hover { background: rgba(111,214,232,0.1); color: var(--cyan); }
-    .action-item.toggled { background: rgba(111,214,232,0.18); color: var(--cyan); }
-    #act-flag.toggled { background: rgba(232,132,90,0.18); color: var(--orange); }
-
-    #decision-panel { position: fixed; bottom: 34px; left: 50%; transform: translateX(-50%); display: flex; gap: 14px; z-index: 4; }
-    .decision-btn { padding: 13px 30px; font-size: 12px; letter-spacing: 2px; background: var(--panel-bg); cursor: pointer; font-family: 'Courier New', monospace; transition: filter 0.1s ease; }
-    #btn-permit { border: 1px solid var(--cyan); color: var(--cyan); }
-    #btn-reject { border: 1px solid var(--orange); color: var(--orange); }
-    .decision-btn:hover { filter: brightness(1.3); }
-
-    #ai-panel {
-      position: fixed; bottom: 30px; right: 20px; width: 200px; z-index: 4;
-      border: 1px solid var(--line); background: var(--panel-bg); padding: 10px 14px;
-      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
-      font-family: 'Courier New', monospace; color: var(--cyan);
-    }
-    #ai-panel.revealed { opacity: 1; pointer-events: auto; }
-    #ai-header { font-size: 11px; letter-spacing: 3px; margin-bottom: 10px; }
-    #ai-conf-row { display: flex; align-items: center; gap: 10px; font-size: 11px; }
-    #ai-conf-track { flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative; }
-    #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
-
-    /* Subject feed: the round image, also shown in the 2D HUD as a backup.
-       The GLB screen meshes now get their UVs normalized to 0..1 in
-       normalizeMeshUVs() so the image shows correctly on the physical
-       screen mesh too -- this panel stays as a guaranteed-readable copy
-       in case a given mesh's UVs turn out to be more than a simple
-       affine remap can fix, or its aspect ratio distorts the image. */
-    #subject-panel {
-      position: fixed; top: 46%; left: 50%; transform: translate(-50%, -50%);
-      z-index: 4; width: 300px;
-      border: 1px solid var(--cyan); background: rgba(4, 10, 16, 0.92);
-      box-shadow: 0 0 18px rgba(111, 214, 232, 0.35);
-      font-family: 'Courier New', monospace;
-      pointer-events: none; opacity: 0; transition: opacity 0.2s ease, width 0.2s ease;
-    }
-    #subject-panel.shown { opacity: 1; }
-    #subject-panel.zoomed { width: 440px; }
-    #subject-header {
-      padding: 6px 10px; font-size: 11px; letter-spacing: 3px; color: var(--cyan);
-      text-align: center; border-bottom: 1px solid var(--line);
-      background: rgba(111, 214, 232, 0.12);
-    }
-    #subject-img { display: block; width: 100%; height: auto; background: #05080c; }
-
-    #feedback {
-      position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 4;
-      font-size: 12px; letter-spacing: 1px; color: var(--cyan);
-      opacity: 0; transition: opacity 0.2s ease; font-family: 'Courier New', monospace;
-    }
-    #feedback.show { opacity: 1; }
-
-    #hud-root { display: none; }
-    #hud-root.active { display: contents; }
-
     #walk-prompt {
       position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 4;
       font-size: 12px; letter-spacing: 2px; color: var(--text-dim); font-family: 'Courier New', monospace;
@@ -235,47 +132,6 @@
   <div id="dev-reset-btn">RESET CONDITION (ESC first)</div>
 
   <div id="walk-prompt">WALK UP TO A SCREEN AND CLICK IT TO BEGIN INSPECTION</div>
-
-  <div id="hud-root">
-    <div id="tick-ruler"></div>
-    <div id="wave-panel">
-      <div id="wave-bar-track"><div id="wave-bar-fill" style="width: 55%;"></div></div>
-      <div id="wave-text">WAVE: <span id="wave-num">6</span>/<span id="wave-total">10</span></div>
-    </div>
-    <div id="station-panel">
-      <div id="station-label">SCREEN: <span id="station-name">—</span> (<span id="station-mode">—</span>)</div>
-      <div id="timer-circle"><span id="timer-value">45</span></div>
-      <div id="exit-station-btn">✕ EXIT SCREEN (ESC)</div>
-    </div>
-    <div id="threat-panel">
-      <div id="threat-header">THREAT ADVISORY</div>
-      <ul id="threat-list"></ul>
-    </div>
-    <div id="actions-panel">
-      <div id="actions-header">ACTIONS</div>
-      <div class="action-item" id="act-scan">SCAN</div>
-      <div class="action-item" id="act-zoom">ZOOM</div>
-      <div class="action-item" id="act-assist">AI ASSIST</div>
-      <div class="action-item" id="act-flag">FLAG</div>
-    </div>
-    <div id="subject-panel">
-      <div id="subject-header">SUBJECT FEED</div>
-      <img id="subject-img" alt="subject under inspection" />
-    </div>
-    <div id="decision-panel">
-      <button class="decision-btn" id="btn-permit">PERMIT</button>
-      <button class="decision-btn" id="btn-reject">REJECT</button>
-    </div>
-    <div id="ai-panel">
-      <div id="ai-header">AI ASSISTANT</div>
-      <div id="ai-conf-row">
-        <span>CONF</span>
-        <div id="ai-conf-track"><div id="ai-conf-fill" style="width: 82%;"></div></div>
-        <span id="ai-conf-value">82</span>
-      </div>
-    </div>
-    <div id="feedback"></div>
-  </div>
 
   <script type="importmap">
     {
@@ -500,10 +356,15 @@
       const rangeU = (maxU - minU) || 1;
       const rangeV = (maxV - minV) || 1;
       for (let i = 0; i < uvAttr.count; i++) {
+        // The extra "1 - ..." on V corrects an upside-down image: after a
+        // plain min/max rescale to 0..1 the photo rendered flipped
+        // vertically on the mesh, so invert V here rather than in the
+        // texture/material (keeps this one function the single place that
+        // owns "how this mesh's UVs map to a normal image").
         uvAttr.setXY(
           i,
           (uvAttr.getX(i) - minU) / rangeU,
-          (uvAttr.getY(i) - minV) / rangeV
+          1 - (uvAttr.getY(i) - minV) / rangeV
         );
       }
       uvAttr.needsUpdate = true;
@@ -901,21 +762,14 @@
     }
     const { sessionKey: CONTENT_SESSION_KEY, playCount: PLAY_COUNT } = getNextContentSession(PARTICIPANT_ID);
 
-    const ruler = document.getElementById('tick-ruler');
-    for (let i = 0; i < 90; i++) ruler.appendChild(document.createElement('span'));
-
-    const hudRoot = document.getElementById('hud-root');
     const walkPrompt = document.getElementById('walk-prompt');
 
     // ---------- round order ----------
-    // Tiers stay grouped into contiguous blocks (like waves) -- all rounds
-    // of the same malice tier appear together -- but the ORDER of those
-    // tier-blocks is shuffled, and human rounds are NOT their own block:
-    // they're scattered at random positions inside the (shuffled) tier
-    // blocks instead of clumping into a separate all-human wave. Seeded off
-    // the content session key so a given session always deals the same
-    // order (result CSVs stay reproducible) while still varying session to
-    // session.
+    // Humans and every zombie tier are shuffled randomly through the whole
+    // session -- no difficulty ramp, no clumping by tier or ground truth. The
+    // shuffle is seeded off the content session key, so a given session always
+    // deals in the same order (result CSVs stay reproducible) while still being
+    // an unpredictable mix, and ground truth isn't correlated with position.
     function makeSeededRng(seedStr) {
       let h = 1779033703 ^ seedStr.length;
       for (let i = 0; i < seedStr.length; i++) {
@@ -941,39 +795,10 @@
       return a;
     }
 
-    // Groups non-human rounds into contiguous per-tier blocks (waves),
-    // shuffles the order the blocks are played in, shuffles each block's
-    // internal order, then scatters human rounds one at a time into random
-    // positions inside random blocks -- so humans show up unpredictably
-    // throughout the session but never form their own separate wave.
+    // Shuffle the whole session (humans + all zombie tiers together) with a
+    // session-seeded RNG.
     function orderRounds(rounds, seedStr) {
-      const rng = makeSeededRng(seedStr);
-
-      const humanRounds = rounds.filter((r) => r.groundTruthIsHuman);
-      const tierMap = new Map(); // tier -> rounds, non-human only
-      for (const r of rounds) {
-        if (r.groundTruthIsHuman) continue;
-        if (!tierMap.has(r.tier)) tierMap.set(r.tier, []);
-        tierMap.get(r.tier).push(r);
-      }
-
-      if (tierMap.size === 0) {
-        // No non-human tiers to build blocks around (shouldn't normally
-        // happen) -- fall back to a flat shuffle so nothing crashes.
-        return seededShuffle(rounds, rng);
-      }
-
-      const tierKeys = seededShuffle([...tierMap.keys()], rng); // wave order
-      const blocks = tierKeys.map((t) => seededShuffle(tierMap.get(t), rng));
-
-      const shuffledHumans = seededShuffle(humanRounds, rng);
-      for (const h of shuffledHumans) {
-        const blockIdx = Math.floor(rng() * blocks.length);
-        const insertIdx = Math.floor(rng() * (blocks[blockIdx].length + 1));
-        blocks[blockIdx].splice(insertIdx, 0, h);
-      }
-
-      return blocks.flat();
+      return seededShuffle(rounds, makeSeededRng(seedStr));
     }
     // --------------------------------------
 
@@ -990,7 +815,7 @@
           throw new Error(`rounds.json has no session "${CONTENT_SESSION_KEY}" (keys found: ${Object.keys(sessionsByKey).join(", ") || "none"})`);
         }
         ROUNDS = orderRounds(sessionRounds, CONTENT_SESSION_KEY);
-        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, tier-blocked + humans scattered)`;
+        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, shuffled)`;
       } catch (err) {
         // This is the #1 reason the screen shows nothing: no round data
         // means tryShowPassiveRounds() has nothing to display, and it was
@@ -1004,33 +829,368 @@
 
     const WAVE_START = 6; // narrative offset: waves 1-5 happen before this checkpoint
     const WAVE_TOTAL = 10;
-    const waveNumEl = document.getElementById('wave-num');
-    const waveBarFill = document.getElementById('wave-bar-fill');
-    const timerValueEl = document.getElementById('timer-value');
-    const stationNameEl = document.getElementById('station-name');
-    const stationModeEl = document.getElementById('station-mode');
-    const threatListEl = document.getElementById('threat-list');
-    const threatPanelEl = document.getElementById('threat-panel');
-    const aiPanelEl = document.getElementById('ai-panel');
-    const aiConfFill = document.getElementById('ai-conf-fill');
-    const aiConfValue = document.getElementById('ai-conf-value');
-    const feedbackEl = document.getElementById('feedback');
-    const actScan = document.getElementById('act-scan');
-    const actZoom = document.getElementById('act-zoom');
-    const actAssist = document.getElementById('act-assist');
-    const actFlag = document.getElementById('act-flag');
-    const subjectPanel = document.getElementById('subject-panel');
-    const subjectImg = document.getElementById('subject-img');
 
-    document.getElementById('wave-total').textContent = WAVE_TOTAL;
+    // ============================================================
+    // ON-MESH HUD -- everything (subject image, threat list, action
+    // buttons, decision buttons, AI panel, timer/wave text) is drawn onto
+    // a single 2D canvas, which becomes the station mesh's texture while
+    // that station is open. There is no DOM/CSS overlay for any of this --
+    // "clicking a button" means raycasting from the crosshair (screen
+    // center, since the pointer stays locked throughout) onto the mesh,
+    // reading the hit's UV coordinate, and mapping that UV to a pixel
+    // position on this same canvas to see which button rect it falls in.
+    // ============================================================
+    const HUD_CANVAS_W = 1280;
+    const HUD_CANVAS_H = 720;
+    const hudCanvas = document.createElement('canvas');
+    hudCanvas.width = HUD_CANVAS_W;
+    hudCanvas.height = HUD_CANVAS_H;
+    const hudCtx = hudCanvas.getContext('2d');
+    const hudTexture = new THREE.CanvasTexture(hudCanvas);
+    hudTexture.colorSpace = THREE.SRGBColorSpace;
 
-    function renderThreats(threats) {
-      threatListEl.innerHTML = '';
-      threats.forEach((t) => {
-        const li = document.createElement('li');
-        li.textContent = t;
-        threatListEl.appendChild(li);
+    // The mesh appears larger than the actual visible screen area -- the
+    // border meshes (Mesh_desk_computerScreen004/005/006) sit in front of
+    // the 3 screens and physically occlude their outer edge, and you want
+    // to keep those borders rather than hide them. Rather than guessing
+    // SAFE_MARGIN and looping back and forth, it's live-tunable: press
+    // [ to shrink the safe area (pull content further from the edges) and
+    // ] to grow it, while looking at an open station -- the HUD redraws
+    // immediately so you can dial it in by eye until nothing sits behind
+    // a border, then just tell me the final number to bake in permanently.
+    // Two debug borders are drawn every frame: SAFE_RECT (green) is this
+    // inset area, and the full canvas edge (yellow) is the true 0..1 UV
+    // extent -- useful for seeing exactly how much margin you've dialed in.
+    let SAFE_MARGIN = 0.09; // fraction of each dimension trimmed off all 4 sides -- calibrated live against the real screen
+    let SAFE_RECT, LAYOUT, BUTTONS, actionsHeaderH, actionsRowH;
+
+    // Places a rect at fractional coordinates (0..1) of SAFE_RECT, so the
+    // whole layout's composition stays proportional to SAFE_RECT no matter
+    // how SAFE_MARGIN ends up getting tuned. VERTICAL_NUDGE shifts
+    // everything up by a small fixed pixel amount on top of that -- tweak
+    // this directly for further tiny vertical adjustments.
+    const VERTICAL_NUDGE = 15;
+    function frac(fx, fy, fw, fh) {
+      return {
+        x: SAFE_RECT.x + fx * SAFE_RECT.w,
+        y: SAFE_RECT.y + fy * SAFE_RECT.h - VERTICAL_NUDGE,
+        w: fw * SAFE_RECT.w,
+        h: fh * SAFE_RECT.h,
+      };
+    }
+
+    function actionsRow(i) {
+      return {
+        x: LAYOUT.actions.x, w: LAYOUT.actions.w,
+        y: LAYOUT.actions.y + actionsHeaderH + i * actionsRowH,
+        h: actionsRowH,
+      };
+    }
+
+    // Recomputes SAFE_RECT, LAYOUT, and BUTTONS from the current
+    // SAFE_MARGIN. Called once at startup and again every time [ / ] change
+    // the margin, so all downstream positions (including hit-boxes used by
+    // pickStationButton) stay in sync with whatever's currently drawn.
+    function rebuildLayout() {
+      SAFE_RECT = {
+        x: HUD_CANVAS_W * SAFE_MARGIN,
+        y: HUD_CANVAS_H * SAFE_MARGIN,
+        w: HUD_CANVAS_W * (1 - 2 * SAFE_MARGIN),
+        h: HUD_CANVAS_H * (1 - 2 * SAFE_MARGIN),
+      };
+
+      // Layout matching the reference design: wave bar top-left, circular
+      // timer top-center, threat advisory top-right, targeting reticle +
+      // subject ID centered, ACTIONS list bottom-left, PERMIT/REJECT
+      // centered-bottom, AI ASSISTANT bottom-right.
+      LAYOUT = {
+        wave: frac(0.00, 0.00, 0.22, 0.09),
+        timerCircle: { cx: frac(0.5, 0.14, 0, 0).x, cy: frac(0, 0.14, 0, 0).y, r: 0.045 * SAFE_RECT.h },
+        threat: frac(0.72, 0.00, 0.28, 0.24),
+        viewport: frac(0.30, 0.16, 0.40, 0.36), // subject image "camera feed" window
+        reticleCy: frac(0, 0.34, 0, 0).y, // reticle sits mid-viewport
+        subjectLabelY: frac(0, 0.56, 0, 0).y,
+        actions: frac(0.00, 0.40, 0.20, 0.24),
+        permit: frac(0.36, 0.60, 0.12, 0.09),
+        reject: frac(0.50, 0.60, 0.12, 0.09),
+        ai: frac(0.72, 0.40, 0.28, 0.10),
+        exit: frac(0.90, 0.04, 0.10, 0.055),
+      };
+
+      // Button hit-boxes in canvas pixel space, matching LAYOUT above.
+      // `disabledWhen` greys a button out and makes it unclickable (matches
+      // the old "human_alone blocks SCAN/AI ASSIST" behavior); `toggledWhen`
+      // highlights it when active. SCAN/ZOOM/AI ASSIST/FLAG are stacked rows
+      // inside the ACTIONS panel, like the reference.
+      actionsHeaderH = LAYOUT.actions.h * 0.18;
+      actionsRowH = (LAYOUT.actions.h - actionsHeaderH) / 4;
+      BUTTONS = [
+        { id: 'scan', label: 'SCAN', ...actionsRow(0),
+          disabledWhen: () => CONDITION === 'human_alone',
+          toggledWhen: (st) => st.scanned },
+        { id: 'zoom', label: 'ZOOM', ...actionsRow(1),
+          toggledWhen: (st) => st.zoomed },
+        { id: 'assist', label: 'AI ASSIST', ...actionsRow(2),
+          disabledWhen: () => CONDITION === 'human_alone',
+          toggledWhen: (st) => st.aiAssistUsed },
+        { id: 'flag', label: 'FLAG', ...actionsRow(3),
+          toggledWhen: (st) => st.flagged },
+        { id: 'permit', label: 'PERMIT', ...LAYOUT.permit },
+        { id: 'reject', label: 'REJECT', ...LAYOUT.reject },
+        { id: 'exit', label: 'EXIT (ESC)', ...LAYOUT.exit },
+      ];
+    }
+    rebuildLayout();
+
+    // [ shrinks the safe area (pulls everything further from the edges,
+    // for when content still clips behind a border), ] grows it (for when
+    // there's too much dead space and the borders aren't actually that
+    // wide). Redraws immediately if a station is open so you see the
+    // effect live.
+    document.addEventListener('keydown', (event) => {
+      if (event.code !== 'BracketLeft' && event.code !== 'BracketRight') return;
+      const delta = event.code === 'BracketLeft' ? 0.01 : -0.01;
+      SAFE_MARGIN = Math.min(0.35, Math.max(0, SAFE_MARGIN + delta));
+      rebuildLayout();
+      showTemporaryMessage(`Safe margin: ${(SAFE_MARGIN * 100).toFixed(0)}% ( [ shrink / ] grow )`);
+      console.log(`SAFE_MARGIN = ${SAFE_MARGIN.toFixed(3)}`);
+      if (activeStationIndex !== -1) drawStationHUD(stations[activeStationIndex]);
+    });
+
+    // One Image object per URL, reused across rounds/redraws so we're not
+    // re-fetching every frame; onload triggers a redraw of whichever
+    // station is currently showing that image (in case it finishes
+    // loading after the round already started).
+    const subjectImageCache = new Map();
+    function getCachedSubjectImage(url) {
+      if (!subjectImageCache.has(url)) {
+        const img = new Image();
+        img.src = url;
+        img.onload = () => {
+          const st = stations[activeStationIndex];
+          if (st && st.currentRound && `data/game_sets/images/${st.currentRound.image}` === url) {
+            drawStationHUD(st);
+          }
+        };
+        img.onerror = () => showTemporaryMessage(`Image failed to load: ${url}`);
+        subjectImageCache.set(url, img);
+      }
+      return subjectImageCache.get(url);
+    }
+
+    function computeWaveNum(station) {
+      // This station's rounds only cover waves WAVE_START..WAVE_TOTAL (the
+      // rest of the siege is assumed to happen elsewhere). Scale
+      // roundIndex into that range based on the real round count so it
+      // never overflows past WAVE_TOTAL regardless of how many rounds a
+      // session actually has.
+      const wavesCovered = WAVE_TOTAL - WAVE_START + 1;
+      const roundsPerWave = ROUNDS.length / wavesCovered;
+      return Math.min(WAVE_TOTAL, WAVE_START + Math.floor(station.roundIndex / roundsPerWave));
+    }
+
+    let feedbackText = '';
+    let hoveredButtonId = null;
+    let hoverCanvasPos = null; // {x,y} in canvas space, drawn as a debug dot
+
+    // Redraws the entire on-mesh HUD for `station` and pushes it to the
+    // mesh via hudTexture.needsUpdate. Called after every state change
+    // (round start, timer tick, button press, hover change) rather than
+    // on a fixed schedule, so it's cheap in the common case.
+    function drawStationHUD(station) {
+      const ctx = hudCtx;
+      ctx.clearRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
+      ctx.fillStyle = '#04080c';
+      ctx.fillRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
+
+      // Decorative tick ruler across the top of the safe area
+      ctx.strokeStyle = 'rgba(111,214,232,0.25)';
+      ctx.lineWidth = 1;
+      for (let x = SAFE_RECT.x; x <= SAFE_RECT.x + SAFE_RECT.w; x += 14) {
+        ctx.beginPath();
+        ctx.moveTo(x, SAFE_RECT.y);
+        ctx.lineTo(x, SAFE_RECT.y + 8);
+        ctx.stroke();
+      }
+
+      // Wave bar, top-left
+      const wave = LAYOUT.wave;
+      const waveFrac = computeWaveNum(station) / WAVE_TOTAL;
+      ctx.strokeStyle = 'rgba(111,214,232,0.3)';
+      ctx.strokeRect(wave.x, wave.y + 20, wave.w, 4);
+      ctx.fillStyle = '#6fd6e8';
+      ctx.fillRect(wave.x, wave.y + 20, wave.w * waveFrac, 4);
+      ctx.font = '15px monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`WAVE: ${computeWaveNum(station)}/${WAVE_TOTAL}`, wave.x, wave.y + 45);
+
+      // Time remaining, top-center circular timer
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#6fd6e8';
+      ctx.font = '13px monospace';
+      ctx.fillText('TIME REMAINING', LAYOUT.timerCircle.cx, LAYOUT.timerCircle.cy - LAYOUT.timerCircle.r - 14);
+      ctx.strokeStyle = '#e8845a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(LAYOUT.timerCircle.cx, LAYOUT.timerCircle.cy, LAYOUT.timerCircle.r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.lineWidth = 1;
+      ctx.fillStyle = '#e8845a';
+      ctx.font = '26px monospace';
+      ctx.fillText(String(Math.max(station.timeRemaining, 0)), LAYOUT.timerCircle.cx, LAYOUT.timerCircle.cy + 9);
+
+      // Threat advisory, top-right (only after SCAN)
+      if (station.scanned && station.currentRound) {
+        const tp = LAYOUT.threat;
+        ctx.fillStyle = 'rgba(111,214,232,0.10)';
+        ctx.fillRect(tp.x, tp.y, tp.w, tp.h);
+        ctx.strokeStyle = '#6fd6e8';
+        ctx.strokeRect(tp.x, tp.y, tp.w, tp.h);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#6fd6e8';
+        ctx.font = '14px monospace';
+        ctx.fillText('THREAT ADVISORY', tp.x + 14, tp.y + 24);
+        ctx.fillStyle = '#b9cdd4';
+        ctx.font = '13px monospace';
+        station.currentRound.threats.forEach((t, i) => {
+          ctx.fillText(`- ${t}`, tp.x + 14, tp.y + 50 + i * 22);
+        });
+      }
+
+      // Camera-feed viewport (subject image) with targeting reticle over it
+      const vp = LAYOUT.viewport;
+      ctx.strokeStyle = 'rgba(111,214,232,0.4)';
+      ctx.strokeRect(vp.x, vp.y, vp.w, vp.h);
+      if (station.currentRound) {
+        const url = `data/game_sets/images/${station.currentRound.image}`;
+        const img = getCachedSubjectImage(url);
+        if (img.complete && img.naturalWidth > 0) {
+          const zoomPad = station.zoomed ? 0.12 : 0;
+          const drawRect = {
+            x: vp.x - vp.w * zoomPad / 2, y: vp.y - vp.h * zoomPad / 2,
+            w: vp.w * (1 + zoomPad), h: vp.h * (1 + zoomPad),
+          };
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(vp.x, vp.y, vp.w, vp.h);
+          ctx.clip(); // keep a zoomed image from spilling outside the viewport frame
+          ctx.drawImage(img, drawRect.x, drawRect.y, drawRect.w, drawRect.h);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#0c1620';
+          ctx.fillRect(vp.x, vp.y, vp.w, vp.h);
+          ctx.fillStyle = '#6fd6e8';
+          ctx.font = '16px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText('LOADING...', vp.x + vp.w / 2, vp.y + vp.h / 2);
+        }
+      }
+      // Reticle: diamond + tick marks, centered in the viewport
+      const rcx = vp.x + vp.w / 2, rcy = LAYOUT.reticleCy;
+      ctx.strokeStyle = 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 1.5;
+      const tick = 22, gap = 14, diamond = 7;
+      [[0, -1], [0, 1], [-1, 0], [1, 0]].forEach(([dx, dy]) => {
+        ctx.beginPath();
+        ctx.moveTo(rcx + dx * gap, rcy + dy * gap);
+        ctx.lineTo(rcx + dx * (gap + tick), rcy + dy * (gap + tick));
+        ctx.stroke();
       });
+      ctx.save();
+      ctx.translate(rcx, rcy);
+      ctx.rotate(Math.PI / 4);
+      ctx.strokeRect(-diamond, -diamond, diamond * 2, diamond * 2);
+      ctx.restore();
+      ctx.lineWidth = 1;
+      // Subject ID label below the reticle
+      if (station.currentRound) {
+        ctx.fillStyle = '#6fd6e8';
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`SUBJECT ${station.currentRound.subjectId}`, rcx, LAYOUT.subjectLabelY);
+      }
+
+      // AI assistant panel, bottom-right (only after AI ASSIST)
+      if (station.aiAssistUsed && station.currentRound) {
+        const ap = LAYOUT.ai;
+        ctx.fillStyle = 'rgba(111,214,232,0.10)';
+        ctx.fillRect(ap.x, ap.y, ap.w, ap.h);
+        ctx.strokeStyle = '#6fd6e8';
+        ctx.strokeRect(ap.x, ap.y, ap.w, ap.h);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#6fd6e8';
+        ctx.font = '14px monospace';
+        ctx.fillText('AI ASSISTANT', ap.x + 14, ap.y + 22);
+        const barX = ap.x + 60, barY = ap.y + 40, barW = ap.w - 130;
+        ctx.fillText('CONF', ap.x + 14, ap.y + 45);
+        ctx.strokeRect(barX, barY, barW, 6);
+        ctx.fillStyle = '#6fd6e8';
+        ctx.fillRect(barX, barY, barW * (station.currentRound.aiConfidence / 100), 6);
+        ctx.fillText(String(station.currentRound.aiConfidence), barX + barW + 10, barY + 6);
+      }
+
+      // ACTIONS panel, bottom-left (header + SCAN/ZOOM/AI ASSIST/FLAG rows)
+      const ac = LAYOUT.actions;
+      ctx.fillStyle = 'rgba(8,18,28,0.85)';
+      ctx.fillRect(ac.x, ac.y, ac.w, actionsHeaderH);
+      ctx.strokeStyle = '#6fd6e8';
+      ctx.strokeRect(ac.x, ac.y, ac.w, ac.h);
+      ctx.fillStyle = '#6fd6e8';
+      ctx.font = '13px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('ACTIONS', ac.x + ac.w / 2, ac.y + actionsHeaderH / 2 + 5);
+
+      // Action + decision buttons (SCAN/ZOOM/AI ASSIST/FLAG rows + PERMIT/REJECT + EXIT)
+      BUTTONS.forEach((btn) => {
+        const disabled = btn.disabledWhen && btn.disabledWhen(station);
+        const active = btn.toggledWhen && btn.toggledWhen(station);
+        const hovered = hoveredButtonId === btn.id && !disabled;
+        ctx.fillStyle = disabled
+          ? 'rgba(60,60,60,0.4)'
+          : active
+            ? 'rgba(111,214,232,0.30)'
+            : hovered
+              ? 'rgba(111,214,232,0.15)'
+              : 'rgba(8,18,28,0.85)';
+        ctx.fillRect(btn.x, btn.y, btn.w, btn.h);
+        ctx.strokeStyle = btn.id === 'reject' ? '#e8845a' : '#6fd6e8';
+        ctx.strokeRect(btn.x, btn.y, btn.w, btn.h);
+        ctx.fillStyle = disabled ? '#5a6b70' : (btn.id === 'reject' ? '#e8845a' : '#6fd6e8');
+        ctx.font = '14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(btn.label, btn.x + btn.w / 2, btn.y + btn.h / 2 + 5);
+      });
+      ctx.textAlign = 'left';
+
+      // Feedback line
+      if (feedbackText) {
+        ctx.fillStyle = '#6fd6e8';
+        ctx.font = '16px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(feedbackText, HUD_CANVAS_W / 2, SAFE_RECT.y + SAFE_RECT.h * 0.85);
+        ctx.textAlign = 'left';
+      }
+
+      // Debug hover marker -- confirms the cursor-to-canvas mapping is
+      // calibrated correctly; remove once you've verified the cursor lines
+      // up with the highlighted button.
+      if (hoverCanvasPos) {
+        ctx.beginPath();
+        ctx.arc(hoverCanvasPos.x, hoverCanvasPos.y, 6, 0, Math.PI * 2);
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.lineWidth = 1;
+      }
+
+      // Debug border guide -- yellow marks the full canvas edge (the true
+      // 0..1 UV extent), useful for seeing how much margin is dialed in.
+      ctx.strokeStyle = '#ffee55';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(1, 1, HUD_CANVAS_W - 2, HUD_CANVAS_H - 2);
+      ctx.lineWidth = 1;
+
+      hudTexture.needsUpdate = true;
     }
 
     function applyScreenTexture(station, url) {
@@ -1097,10 +1257,10 @@
     function startTimer(station) {
       clearInterval(station.timerInterval);
       station.timeRemaining = 45;
-      timerValueEl.textContent = station.timeRemaining;
+      drawStationHUD(station);
       station.timerInterval = setInterval(() => {
         station.timeRemaining -= 1;
-        timerValueEl.textContent = Math.max(station.timeRemaining, 0);
+        drawStationHUD(station);
         if (station.timeRemaining <= 0) {
           clearInterval(station.timerInterval);
           recordAnswer(station, null);
@@ -1110,67 +1270,23 @@
 
     function startRound(station) {
       if (station.roundIndex >= ROUNDS.length) {
-        feedbackEl.textContent = `${station.meshName}: ALL ROUNDS COMPLETE — results exported`;
-        feedbackEl.classList.add('show');
-        subjectPanel.classList.remove('shown'); // no more subjects to inspect
+        feedbackText = `${station.meshName}: ALL ROUNDS COMPLETE — results exported`;
+        drawStationHUD(station);
         console.log(`Final results for ${station.meshName}:`, station.results);
         exportResultsCSV(station);
         return;
       }
       station.currentRound = ROUNDS[station.roundIndex];
-
-      // Show the subject in the 2D HUD -- this is the display the player
-      // actually reads (the 3D screen mesh can't show the image; see the
-      // #subject-panel CSS note).
-      subjectImg.src = `data/game_sets/images/${station.currentRound.image}`;
-      subjectPanel.classList.add('shown');
-      // This station's rounds only cover waves WAVE_START..WAVE_TOTAL (the
-      // rest of the siege is assumed to happen elsewhere). A fixed "+6"
-      // offset against roundIndex overflowed past WAVE_TOTAL once
-      // roundIndex passed (WAVE_TOTAL - WAVE_START) -- e.g. around round 4
-      // even though a session actually has ROUNDS.length (30) rounds. Scale
-      // roundIndex into the WAVE_START..WAVE_TOTAL range based on the real
-      // round count instead, and clamp as a safety net against any
-      // rounding overshoot on the very last round.
-      const wavesCovered = WAVE_TOTAL - WAVE_START + 1;
-      const roundsPerWave = ROUNDS.length / wavesCovered;
-      const waveNum = Math.min(
-        WAVE_TOTAL,
-        WAVE_START + Math.floor(station.roundIndex / roundsPerWave)
-      );
-      waveNumEl.textContent = waveNum;
-      waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
-
-      stationNameEl.textContent = station.meshName;
-      stationModeEl.textContent = CONDITION === 'human_ai' ? 'AI ASSIST' : 'HUMAN ONLY';
-
-      applyScreenTexture(station, `data/game_sets/images/${station.currentRound.image}`);
-      renderThreats(station.currentRound.threats);
-      aiConfFill.style.width = `${station.currentRound.aiConfidence}%`;
-      aiConfValue.textContent = station.currentRound.aiConfidence;
-      feedbackEl.classList.remove('show');
+      feedbackText = '';
 
       station.scanned = false;
       station.zoomed = false;
       station.aiAssistUsed = false;
       station.flagged = false;
       station.aiAssistClickTime = null;
-      threatPanelEl.classList.remove('revealed');
-      aiPanelEl.classList.remove('revealed');
-      actScan.classList.remove('toggled');
-      actZoom.classList.remove('toggled');
-      actAssist.classList.remove('toggled');
-      actFlag.classList.remove('toggled');
-      subjectPanel.classList.remove('zoomed');
-
-      const infoChannelsBlocked = CONDITION === 'human_alone';
-      actScan.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
-      actScan.style.opacity = infoChannelsBlocked ? '0.3' : '';
-      actAssist.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
-      actAssist.style.opacity = infoChannelsBlocked ? '0.3' : '';
 
       station.roundStartTime = performance.now();
-      startTimer(station);
+      startTimer(station); // also does the first drawStationHUD() call
     }
 
     function recordAnswer(station, saysHuman) {
@@ -1207,8 +1323,8 @@
       // sets currentRound again for the next round.
       station.currentRound = null;
 
-      feedbackEl.textContent = saysHuman === null ? 'TIMED OUT — NO DECISION' : 'DECISION LOGGED';
-      feedbackEl.classList.add('show');
+      feedbackText = saysHuman === null ? 'TIMED OUT — NO DECISION' : 'DECISION LOGGED';
+      drawStationHUD(station);
       console.log('Round result:', entry);
 
       station.roundIndex += 1;
@@ -1247,60 +1363,46 @@
       URL.revokeObjectURL(url);
     }
 
-    // Decision buttons. PERMIT = "let them through the checkpoint", i.e. the
+    // Button actions. PERMIT = "let them through the checkpoint", i.e. the
     // player judges the subject a healthy human (saysHuman = true). REJECT =
     // "turn them away", i.e. a disguised survivor (saysHuman = false). This
     // matches ground_truth_human, which is true only for the tier-0 real
     // humans. recordAnswer() handles correctness scoring, logging, advancing
-    // to the next round, and CSV export on the final round -- so wiring is
-    // just routing the click to it with the right boolean.
+    // to the next round, and CSV export on the final round.
     //
-    // The `!st.currentRound` guard makes a decision a no-op unless a round is
-    // actually live. recordAnswer() nulls currentRound as soon as it records,
-    // so a double-click (or a click landing in the 700ms gap before the next
-    // round, or right after the 45s timer already auto-recorded null) can't
-    // log the same round twice or skip the next one.
-    document.getElementById('btn-permit').addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st || !st.currentRound) return;
-      recordAnswer(st, true);
-    });
-    document.getElementById('btn-reject').addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st || !st.currentRound) return;
-      recordAnswer(st, false);
-    });
-
-    actScan.addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st || CONDITION === 'human_alone') return;
-      st.scanned = true;
-      actScan.classList.add('toggled');
-      threatPanelEl.classList.add('revealed');
-    });
-    actZoom.addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st) return;
-      st.zoomed = !st.zoomed;
-      actZoom.classList.toggle('toggled', st.zoomed);
-      subjectPanel.classList.toggle('zoomed', st.zoomed); // enlarge the subject feed
-    });
-    actAssist.addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st || CONDITION === 'human_alone') return;
-      if (!st.aiAssistUsed) {
-        st.aiAssistClickTime = Math.round(performance.now() - st.roundStartTime);
+    // Called from handleStationClick() below once a raycast + UV lookup has
+    // already determined which on-screen button (if any) was clicked.
+    function handleButtonClick(id, station) {
+      const btn = BUTTONS.find((b) => b.id === id);
+      if (btn && btn.disabledWhen && btn.disabledWhen(station)) return;
+      switch (id) {
+        case 'scan':
+          station.scanned = true;
+          break;
+        case 'zoom':
+          station.zoomed = !station.zoomed;
+          break;
+        case 'assist':
+          if (!station.aiAssistUsed) {
+            station.aiAssistClickTime = Math.round(performance.now() - station.roundStartTime);
+          }
+          station.aiAssistUsed = true;
+          break;
+        case 'flag':
+          station.flagged = !station.flagged;
+          break;
+        case 'permit':
+          if (station.currentRound) recordAnswer(station, true);
+          return; // recordAnswer already redraws
+        case 'reject':
+          if (station.currentRound) recordAnswer(station, false);
+          return; // recordAnswer already redraws
+        case 'exit':
+          deactivateStation();
+          return; // station is gone, nothing left to redraw
       }
-      st.aiAssistUsed = true;
-      actAssist.classList.add('toggled');
-      aiPanelEl.classList.add('revealed');
-    });
-    actFlag.addEventListener('click', () => {
-      const st = stations[activeStationIndex];
-      if (!st) return;
-      st.flagged = !st.flagged;
-      actFlag.classList.toggle('toggled', st.flagged);
-    });
+      drawStationHUD(station);
+    }
 
     // ============================================================
     // ACTIVATION: the HUD no longer opens automatically on proximity —
@@ -1313,42 +1415,119 @@
     // ============================================================
     const INTERACT_RANGE = 6; // a bit more forgiving than the old auto-trigger radius
 
+    // Swaps a station mesh's material texture to the shared HUD canvas
+    // texture (used while the station is open) or back to a plain photo
+    // texture (used for the ambient walk-by preview and after closing).
+    function setStationMaterialTexture(station, texture) {
+      if (!station.mesh) return;
+      const mat = Array.isArray(station.mesh.material) ? station.mesh.material[0] : station.mesh.material;
+      mat.map = texture;
+      mat.color.set(0xffffff);
+      if ('emissiveMap' in mat) {
+        mat.emissiveMap = texture;
+        mat.emissive.set(0xffffff);
+        mat.emissiveIntensity = 1.0;
+      }
+      mat.needsUpdate = true;
+    }
+
+    // Tracks the real mouse position (as normalized device coords) while a
+    // station is open and the pointer is unlocked, so pickStationButton()
+    // can raycast from wherever the actual cursor is instead of always the
+    // screen center. Only updated while a station is active -- while
+    // walking around (pointer locked) clientX/Y don't move meaningfully,
+    // so aiming still uses the crosshair (screen center) for opening a
+    // screen in the first place.
+    const mouseNDC = new THREE.Vector2(0, 0);
+    document.addEventListener('mousemove', (event) => {
+      if (activeStationIndex === -1) return;
+      mouseNDC.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouseNDC.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    });
+    const crosshairEl = document.getElementById('crosshair');
+
     function activateStation(index) {
       activeStationIndex = index;
       const st = stations[index];
       console.log(`Station activated: "${st.meshName}" (condition: ${CONDITION})`);
-      hudRoot.classList.add('active');
       walkPrompt.classList.add('hidden');
-      blocker.classList.add('hidden');
-      // Free the cursor so HUD buttons are clickable. Previously this
-      // checked `document.pointerLockElement === renderer.domElement`,
-      // but PointerLockControls locks document.body, never the canvas --
-      // that comparison could never be true, so exitPointerLock() never
-      // actually ran and the cursor stayed hidden/locked. controls.unlock()
-      // is safe to call even if already unlocked.
+      // Free the cursor so the real mouse position can be used to aim at
+      // on-screen buttons -- see pickStationButton()'s use of mouseNDC.
+      // The crosshair dot is hidden since it no longer reflects where a
+      // click will land once the pointer is unlocked.
       controls.unlock();
+      crosshairEl.style.display = 'none';
+      setStationMaterialTexture(st, hudTexture);
       if (ROUNDS.length > 0) {
         st.roundIndex = 0; // fresh run each time you open a screen
         startRound(st);
+      } else {
+        drawStationHUD(st); // still show something (e.g. "no rounds loaded") if data hasn't arrived yet
       }
     }
 
     function deactivateStation() {
       if (activeStationIndex === -1) return;
-      clearInterval(stations[activeStationIndex].timerInterval);
-      stations[activeStationIndex].currentRound = null; // no live round while walking
+      const st = stations[activeStationIndex];
+      clearInterval(st.timerInterval);
+      st.currentRound = null; // no live round while walking
+      hoveredButtonId = null;
+      hoverCanvasPos = null;
       activeStationIndex = -1;
-      hudRoot.classList.remove('active');
-      subjectPanel.classList.remove('shown');
-      controls.lock(); // resume walking immediately, no need to click the overlay again
+      crosshairEl.style.display = '';
+      // Restore the ambient preview image instead of leaving the HUD
+      // canvas showing on the mesh while the player just walks past it.
+      if (ROUNDS.length > 0) {
+        applyScreenTexture(st, `data/game_sets/images/${ROUNDS[0].image}`);
+      }
+      controls.lock(); // automatically re-lock so walking resumes immediately, no need to click the overlay again
     }
 
-    document.getElementById('exit-station-btn').addEventListener('click', deactivateStation);
     document.addEventListener('keydown', (event) => {
       if (event.code === 'Escape' && activeStationIndex !== -1) {
         deactivateStation();
       }
     });
+
+    // Raycasts from wherever the real mouse cursor is (mouseNDC, since the
+    // pointer unlocks the moment a station opens) onto that station's mesh,
+    // converts the hit UV to a canvas pixel position, and returns the
+    // button whose rect contains that point (or null). Shared by both the
+    // per-frame hover check and the actual click handler so they can never
+    // disagree about what's under the cursor.
+    function pickStationButton(station) {
+      if (!station.mesh) return { button: null, canvasPos: null };
+      raycaster.setFromCamera(mouseNDC, camera);
+      raycaster.far = 650;
+      const hits = raycaster.intersectObject(station.mesh, false);
+      if (hits.length === 0 || !hits[0].uv) return { button: null, canvasPos: null };
+      // Standard WebGL-texture convention (flipY on by default): UV (0,0)
+      // is the bottom-left texel of the source canvas, UV (1,1) the
+      // top-right. If clicks land on the wrong button, this is the first
+      // place to check -- flip the (1 - uv.y) to uv.y instead and see if
+      // the debug hover dot (drawn in drawStationHUD) starts tracking your
+      // cursor correctly.
+      const canvasPos = {
+        x: hits[0].uv.x * HUD_CANVAS_W,
+        y: (1 - hits[0].uv.y) * HUD_CANVAS_H,
+      };
+      const button = BUTTONS.find(
+        (b) => canvasPos.x >= b.x && canvasPos.x <= b.x + b.w &&
+               canvasPos.y >= b.y && canvasPos.y <= b.y + b.h
+      );
+      return { button: button || null, canvasPos };
+    }
+
+    function handleStationClick() {
+      const station = stations[activeStationIndex];
+      if (!station) return;
+      const { button } = pickStationButton(station);
+      if (!button) {
+        showTemporaryMessage("Click a button on the screen to use it");
+        return;
+      }
+      handleButtonClick(button.id, station);
+    }
 
     // Click-to-interact: only fires while walking around (pointer locked)
     // and no screen is currently open, so it can't fight with clicks on
@@ -1361,12 +1540,7 @@
     // logger above (target was consistently <body>).
     document.addEventListener('click', () => {
       if (activeStationIndex !== -1) {
-        // Previously silent -- if you're seeing this in the console, a
-        // screen is already open (from an earlier click) and every click
-        // since then has been swallowed here with no visible feedback.
-        // Check whether the HUD (timer / actions / decision buttons) is
-        // actually visible somewhere on screen right now.
-        console.log(`Click ignored: station "${stations[activeStationIndex].meshName}" is already active. Press EXIT or Escape to close it first.`);
+        handleStationClick();
         return;
       }
       if (!controls.isLocked) {
@@ -1466,6 +1640,23 @@
         }
 
         respawnIfFallen();
+      }
+
+      // While a station is open, keep tracking which on-screen button (if
+      // any) the crosshair is currently over, and only redraw the HUD
+      // canvas when that actually changes -- avoids a full canvas redraw
+      // every single frame just for a static hover state.
+      if (activeStationIndex !== -1) {
+        const st = stations[activeStationIndex];
+        const { button, canvasPos } = pickStationButton(st);
+        const newHoverId = button ? button.id : null;
+        const posChanged = (!hoverCanvasPos && canvasPos) || (hoverCanvasPos && !canvasPos) ||
+          (hoverCanvasPos && canvasPos && (Math.abs(hoverCanvasPos.x - canvasPos.x) > 2 || Math.abs(hoverCanvasPos.y - canvasPos.y) > 2));
+        if (newHoverId !== hoveredButtonId || posChanged) {
+          hoveredButtonId = newHoverId;
+          hoverCanvasPos = canvasPos;
+          drawStationHUD(st);
+        }
       }
 
       updateWalkPrompt(); // just toggles the "click to inspect" hint; opening now requires an actual click
