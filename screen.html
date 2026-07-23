@@ -1040,6 +1040,10 @@
         timestamp: new Date().toISOString(),
       };
       station.results.push(entry);
+      // Consume the round so a second decision (double-click, or a button
+      // press racing the 45s auto-timeout) can't log it twice; startRound
+      // sets currentRound again for the next round.
+      station.currentRound = null;
 
       feedbackEl.textContent = saysHuman === null ? 'TIMED OUT — NO DECISION' : 'DECISION LOGGED';
       feedbackEl.classList.add('show');
@@ -1081,11 +1085,28 @@
       URL.revokeObjectURL(url);
     }
 
+    // Decision buttons. PERMIT = "let them through the checkpoint", i.e. the
+    // player judges the subject a healthy human (saysHuman = true). REJECT =
+    // "turn them away", i.e. a disguised survivor (saysHuman = false). This
+    // matches ground_truth_human, which is true only for the tier-0 real
+    // humans. recordAnswer() handles correctness scoring, logging, advancing
+    // to the next round, and CSV export on the final round -- so wiring is
+    // just routing the click to it with the right boolean.
+    //
+    // The `!st.currentRound` guard makes a decision a no-op unless a round is
+    // actually live. recordAnswer() nulls currentRound as soon as it records,
+    // so a double-click (or a click landing in the 700ms gap before the next
+    // round, or right after the 45s timer already auto-recorded null) can't
+    // log the same round twice or skip the next one.
     document.getElementById('btn-permit').addEventListener('click', () => {
-      console.log('PERMIT clicked — not wired up yet (waiting on real images/ground truth)');
+      const st = stations[activeStationIndex];
+      if (!st || !st.currentRound) return;
+      recordAnswer(st, true);
     });
     document.getElementById('btn-reject').addEventListener('click', () => {
-      console.log('REJECT clicked — not wired up yet (waiting on real images/ground truth)');
+      const st = stations[activeStationIndex];
+      if (!st || !st.currentRound) return;
+      recordAnswer(st, false);
     });
 
     actScan.addEventListener('click', () => {
