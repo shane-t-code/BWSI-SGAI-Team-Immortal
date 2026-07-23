@@ -67,6 +67,26 @@
       line-height: 1.5; white-space: pre-line; pointer-events: none;
     }
 
+    /* Playtest-only reset button — fine while testing is just the team
+       screen-sharing; remove/hide before real uncontrolled data collection
+       so participants can't hit it.
+       z-index 12 puts it ABOVE #blocker (10) and #condition-select (11) --
+       otherwise those full-screen overlays sit on top while unlocked and
+       swallow the click before it ever reaches this button.
+       It's also only meant to be used while unlocked: under Pointer Lock
+       there's no real moving cursor, so a fixed-position button can't
+       reliably receive a click anyway -- press ESC first, then reset. */
+    #dev-reset-btn {
+      position: fixed; bottom: 12px; right: 12px; z-index: 12;
+      font-family: monospace; font-size: 11px; padding: 6px 10px;
+      background: rgba(0, 0, 0, 0.6); color: #6fd6e8; border: 1px solid #6fd6e8;
+      cursor: pointer;
+    }
+    #dev-reset-btn:hover { filter: brightness(1.35); }
+    #dev-reset-btn.locked-disabled {
+      opacity: 0.35; cursor: default; pointer-events: none;
+    }
+
     /* ---------------- Checkpoint HUD --------------- */
     :root {
       --panel-bg: rgba(8, 18, 28, 0.75);
@@ -148,6 +168,29 @@
     #ai-conf-track { flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative; }
     #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
 
+    /* Subject feed: the round image, shown in the 2D HUD. The GLB screen
+       meshes aren't UV-mapped for a full image (their UVs run way outside
+       0..1, so a texture just samples one edge pixel and the monitor looks
+       blank grey), so painting the image onto the 3D mesh can't reliably
+       show it. This panel is the dependable place the player actually reads
+       the subject, sitting over the center screen like the monitor's feed. */
+    #subject-panel {
+      position: fixed; top: 46%; left: 50%; transform: translate(-50%, -50%);
+      z-index: 4; width: 300px;
+      border: 1px solid var(--cyan); background: rgba(4, 10, 16, 0.92);
+      box-shadow: 0 0 18px rgba(111, 214, 232, 0.35);
+      font-family: 'Courier New', monospace;
+      pointer-events: none; opacity: 0; transition: opacity 0.2s ease, width 0.2s ease;
+    }
+    #subject-panel.shown { opacity: 1; }
+    #subject-panel.zoomed { width: 440px; }
+    #subject-header {
+      padding: 6px 10px; font-size: 11px; letter-spacing: 3px; color: var(--cyan);
+      text-align: center; border-bottom: 1px solid var(--line);
+      background: rgba(111, 214, 232, 0.12);
+    }
+    #subject-img { display: block; width: 100%; height: auto; background: #05080c; }
+
     #feedback {
       position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 4;
       font-size: 12px; letter-spacing: 1px; color: var(--cyan);
@@ -189,6 +232,7 @@
 
   <div id="crosshair"></div>
   <div id="status">Loading map...</div>
+  <div id="dev-reset-btn">RESET CONDITION (ESC first)</div>
 
   <div id="walk-prompt">WALK UP TO A SCREEN AND CLICK IT TO BEGIN INSPECTION</div>
 
@@ -213,6 +257,10 @@
       <div class="action-item" id="act-zoom">ZOOM</div>
       <div class="action-item" id="act-assist">AI ASSIST</div>
       <div class="action-item" id="act-flag">FLAG</div>
+    </div>
+    <div id="subject-panel">
+      <div id="subject-header">SUBJECT FEED</div>
+      <img id="subject-img" alt="subject under inspection" />
     </div>
     <div id="decision-panel">
       <button class="decision-btn" id="btn-permit">PERMIT</button>
@@ -322,6 +370,10 @@
       // Don't show "click to start" over the HUD when we unlocked the
       // pointer ourselves so the player can click screen buttons.
       if (activeStationIndex === -1) blocker.classList.remove("hidden");
+      document.getElementById('dev-reset-btn').classList.remove("locked-disabled");
+    });
+    controls.addEventListener("lock", () => {
+      document.getElementById('dev-reset-btn').classList.add("locked-disabled");
     });
 
     function createStarField() {
@@ -743,6 +795,32 @@
     const PARTICIPANT_ID = getOrCreateParticipantId();
     const SESSION_ID = crypto.randomUUID();
 
+    // PARTICIPANT_ID_CHAIN persists across resets (never cleared by the
+    // reset button) so we can trace "this browser played before as X,
+    // then reset and came back as Y." Each reset appends the outgoing id.
+    function getPrevParticipantId() {
+      const chain = JSON.parse(localStorage.getItem('participant_id_chain') || '[]');
+      return chain.length > 0 ? chain[chain.length - 1] : null;
+    }
+    const PREV_PARTICIPANT_ID = getPrevParticipantId();
+
+    // Playtest-only reset button — always visible, no gating. Fine while
+    // testing is just the team screen-sharing; remove/hide before real
+    // uncontrolled data collection so participants can't reset their own
+    // condition assignment.
+    document.getElementById('dev-reset-btn').addEventListener('click', () => {
+      const outgoingId = localStorage.getItem('participant_id');
+      if (outgoingId) {
+        const chain = JSON.parse(localStorage.getItem('participant_id_chain') || '[]');
+        chain.push(outgoingId);
+        localStorage.setItem('participant_id_chain', JSON.stringify(chain));
+      }
+      localStorage.removeItem('condition');
+      localStorage.removeItem('participant_id');
+      localStorage.removeItem('session_count_' + PARTICIPANT_ID);
+      location.reload();
+    });
+
     // ---------------------------------------------------------------------
     // CONDITION — chosen ONCE per participant, applies to every screen for
     // the rest of the session. This is NOT per-screen: seeing AI advice on
@@ -788,6 +866,44 @@
     const hudRoot = document.getElementById('hud-root');
     const walkPrompt = document.getElementById('walk-prompt');
 
+    // ---------- round order ----------
+    // Humans and every zombie tier are shuffled randomly through the whole
+    // session -- no difficulty ramp, no clumping by tier or ground truth. The
+    // shuffle is seeded off the content session key, so a given session always
+    // deals in the same order (result CSVs stay reproducible) while still being
+    // an unpredictable mix, and ground truth isn't correlated with position.
+    function makeSeededRng(seedStr) {
+      let h = 1779033703 ^ seedStr.length;
+      for (let i = 0; i < seedStr.length; i++) {
+        h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      let a = (h ^= h >>> 16) >>> 0;
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function seededShuffle(arr, rng) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // Shuffle the whole session (humans + all zombie tiers together) with a
+    // session-seeded RNG.
+    function orderRounds(rounds, seedStr) {
+      return seededShuffle(rounds, makeSeededRng(seedStr));
+    }
+    // --------------------------------------
+
     let ROUNDS = [];
     async function loadRounds() {
       try {
@@ -800,8 +916,8 @@
         if (!Array.isArray(sessionRounds)) {
           throw new Error(`rounds.json has no session "${CONTENT_SESSION_KEY}" (keys found: ${Object.keys(sessionsByKey).join(", ") || "none"})`);
         }
-        ROUNDS = sessionRounds;
-        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY})`;
+        ROUNDS = orderRounds(sessionRounds, CONTENT_SESSION_KEY);
+        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, shuffled)`;
       } catch (err) {
         // This is the #1 reason the screen shows nothing: no round data
         // means tryShowPassiveRounds() has nothing to display, and it was
@@ -813,6 +929,7 @@
       }
     }
 
+    const WAVE_START = 6; // narrative offset: waves 1-5 happen before this checkpoint
     const WAVE_TOTAL = 10;
     const waveNumEl = document.getElementById('wave-num');
     const waveBarFill = document.getElementById('wave-bar-fill');
@@ -829,6 +946,8 @@
     const actZoom = document.getElementById('act-zoom');
     const actAssist = document.getElementById('act-assist');
     const actFlag = document.getElementById('act-flag');
+    const subjectPanel = document.getElementById('subject-panel');
+    const subjectImg = document.getElementById('subject-img');
 
     document.getElementById('wave-total').textContent = WAVE_TOTAL;
 
@@ -920,12 +1039,32 @@
       if (station.roundIndex >= ROUNDS.length) {
         feedbackEl.textContent = `${station.meshName}: ALL ROUNDS COMPLETE — results exported`;
         feedbackEl.classList.add('show');
+        subjectPanel.classList.remove('shown'); // no more subjects to inspect
         console.log(`Final results for ${station.meshName}:`, station.results);
         exportResultsCSV(station);
         return;
       }
       station.currentRound = ROUNDS[station.roundIndex];
-      const waveNum = 6 + station.roundIndex;
+
+      // Show the subject in the 2D HUD -- this is the display the player
+      // actually reads (the 3D screen mesh can't show the image; see the
+      // #subject-panel CSS note).
+      subjectImg.src = `data/game_sets/images/${station.currentRound.image}`;
+      subjectPanel.classList.add('shown');
+      // This station's rounds only cover waves WAVE_START..WAVE_TOTAL (the
+      // rest of the siege is assumed to happen elsewhere). A fixed "+6"
+      // offset against roundIndex overflowed past WAVE_TOTAL once
+      // roundIndex passed (WAVE_TOTAL - WAVE_START) -- e.g. around round 4
+      // even though a session actually has ROUNDS.length (30) rounds. Scale
+      // roundIndex into the WAVE_START..WAVE_TOTAL range based on the real
+      // round count instead, and clamp as a safety net against any
+      // rounding overshoot on the very last round.
+      const wavesCovered = WAVE_TOTAL - WAVE_START + 1;
+      const roundsPerWave = ROUNDS.length / wavesCovered;
+      const waveNum = Math.min(
+        WAVE_TOTAL,
+        WAVE_START + Math.floor(station.roundIndex / roundsPerWave)
+      );
       waveNumEl.textContent = waveNum;
       waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
 
@@ -949,6 +1088,7 @@
       actZoom.classList.remove('toggled');
       actAssist.classList.remove('toggled');
       actFlag.classList.remove('toggled');
+      subjectPanel.classList.remove('zoomed');
 
       const infoChannelsBlocked = CONDITION === 'human_alone';
       actScan.style.pointerEvents = infoChannelsBlocked ? 'none' : '';
@@ -968,6 +1108,7 @@
 
       const entry = {
         participant_id: PARTICIPANT_ID,
+        prev_participant_id: PREV_PARTICIPANT_ID,
         session_id: SESSION_ID,
         content_session_key: CONTENT_SESSION_KEY,
         play_count: PLAY_COUNT,
@@ -988,6 +1129,10 @@
         timestamp: new Date().toISOString(),
       };
       station.results.push(entry);
+      // Consume the round so a second decision (double-click, or a button
+      // press racing the 45s auto-timeout) can't log it twice; startRound
+      // sets currentRound again for the next round.
+      station.currentRound = null;
 
       feedbackEl.textContent = saysHuman === null ? 'TIMED OUT — NO DECISION' : 'DECISION LOGGED';
       feedbackEl.classList.add('show');
@@ -1002,14 +1147,14 @@
     function exportResultsCSV(station) {
       if (!station.results.length) return;
       const headers = [
-        'participant_id', 'session_id', 'content_session_key', 'play_count',
+        'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
         'station', 'subject_id', 'malice_tier', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
         'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
         'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
       ];
       const rows = station.results.map((r) => [
-        r.participant_id, r.session_id, r.content_session_key, r.play_count,
+        r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
         r.station, r.subject, r.tier, r.condition,
         r.ground_truth_human, r.player_answer_human, r.correct,
         r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
@@ -1029,11 +1174,28 @@
       URL.revokeObjectURL(url);
     }
 
+    // Decision buttons. PERMIT = "let them through the checkpoint", i.e. the
+    // player judges the subject a healthy human (saysHuman = true). REJECT =
+    // "turn them away", i.e. a disguised survivor (saysHuman = false). This
+    // matches ground_truth_human, which is true only for the tier-0 real
+    // humans. recordAnswer() handles correctness scoring, logging, advancing
+    // to the next round, and CSV export on the final round -- so wiring is
+    // just routing the click to it with the right boolean.
+    //
+    // The `!st.currentRound` guard makes a decision a no-op unless a round is
+    // actually live. recordAnswer() nulls currentRound as soon as it records,
+    // so a double-click (or a click landing in the 700ms gap before the next
+    // round, or right after the 45s timer already auto-recorded null) can't
+    // log the same round twice or skip the next one.
     document.getElementById('btn-permit').addEventListener('click', () => {
-      console.log('PERMIT clicked — not wired up yet (waiting on real images/ground truth)');
+      const st = stations[activeStationIndex];
+      if (!st || !st.currentRound) return;
+      recordAnswer(st, true);
     });
     document.getElementById('btn-reject').addEventListener('click', () => {
-      console.log('REJECT clicked — not wired up yet (waiting on real images/ground truth)');
+      const st = stations[activeStationIndex];
+      if (!st || !st.currentRound) return;
+      recordAnswer(st, false);
     });
 
     actScan.addEventListener('click', () => {
@@ -1048,6 +1210,7 @@
       if (!st) return;
       st.zoomed = !st.zoomed;
       actZoom.classList.toggle('toggled', st.zoomed);
+      subjectPanel.classList.toggle('zoomed', st.zoomed); // enlarge the subject feed
     });
     actAssist.addEventListener('click', () => {
       const st = stations[activeStationIndex];
@@ -1100,8 +1263,10 @@
     function deactivateStation() {
       if (activeStationIndex === -1) return;
       clearInterval(stations[activeStationIndex].timerInterval);
+      stations[activeStationIndex].currentRound = null; // no live round while walking
       activeStationIndex = -1;
       hudRoot.classList.remove('active');
+      subjectPanel.classList.remove('shown');
       controls.lock(); // resume walking immediately, no need to click the overlay again
     }
 
