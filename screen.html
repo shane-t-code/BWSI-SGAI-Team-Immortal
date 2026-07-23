@@ -864,6 +864,7 @@
       }
     }
 
+    const WAVE_START = 6; // narrative offset: waves 1-5 happen before this checkpoint
     const WAVE_TOTAL = 10;
     const waveNumEl = document.getElementById('wave-num');
     const waveBarFill = document.getElementById('wave-bar-fill');
@@ -976,7 +977,20 @@
         return;
       }
       station.currentRound = ROUNDS[station.roundIndex];
-      const waveNum = 6 + station.roundIndex;
+      // This station's rounds only cover waves WAVE_START..WAVE_TOTAL (the
+      // rest of the siege is assumed to happen elsewhere). A fixed "+6"
+      // offset against roundIndex overflowed past WAVE_TOTAL once
+      // roundIndex passed (WAVE_TOTAL - WAVE_START) -- e.g. around round 4
+      // even though a session actually has ROUNDS.length (30) rounds. Scale
+      // roundIndex into the WAVE_START..WAVE_TOTAL range based on the real
+      // round count instead, and clamp as a safety net against any
+      // rounding overshoot on the very last round.
+      const wavesCovered = WAVE_TOTAL - WAVE_START + 1;
+      const roundsPerWave = ROUNDS.length / wavesCovered;
+      const waveNum = Math.min(
+        WAVE_TOTAL,
+        WAVE_START + Math.floor(station.roundIndex / roundsPerWave)
+      );
       waveNumEl.textContent = waveNum;
       waveBarFill.style.width = `${(waveNum / WAVE_TOTAL) * 100}%`;
 
