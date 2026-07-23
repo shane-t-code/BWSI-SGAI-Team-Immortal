@@ -168,12 +168,12 @@
     #ai-conf-track { flex: 1; height: 3px; background: rgba(111,214,232,0.15); position: relative; }
     #ai-conf-fill { height: 100%; background: var(--cyan); box-shadow: 0 0 6px var(--cyan); }
 
-    /* Subject feed: the round image, shown in the 2D HUD. The GLB screen
-       meshes aren't UV-mapped for a full image (their UVs run way outside
-       0..1, so a texture just samples one edge pixel and the monitor looks
-       blank grey), so painting the image onto the 3D mesh can't reliably
-       show it. This panel is the dependable place the player actually reads
-       the subject, sitting over the center screen like the monitor's feed. */
+    /* Subject feed: the round image, also shown in the 2D HUD as a backup.
+       The GLB screen meshes now get their UVs normalized to 0..1 in
+       normalizeMeshUVs() so the image shows correctly on the physical
+       screen mesh too -- this panel stays as a guaranteed-readable copy
+       in case a given mesh's UVs turn out to be more than a simple
+       affine remap can fix, or its aspect ratio distorts the image. */
     #subject-panel {
       position: fixed; top: 46%; left: 50%; transform: translate(-50%, -50%);
       z-index: 4; width: 300px;
@@ -473,6 +473,46 @@
       material.needsUpdate = true;
     }
 
+    // The screen meshes' UVs run way outside the normal 0..1 range (e.g.
+    // spanning something like 4.2..4.9 instead of 0..1), so a texture
+    // applied via applyScreenTexture() only ever samples one edge pixel --
+    // the monitor looks like flat grey no matter what image is loaded. This
+    // rescales a mesh's UV attribute in place, stretching whatever min..max
+    // range it actually occupies back to exactly 0..1, which preserves the
+    // relative UV layout (so the image still maps onto the screen the same
+    // shape-wise) while making a normal full-image texture actually show up.
+    // Called once per resolved station mesh right after the map loads.
+    function normalizeMeshUVs(mesh) {
+      const uvAttr = mesh.geometry && mesh.geometry.attributes && mesh.geometry.attributes.uv;
+      if (!uvAttr) {
+        console.warn(`normalizeMeshUVs: mesh "${mesh.name}" has no UV attribute -- can't remap.`);
+        return;
+      }
+      let minU = Infinity, maxU = -Infinity, minV = Infinity, maxV = -Infinity;
+      for (let i = 0; i < uvAttr.count; i++) {
+        const u = uvAttr.getX(i);
+        const v = uvAttr.getY(i);
+        if (u < minU) minU = u;
+        if (u > maxU) maxU = u;
+        if (v < minV) minV = v;
+        if (v > maxV) maxV = v;
+      }
+      const rangeU = (maxU - minU) || 1;
+      const rangeV = (maxV - minV) || 1;
+      for (let i = 0; i < uvAttr.count; i++) {
+        uvAttr.setXY(
+          i,
+          (uvAttr.getX(i) - minU) / rangeU,
+          (uvAttr.getY(i) - minV) / rangeV
+        );
+      }
+      uvAttr.needsUpdate = true;
+      console.log(
+        `normalizeMeshUVs: "${mesh.name}" UVs were [${minU.toFixed(3)}..${maxU.toFixed(3)}] x ` +
+        `[${minV.toFixed(3)}..${maxV.toFixed(3)}] -- rescaled to 0..1`
+      );
+    }
+
     // ============================================================
     // STATIONS — one per physical screen, each with its own round
     // progress, timer, and fixed AI-assist condition.
@@ -531,6 +571,7 @@
             station.mesh = child;
             child.getWorldPosition(station.position);
             foundNames.push(child.name);
+            normalizeMeshUVs(child); // fix out-of-range UVs so applyScreenTexture actually shows on the mesh
           }
         });
 
@@ -867,11 +908,14 @@
     const walkPrompt = document.getElementById('walk-prompt');
 
     // ---------- round order ----------
-    // Humans and every zombie tier are shuffled randomly through the whole
-    // session -- no difficulty ramp, no clumping by tier or ground truth. The
-    // shuffle is seeded off the content session key, so a given session always
-    // deals in the same order (result CSVs stay reproducible) while still being
-    // an unpredictable mix, and ground truth isn't correlated with position.
+    // Tiers stay grouped into contiguous blocks (like waves) -- all rounds
+    // of the same malice tier appear together -- but the ORDER of those
+    // tier-blocks is shuffled, and human rounds are NOT their own block:
+    // they're scattered at random positions inside the (shuffled) tier
+    // blocks instead of clumping into a separate all-human wave. Seeded off
+    // the content session key so a given session always deals the same
+    // order (result CSVs stay reproducible) while still varying session to
+    // session.
     function makeSeededRng(seedStr) {
       let h = 1779033703 ^ seedStr.length;
       for (let i = 0; i < seedStr.length; i++) {
@@ -897,10 +941,39 @@
       return a;
     }
 
-    // Shuffle the whole session (humans + all zombie tiers together) with a
-    // session-seeded RNG.
+    // Groups non-human rounds into contiguous per-tier blocks (waves),
+    // shuffles the order the blocks are played in, shuffles each block's
+    // internal order, then scatters human rounds one at a time into random
+    // positions inside random blocks -- so humans show up unpredictably
+    // throughout the session but never form their own separate wave.
     function orderRounds(rounds, seedStr) {
-      return seededShuffle(rounds, makeSeededRng(seedStr));
+      const rng = makeSeededRng(seedStr);
+
+      const humanRounds = rounds.filter((r) => r.groundTruthIsHuman);
+      const tierMap = new Map(); // tier -> rounds, non-human only
+      for (const r of rounds) {
+        if (r.groundTruthIsHuman) continue;
+        if (!tierMap.has(r.tier)) tierMap.set(r.tier, []);
+        tierMap.get(r.tier).push(r);
+      }
+
+      if (tierMap.size === 0) {
+        // No non-human tiers to build blocks around (shouldn't normally
+        // happen) -- fall back to a flat shuffle so nothing crashes.
+        return seededShuffle(rounds, rng);
+      }
+
+      const tierKeys = seededShuffle([...tierMap.keys()], rng); // wave order
+      const blocks = tierKeys.map((t) => seededShuffle(tierMap.get(t), rng));
+
+      const shuffledHumans = seededShuffle(humanRounds, rng);
+      for (const h of shuffledHumans) {
+        const blockIdx = Math.floor(rng() * blocks.length);
+        const insertIdx = Math.floor(rng() * (blocks[blockIdx].length + 1));
+        blocks[blockIdx].splice(insertIdx, 0, h);
+      }
+
+      return blocks.flat();
     }
     // --------------------------------------
 
@@ -917,7 +990,7 @@
           throw new Error(`rounds.json has no session "${CONTENT_SESSION_KEY}" (keys found: ${Object.keys(sessionsByKey).join(", ") || "none"})`);
         }
         ROUNDS = orderRounds(sessionRounds, CONTENT_SESSION_KEY);
-        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, shuffled)`;
+        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, tier-blocked + humans scattered)`;
       } catch (err) {
         // This is the #1 reason the screen shows nothing: no round data
         // means tryShowPassiveRounds() has nothing to display, and it was
