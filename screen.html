@@ -839,6 +839,67 @@
     const hudRoot = document.getElementById('hud-root');
     const walkPrompt = document.getElementById('walk-prompt');
 
+    // ---------- difficulty ramp ----------
+    // A given content session should always deal in the same order (so a
+    // result CSV is reproducible), but we still want humans and disguises
+    // interleaved unpredictably inside a wave. A small seeded PRNG gives us
+    // both: deterministic from the session key, but not a fixed clump.
+    function makeSeededRng(seedStr) {
+      let h = 1779033703 ^ seedStr.length;
+      for (let i = 0; i < seedStr.length; i++) {
+        h = Math.imul(h ^ seedStr.charCodeAt(i), 3432918353);
+        h = (h << 13) | (h >>> 19);
+      }
+      h = Math.imul(h ^ (h >>> 16), 2246822507);
+      h = Math.imul(h ^ (h >>> 13), 3266489909);
+      let a = (h ^= h >>> 16) >>> 0;
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function seededShuffle(arr, rng) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    // Reorder a session so difficulty ramps up: the RL-disguised survivors are
+    // grouped by malice tier and played low-to-high (tier 2 first, tier 10
+    // last), so early waves are the easy-to-catch disguises and the game gets
+    // harder as it goes. The real-human controls (tier 0) are dealt evenly
+    // across those waves instead of piling up at one end -- if every human sat
+    // at the end, "is this a human?" would collapse into "is this late in the
+    // game?", confounding the accuracy-vs-tier comparison the whole study rests
+    // on. So each wave is that tier's disguises MIXED with a share of humans,
+    // shuffled together so which one is coming next isn't predictable.
+    function orderRoundsByDifficulty(rounds, seedStr) {
+      const rng = makeSeededRng(seedStr);
+      const humans = rounds.filter((r) => r.groundTruthIsHuman);       // tier-0 controls
+      const disguised = rounds.filter((r) => !r.groundTruthIsHuman);   // malice tiers
+      const maliceTiers = [...new Set(disguised.map((r) => r.tier))].sort((a, b) => a - b);
+      if (maliceTiers.length === 0) return seededShuffle(rounds, rng); // no disguises: just shuffle
+
+      // Deal humans round-robin across the waves so each gets as even a share
+      // as possible (any remainder lands in the earliest waves).
+      const humansShuffled = seededShuffle(humans, rng);
+      const humansPerWave = maliceTiers.map(() => []);
+      humansShuffled.forEach((h, i) => { humansPerWave[i % maliceTiers.length].push(h); });
+
+      const ordered = [];
+      maliceTiers.forEach((tier, wi) => {
+        const wave = disguised.filter((r) => r.tier === tier).concat(humansPerWave[wi]);
+        ordered.push(...seededShuffle(wave, rng)); // mix humans + disguises within the wave
+      });
+      return ordered;
+    }
+    // --------------------------------------
+
     let ROUNDS = [];
     async function loadRounds() {
       try {
@@ -851,8 +912,8 @@
         if (!Array.isArray(sessionRounds)) {
           throw new Error(`rounds.json has no session "${CONTENT_SESSION_KEY}" (keys found: ${Object.keys(sessionsByKey).join(", ") || "none"})`);
         }
-        ROUNDS = sessionRounds;
-        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY})`;
+        ROUNDS = orderRoundsByDifficulty(sessionRounds, CONTENT_SESSION_KEY);
+        roundsStatusText = `Loaded ${ROUNDS.length} rounds (session ${CONTENT_SESSION_KEY}, difficulty ramp)`;
       } catch (err) {
         // This is the #1 reason the screen shows nothing: no round data
         // means tryShowPassiveRounds() has nothing to display, and it was
