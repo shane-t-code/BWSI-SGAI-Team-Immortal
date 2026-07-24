@@ -12,13 +12,14 @@ were removed from the UI. The Threat Advisory and AI Assistant panels are no
 longer opened by a click — they now render automatically for every
 `human_ai`-condition round (and never for `human_alone`), which is a cleaner
 way of enforcing the "disabled entirely in `human_alone`" requirement below
-than gating individual buttons was. `scanned` / `ai_assist_used` /
-`ai_assist_time_ms` are kept in the schema but are now derived from
-`condition` rather than recorded from a click; `flagged` has no button behind
-it anymore and is always `false`. The old boolean `zoomed` field was replaced
-by `zoom_level` (int 0-3) since zoom is now 3 discrete magnification settings
-(ZOOM 1/2/3) instead of a single on/off toggle. See the field table below for
-the updated per-field detail.
+than gating individual buttons was. `condition` alone now fully determines
+whether the panels were shown, so `scanned`, `ai_assist_used`, and
+`ai_assist_time_ms` were dropped from the schema — they had become
+dead/derived fields once the buttons were removed. `flagged` was also dropped
+— it had no button behind it and was always `false`. The old boolean `zoomed`
+field was replaced by `zoom_level` (int 0-3) since zoom is now 3 discrete
+magnification settings (ZOOM 1/2/3) instead of a single on/off toggle. See the
+field table below for the updated per-field detail.
 
 ## One row per trial (one humanoid judged by one participant)
 
@@ -30,17 +31,21 @@ the updated per-field detail.
 | `subject_id` | string | `currentRound.subjectId` (`game_manifest.csv` `subject_id`, e.g. `test_00074_tier1`) | Identifies which humanoid/image was shown. |
 | `malice_tier` | int | `currentRound.tier` (`game_manifest.csv` `malice_tier`) | Independent variable. 4 confirmed levels: **`{0, 2, 8, 10}`** — `0` is the real-human control; `2`/`8`/`10` are the agent's malice budgets (Shane, PR #13's reward redesign; supersedes the earlier `{0, 1, 5, 10}`). See "Tier definition" below. |
 | `condition` | enum: `human_alone` \| `human_ai` | `getOrCreateParticipantId()` bootstrap in `index.html`, via `analysis/trial_protocol.assign_condition()` logic mirrored client-side | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. See "Participant tracking" below. The Threat Advisory / AI Assistant panels are now gated on this directly in `drawStationHUD()` (`human_ai` only), rather than via disabled SCAN/AI ASSIST buttons — this field records what was assigned and, since the removal of those buttons, also fully determines whether the panels were shown. |
-| `ground_truth_human` | bool | `currentRound.groundTruthIsHuman` | True if the subject is actually a healthy human, false if overgrown/zombie. |
-| `player_answer_human` | bool \| null | argument to `recordAnswer()` | `null` = timed out, no decision made. |
-| `correct` | bool \| null | computed: `player_answer_human === ground_truth_human` | `null` when `player_answer_human` is `null`. |
+| `ground_truth_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.groundTruthIsHuman)` | `"human"` if the subject is actually a healthy human, `"zombie"` if overgrown/disguised. Logged as a label (not a raw bool) so `log.csv` reads as the actual classes. |
+| `player_answer_human` | `"human"` \| `"zombie"` \| null | `humanZombieLabel()` applied to the argument passed to `recordAnswer()` | `null` = timed out, no decision made. |
+| `correct` | bool \| null | computed internally from the raw `saysHuman`/`groundTruthIsHuman` booleans before labeling: `saysHuman === groundTruthIsHuman` | `null` when the player timed out (`player_answer_human` is `null`). |
 | `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, the CNN's `max_prob` — its probability for whichever class it predicted, not `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary, so its winning-class probability falls toward 50%. |
+| `cnn_says_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.cnnSaysHuman)` (root `screen.html` only — not logged by `threeD_player/screen.html`, which has no CNN-prediction field) | The classifier's predicted class, labeled the same way as `ground_truth_human`/`player_answer_human`. |
 | `reaction_time_ms` | int | `performance.now() - roundStartTime` | Primary dependent variable alongside `correct`. |
-| `scanned` | bool | `condition === 'human_ai'` (SCAN button removed; no longer a player toggle) | Whether the Threat Advisory panel was shown this round — `true` for every `human_ai` trial, `false` for every `human_alone` trial. |
 | `zoom_level` | int (0-3) | `zoomLevel` state, set by the ZOOM 1 / ZOOM 2 / ZOOM 3 buttons | Which zoom setting was active when the player answered; `0` = no zoom. Replaces the old boolean `zoomed` field now that zoom has 3 discrete magnification levels instead of a single toggle. |
-| `ai_assist_used` | bool | `condition === 'human_ai'` (AI ASSIST button removed; no longer a player toggle) | Whether the AI Assistant/confidence panel was shown this round — same automatic-display logic as `scanned` above. |
-| `ai_assist_time_ms` | int \| null | `condition === 'human_ai' ? 0 : null` | `0` for `human_ai` trials, since the panel is visible from the moment the round starts (no click to time anymore); `null` for `human_alone`. No longer measures a meaningful "time to open" — kept for schema/column-count stability, but analysis should not treat it as a real latency. |
-| `flagged` | bool | Always `false` — FLAG button removed | Dead field, kept only so the CSV column order/count doesn't change. Player marking-for-review is no longer collected. |
 | `timestamp` | ISO 8601 string | `new Date().toISOString()` | Wall-clock time the trial was recorded. |
+
+**Dropped fields (Claire):** `scanned`, `ai_assist_used`, `ai_assist_time_ms`,
+and `flagged` are no longer logged or exported. All four had become
+dead/fully-derived once the SCAN/AI ASSIST/FLAG buttons were removed (see the
+update note above) — `condition` alone already tells you everything they
+used to encode, so the redundant columns were cut from the trial-results CSV
+export in both `screen.html` and `threeD_player/screen.html`.
 
 ## Data quality field (added by analysis, not the UI)
 

@@ -1194,10 +1194,10 @@
       // decided, so timeouts (which always read ~45s) are excluded.
       const rts = r.filter((e) => e.player_answer_human !== null).map((e) => e.reaction_time_ms);
       const avgRtMs = rts.length ? rts.reduce((a, b) => a + b, 0) / rts.length : null;
-      const disguisesTotal = r.filter((e) => e.ground_truth_human === false).length;
-      const disguisesCaught = r.filter((e) => e.ground_truth_human === false && e.correct === true).length;
-      const humansTotal = r.filter((e) => e.ground_truth_human === true).length;
-      const humansCleared = r.filter((e) => e.ground_truth_human === true && e.correct === true).length;
+      const disguisesTotal = r.filter((e) => e.ground_truth_human === 'zombie').length;
+      const disguisesCaught = r.filter((e) => e.ground_truth_human === 'zombie' && e.correct === true).length;
+      const humansTotal = r.filter((e) => e.ground_truth_human === 'human').length;
+      const humansCleared = r.filter((e) => e.ground_truth_human === 'human' && e.correct === true).length;
       return { total, correct, timeouts, accuracy, avgRtMs,
                disguisesTotal, disguisesCaught, humansTotal, humansCleared };
     }
@@ -1821,6 +1821,13 @@
       startTimer(station); // also does the first drawStationHUD() call
     }
 
+    // Maps a saysHuman/groundTruthIsHuman/cnnSaysHuman boolean (or null for a
+    // timeout) to the "human"/"zombie" label recorded in the trial log, so
+    // log.csv reads as the actual classes rather than an opaque true/false.
+    function humanZombieLabel(isHuman) {
+      return isHuman === null ? null : (isHuman ? 'human' : 'zombie');
+    }
+
     function recordAnswer(station, saysHuman) {
       if (!station.currentRound) return;
       clearInterval(station.timerInterval);
@@ -1838,21 +1845,13 @@
         subject: station.currentRound.subjectId,
         tier: station.currentRound.tier,
         round_index: station.roundIndex,
-        ground_truth_human: station.currentRound.groundTruthIsHuman,
-        player_answer_human: saysHuman,
+        ground_truth_human: humanZombieLabel(station.currentRound.groundTruthIsHuman),
+        player_answer_human: humanZombieLabel(saysHuman),
         correct: saysHuman === null ? null : correct,
         ai_confidence_shown: station.currentRound.aiConfidence,
-        cnn_says_human: station.currentRound.cnnSaysHuman,
+        cnn_says_human: humanZombieLabel(station.currentRound.cnnSaysHuman),
         reaction_time_ms: reactionMs,
-        // SCAN/AI ASSIST/FLAG buttons were removed -- the threat advisory
-        // and AI confidence panels are now shown automatically whenever the
-        // human_ai condition applies (see drawStationHUD), so `scanned`/
-        // `ai_assist_used` just record that fact rather than a click.
-        scanned: CONDITION === 'human_ai',
         zoom_level: station.zoomLevel,
-        ai_assist_used: CONDITION === 'human_ai',
-        ai_assist_time_ms: CONDITION === 'human_ai' ? 0 : null,
-        flagged: false,
         timestamp: new Date().toISOString(),
       };
       station.results.push(entry);
@@ -1877,15 +1876,13 @@
         'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
         'station', 'subject_id', 'malice_tier', 'round_index', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
-        'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'scanned', 'zoom_level',
-        'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
+        'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'zoom_level', 'timestamp',
       ];
       const rows = station.results.map((r) => [
         r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
         r.station, r.subject, r.tier, r.round_index, r.condition,
         r.ground_truth_human, r.player_answer_human, r.correct,
-        r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.scanned, r.zoom_level,
-        r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
+        r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.zoom_level, r.timestamp,
       ]);
 
       sendToServer('trials', headers, rows);   // POST to our Sheet (backup: the download below)
@@ -1907,9 +1904,10 @@
     // Button actions. PERMIT = "let them through the checkpoint", i.e. the
     // player judges the subject a healthy human (saysHuman = true). REJECT =
     // "turn them away", i.e. a disguised survivor (saysHuman = false). This
-    // matches ground_truth_human, which is true only for the tier-0 real
-    // humans. recordAnswer() handles correctness scoring, logging, advancing
-    // to the next round, and CSV export on the final round.
+    // matches groundTruthIsHuman, which is true only for the tier-0 real
+    // humans (logged as ground_truth_human: "human"/"zombie" — see
+    // humanZombieLabel()). recordAnswer() handles correctness scoring,
+    // logging, advancing to the next round, and CSV export on the final round.
     //
     // Called from handleStationClick() below once a raycast + UV lookup has
     // already determined which on-screen button (if any) was clicked.
