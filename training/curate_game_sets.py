@@ -184,6 +184,11 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
                 "tier": int(r.malice_tier),
                 "groundTruthIsHuman": bool(r.ground_truth_human),
                 "aiConfidence": float(r.ai_confidence_shown),
+                # What the CNN actually recommended (human vs zombie). The game logs this
+                # per trial so "did the player follow the AI" / over-trust is computable
+                # without joining subject_id back to the manifest. aiConfidence alone is
+                # directionless (it's confidence in whatever class it picked, not which one).
+                "cnnSaysHuman": bool(r.cnn_says_human),
                 "threats": r.threats,
             }
             for r in grp.itertuples()
