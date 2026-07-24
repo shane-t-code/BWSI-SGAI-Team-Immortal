@@ -6,6 +6,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.55,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -17,6 +18,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.86,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -28,6 +30,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.61,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -39,6 +42,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 93.09,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -50,6 +54,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.86,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -61,6 +66,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 93.46,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -72,6 +78,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 77.06,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -83,6 +90,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 87.74,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -94,6 +102,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 62.03,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -105,6 +114,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 74.62,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -116,6 +126,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 78.56,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -127,6 +138,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.92,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -138,6 +150,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 47.2,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -150,6 +163,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 51.08,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -162,6 +176,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 53.99,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -174,6 +189,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 90.29,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -185,6 +201,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 81.53,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -196,6 +213,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 73.35,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -207,6 +225,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.43,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -218,6 +237,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 92.8,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -229,6 +249,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.99,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -240,6 +261,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 94.18,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -251,6 +273,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.83,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -262,6 +285,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.87,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -273,6 +297,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.83,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -284,6 +309,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 71.3,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -295,6 +321,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.81,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -306,6 +333,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 87.96,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -317,6 +345,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 49.95,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -329,6 +358,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 97.98,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -342,6 +372,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.99,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -353,6 +384,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 97.78,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -364,6 +396,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 94.55,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -375,6 +408,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.94,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -386,6 +420,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 79.26,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -397,6 +432,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 68.9,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -408,6 +444,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 66.93,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -419,6 +456,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 92.77,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -430,6 +468,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 54.76,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -441,6 +480,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 94.79,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -452,6 +492,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 68.68,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -463,6 +504,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 49.53,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -475,6 +517,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 59.17,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -487,6 +530,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 61.2,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -498,6 +542,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 74.77,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -509,6 +554,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.82,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -520,6 +566,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.96,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -531,6 +578,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.79,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -542,6 +590,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.93,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -553,6 +602,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 93.89,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -564,6 +614,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 88.77,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -575,6 +626,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.49,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -586,6 +638,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.68,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -597,6 +650,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.79,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -608,6 +662,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 93.97,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -619,6 +674,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.99,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -630,6 +686,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.49,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -641,6 +698,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.49,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -652,6 +710,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.82,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -663,6 +722,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -676,6 +736,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 80.28,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -687,6 +748,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -698,6 +760,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 81.37,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -709,6 +772,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.79,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -720,6 +784,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.03,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -731,6 +796,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 62.99,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -742,6 +808,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 63.84,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -753,6 +820,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.8,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -764,6 +832,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 32.77,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -776,6 +845,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 96.88,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -787,6 +857,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.83,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -798,6 +869,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 91.04,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -809,6 +881,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 67.99,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Low AI Confidence"
@@ -820,6 +893,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 53.21,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -832,6 +906,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 58.58,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -844,6 +919,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 96.13,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -855,6 +931,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.05,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -866,6 +943,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.57,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -877,6 +955,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 62.74,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "Low AI Confidence"
@@ -888,6 +967,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.05,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -899,6 +979,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 96.47,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -910,6 +991,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.56,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -921,6 +1003,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.99,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -932,6 +1015,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 95.13,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -943,6 +1027,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.61,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -954,6 +1039,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 91.45,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -965,6 +1051,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.67,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -976,6 +1063,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.87,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -987,6 +1075,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.84,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -998,6 +1087,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 69.78,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Low AI Confidence"
@@ -1011,6 +1101,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.82,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1022,6 +1113,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1033,6 +1125,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 100.0,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1044,6 +1137,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1055,6 +1149,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.43,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1066,6 +1161,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 65.66,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -1077,6 +1173,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 67.1,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -1088,6 +1185,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 61.38,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -1099,6 +1197,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 86.12,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1110,6 +1209,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 97.27,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1121,6 +1221,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 95.23,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1132,6 +1233,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.47,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1143,6 +1245,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 86.78,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1154,6 +1257,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 54.87,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -1166,6 +1270,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 59.03,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -1178,6 +1283,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.93,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -1189,6 +1295,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.9,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1200,6 +1307,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 97.51,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1211,6 +1319,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 79.28,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1222,6 +1331,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 80.97,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1233,6 +1343,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 97.69,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1244,6 +1355,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 100.0,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1255,6 +1367,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.99,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1266,6 +1379,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.54,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1277,6 +1391,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.25,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1288,6 +1403,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.77,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1299,6 +1415,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 97.37,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1310,6 +1427,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.16,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1321,6 +1439,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.7,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1332,6 +1451,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1345,6 +1465,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 93.47,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1356,6 +1477,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.24,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1367,6 +1489,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 67.01,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Low AI Confidence"
@@ -1378,6 +1501,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.52,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1389,6 +1513,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.81,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1400,6 +1525,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.96,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1411,6 +1537,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 98.73,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1422,6 +1549,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 95.38,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1433,6 +1561,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.92,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1444,6 +1573,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 91.96,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1455,6 +1585,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 57.74,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -1467,6 +1598,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 88.83,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1478,6 +1610,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 49.67,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -1490,6 +1623,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 53.76,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -1502,6 +1636,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 56.29,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -1514,6 +1649,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 52.16,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "Ambiguous Classification",
@@ -1526,6 +1662,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.91,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1537,6 +1674,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.15,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1548,6 +1686,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.99,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1559,6 +1698,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 94.09,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1570,6 +1710,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.58,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1581,6 +1722,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.01,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1592,6 +1734,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 95.76,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1603,6 +1746,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 96.74,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1614,6 +1758,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 44.94,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "Ambiguous Classification",
@@ -1626,6 +1771,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.95,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1637,6 +1783,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.87,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1648,6 +1795,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 81.66,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1659,6 +1807,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.9,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -1670,6 +1819,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.98,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1683,6 +1833,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.33,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1694,6 +1845,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.98,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1705,6 +1857,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.68,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1716,6 +1869,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.88,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1727,6 +1881,7 @@
       "tier": 2,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.93,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1738,6 +1893,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 95.11,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1749,6 +1905,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 62.56,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Low AI Confidence"
@@ -1760,6 +1917,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 50.84,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "Ambiguous Classification",
@@ -1772,6 +1930,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 96.49,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1783,6 +1942,7 @@
       "tier": 8,
       "groundTruthIsHuman": false,
       "aiConfidence": 90.76,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"
@@ -1794,6 +1954,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 59.43,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Low AI Confidence"
@@ -1805,6 +1966,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 60.52,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "Ambiguous Classification",
@@ -1817,6 +1979,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 99.29,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1828,6 +1991,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 78.26,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1839,6 +2003,7 @@
       "tier": 10,
       "groundTruthIsHuman": false,
       "aiConfidence": 64.4,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "Low AI Confidence"
@@ -1850,6 +2015,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 91.11,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -1861,6 +2027,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 95.04,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1872,6 +2039,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 93.58,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1883,6 +2051,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.62,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1894,6 +2063,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 54.91,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "Ambiguous Classification",
@@ -1906,6 +2076,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.75,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1917,6 +2088,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 96.78,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1928,6 +2100,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 97.58,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1939,6 +2112,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 76.4,
+      "cnnSaysHuman": false,
       "threats": [
         "Overgrowth Signature Detected",
         "High AI Confidence"
@@ -1950,6 +2124,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.89,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1961,6 +2136,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 78.17,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1972,6 +2148,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 98.85,
+      "cnnSaysHuman": true,
       "threats": [
         "Trauma Indicators Present",
         "High AI Confidence"
@@ -1983,6 +2160,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.98,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -1994,6 +2172,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 99.79,
+      "cnnSaysHuman": true,
       "threats": [
         "No Anomalies Detected",
         "High AI Confidence"
@@ -2005,6 +2184,7 @@
       "tier": 0,
       "groundTruthIsHuman": true,
       "aiConfidence": 79.56,
+      "cnnSaysHuman": false,
       "threats": [
         "No Vital Signs Detected",
         "High AI Confidence"

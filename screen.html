@@ -103,6 +103,87 @@
       font-size: 12px; letter-spacing: 2px; color: var(--text-dim); font-family: 'Courier New', monospace;
     }
     #walk-prompt.hidden { display: none; }
+    /* PRE/POST attitude survey (reused for both phases) and the static
+       mission briefing. Both sit ABOVE #blocker (10), #condition-select
+       (11), and #dev-reset-btn (12) at z-index 13 so they gate the start
+       of play during first-time onboarding. Both start hidden (no
+       .visible) so a returning participant who already picked a condition
+       never sees them. Styled to match #condition-select: dark bg, cyan
+       accents, monospace; scrollable if taller than the viewport. */
+    #survey-overlay, #directions-overlay {
+      position: fixed; inset: 0; z-index: 13;
+      display: none; flex-direction: column; align-items: center; justify-content: flex-start;
+      gap: 18px; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;
+      background: rgba(2, 3, 9, 0.97);
+      color: white; text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+    #survey-overlay.visible, #directions-overlay.visible { display: flex; }
+    #survey-title, #directions-overlay h2 {
+      font-size: 18px; letter-spacing: 3px; margin: 0; color: var(--cyan);
+    }
+    #survey-intro { font-size: 12px; letter-spacing: 1px; color: var(--text-dim); }
+    #survey-questions { display: flex; flex-direction: column; gap: 20px; width: 100%; max-width: 640px; }
+    .survey-question { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+    .survey-q-text { font-size: 13px; line-height: 1.5; color: #d4d4d4; }
+    .survey-scale { display: flex; gap: 8px; justify-content: center; }
+    .survey-scale button {
+      width: 34px; height: 34px; font-size: 13px;
+      background: rgba(8, 18, 28, 0.9); border: 1px solid var(--cyan-dim); color: var(--cyan);
+      cursor: pointer; font-family: inherit; transition: filter 0.1s ease;
+    }
+    .survey-scale button:hover { filter: brightness(1.35); }
+    .survey-scale button.selected { background: var(--cyan); color: #020309; border-color: var(--cyan); }
+    #survey-error { font-size: 12px; letter-spacing: 1px; color: var(--orange); display: none; }
+    #survey-error.visible { display: block; }
+    #survey-submit, #directions-accept {
+      padding: 16px 34px; font-size: 13px; letter-spacing: 2px;
+      background: rgba(8, 18, 28, 0.9); border: 1px solid var(--cyan); color: var(--cyan);
+      cursor: pointer; font-family: inherit; transition: filter 0.1s ease;
+    }
+    #survey-submit:hover, #directions-accept:hover { filter: brightness(1.35); }
+    #directions-overlay .directions-body {
+      max-width: 640px; text-align: left; font-size: 13px; line-height: 1.7; color: #d4d4d4;
+    }
+    #directions-overlay .directions-warning {
+      max-width: 640px; text-align: left; font-size: 13px; line-height: 1.6;
+      color: var(--orange); border: 1px solid var(--orange); padding: 12px 16px;
+    }
+    #directions-close {
+      position: absolute; top: 16px; right: 20px; font-size: 20px; color: var(--cyan);
+      cursor: pointer; line-height: 1;
+    }
+    #directions-close:hover { filter: brightness(1.35); }
+    /* End-of-game debrief. Shown once a game is finished: after the post
+       survey for AI-assist players, or straight away for human-only. Same
+       overlay treatment (z-index 13, dark bg, cyan, monospace) as the survey
+       and briefing screens. Starts hidden. */
+    #end-overlay {
+      position: fixed; inset: 0; z-index: 13;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 22px; padding: 40px 20px; box-sizing: border-box; overflow-y: auto;
+      background: rgba(2, 3, 9, 0.97);
+      color: white; text-align: center;
+      font-family: 'Courier New', monospace;
+    }
+    #end-overlay.visible { display: flex; }
+    #end-overlay h2 { font-size: 20px; letter-spacing: 4px; margin: 0; color: var(--cyan); }
+    #end-subtitle { font-size: 12px; letter-spacing: 2px; color: var(--text-dim); margin-top: -14px; }
+    #end-stats {
+      display: grid; grid-template-columns: repeat(3, 150px); gap: 16px;
+      justify-content: center; margin: 4px 0;
+    }
+    .end-stat {
+      border: 1px solid var(--line); background: rgba(8, 18, 28, 0.6);
+      padding: 18px 10px; display: flex; flex-direction: column; gap: 8px;
+    }
+    .end-stat-value { font-size: 26px; color: var(--cyan); }
+    .end-stat-label { font-size: 10px; letter-spacing: 2px; color: var(--text-dim); }
+    #end-thanks {
+      font-size: 14px; letter-spacing: 2px; color: var(--cyan);
+      margin-top: 10px; line-height: 1.7;
+    }
+
   </style>
 </head>
 
@@ -113,6 +194,43 @@
       <button id="choose-ai-assist">AI ASSIST</button>
       <button id="choose-human-only">HUMAN ONLY</button>
     </div>
+  </div>
+
+  <div id="survey-overlay">
+    <h2 id="survey-title">SURVEY</h2>
+    <div id="survey-intro">7-point scale: 1 = strongly disagree, 7 = strongly agree</div>
+    <div id="survey-questions"></div>
+    <div id="survey-error">Please answer every question before continuing.</div>
+    <button id="survey-submit">SUBMIT</button>
+  </div>
+
+  <div id="directions-overlay">
+    <div id="directions-close" title="Close">✕</div>
+    <h2>MISSION BRIEFING</h2>
+    <div class="directions-body">
+      You are the checkpoint officer. Walk up to a screen and click it to
+      begin inspecting a subject.
+      <br /><br />
+      You have 45 seconds per subject. Choose PERMIT to let a healthy human
+      through, or REJECT to turn away a disguised survivor.
+      <span id="directions-ai-line"><br /><br />
+      In AI-assist mode you can also use SCAN (threat advisory) and AI ASSIST
+      (the AI's confidence) for extra information before you decide.</span>
+      <br /><br />
+      Controls: WASD = move · Mouse = look · SPACE = jump · ESC = release mouse.
+    </div>
+    <div class="directions-warning">
+      WARNING: some of the images have been deliberately WARPED/manipulated by
+      an adversarial AI to fool you into thinking a disguised survivor is a
+      healthy human. Look carefully before you decide.
+    </div>
+    <button id="directions-accept">ACCEPT</button>
+  </div>
+  <div id="end-overlay">
+    <h2>DEBRIEF</h2>
+    <div id="end-subtitle">CHECKPOINT SHIFT COMPLETE</div>
+    <div id="end-stats"></div>
+    <div id="end-thanks">SESSION COMPLETE — THANK YOU FOR PLAYING.<br />You may now close this window.</div>
   </div>
 
   <div id="blocker">
@@ -741,6 +859,14 @@
       CONDITION = value;
       localStorage.setItem('condition', value);
       conditionSelectEl.classList.remove('visible');
+      // First-time onboarding, once per participant: AI-assist takes the PRE
+      // survey first, then the briefing; human-only goes straight to the
+      // briefing (no survey). Both hand off to #blocker "Click to start".
+      if (value === 'human_ai') {
+        showSurvey('pre');
+      } else {
+        showDirections();
+      }
     }
 
     if (!CONDITION) {
@@ -752,6 +878,279 @@
     }
     document.getElementById('choose-ai-assist').addEventListener('click', () => chooseCondition('human_ai'));
     document.getElementById('choose-human-only').addEventListener('click', () => chooseCondition('human_alone'));
+
+    // ONBOARDING SURVEYS + DIRECTIONS
+    // Pre/post attitude surveys (AI-assist condition only) plus a static
+    // mission briefing. All gated to run once per participant: the pre
+    // survey + briefing hang off chooseCondition (which only fires the first
+    // time a condition is picked), and the post survey is guarded by a
+    // per-participant localStorage flag in the startRound completion branch.
+    // None of this re-runs for a returning participant.
+    // ---------------------------------------------------------------------
+    const PRE_SURVEY_QUESTIONS = [
+      { id: 'pre_q1', text: 'I regularly use AI tools (such as ChatGPT, Gemini, Copilot, Claude, etc.).' },
+      { id: 'pre_q2', text: 'I am comfortable making decisions with the help of AI.' },
+      { id: 'pre_q3', text: 'I understand that AI systems can sometimes make mistakes.' },
+      { id: 'pre_q4', text: 'I generally trust recommendations made by AI.' },
+      { id: 'pre_q5', text: 'I believe AI often performs better than humans at recognizing visual patterns.' },
+      { id: 'pre_q6', text: 'If an AI disagreed with me, I would probably reconsider my decision.' },
+      { id: 'pre_q7', text: 'I trust my own judgment when making difficult decisions.' },
+      { id: 'pre_q8', text: 'I prefer to make important decisions myself rather than relying on AI.' },
+      { id: 'pre_q9', text: 'I am confident in my ability to make decisions based only on visual information.' },
+      { id: 'pre_q10', text: 'I think AI will become increasingly important in security and screening tasks.' },
+    ];
+    const POST_SURVEY_QUESTIONS = [
+      { id: 'post_q1', text: "I trusted the AI's recommendations during the game." },
+      { id: 'post_q2', text: 'The AI generally gave useful recommendations.' },
+      { id: 'post_q3', text: 'I felt the AI made accurate decisions.' },
+      { id: 'post_q4', text: 'I relied on the AI more as the game progressed.' },
+      { id: 'post_q5', text: 'I depended on the AI more than I expected.' },
+      { id: 'post_q6', text: "I often accepted the AI's recommendation without much additional thought." },
+      { id: 'post_q7', text: 'I noticed situations where the AI made mistakes.' },
+      { id: 'post_q8', text: 'Even when the AI made mistakes, I still trusted its future recommendations.' },
+      { id: 'post_q9', text: 'I felt confident in my own decisions during the game.' },
+      { id: 'post_q10', text: 'I would feel comfortable making similar decisions without AI assistance.' },
+    ];
+
+    const surveyOverlay = document.getElementById('survey-overlay');
+    const surveyTitleEl = document.getElementById('survey-title');
+    const surveyQuestionsEl = document.getElementById('survey-questions');
+    const surveyErrorEl = document.getElementById('survey-error');
+    const surveySubmitBtn = document.getElementById('survey-submit');
+    const directionsOverlay = document.getElementById('directions-overlay');
+
+    let surveyPhase = null;      // 'pre' | 'post' while a survey is open
+    let surveyResponses = {};    // { pre_q1: 3, ... } for the currently open survey
+    let preSurveyAnswers = null;    // retained PRE answers for the POST CSV export
+    let preSurveyTimestamp = null;  // when the PRE survey was actually submitted
+
+    // Render one question set into the reusable #survey-overlay. Each
+    // question gets a 1..7 button row; clicking a button records the value
+    // and highlights it, so exactly one option is selectable per question.
+    function renderSurvey(questions) {
+      surveyResponses = {};
+      surveyQuestionsEl.innerHTML = '';
+      questions.forEach((q, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'survey-question';
+        const text = document.createElement('div');
+        text.className = 'survey-q-text';
+        text.textContent = `${i + 1}. ${q.text}`;
+        wrap.appendChild(text);
+        const scale = document.createElement('div');
+        scale.className = 'survey-scale';
+        for (let v = 1; v <= 7; v++) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = v;
+          btn.addEventListener('click', () => {
+            surveyResponses[q.id] = v;
+            scale.querySelectorAll('button').forEach((b) => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            surveyErrorEl.classList.remove('visible');
+          });
+          scale.appendChild(btn);
+        }
+        wrap.appendChild(scale);
+        surveyQuestionsEl.appendChild(wrap);
+      });
+    }
+
+    function showSurvey(phase) {
+      surveyPhase = phase;
+      const questions = phase === 'pre' ? PRE_SURVEY_QUESTIONS : POST_SURVEY_QUESTIONS;
+      surveyTitleEl.textContent = phase === 'pre' ? 'PRE-GAME SURVEY' : 'POST-GAME SURVEY';
+      renderSurvey(questions);
+      surveyErrorEl.classList.remove('visible');
+      surveyOverlay.classList.add('visible');
+    }
+
+    function showDirections() {
+      // Only AI-assist players have SCAN / AI ASSIST, so hide that line for
+      // human-only players rather than telling them about buttons they lack.
+      document.getElementById('directions-ai-line').style.display =
+        CONDITION === 'human_ai' ? '' : 'none';
+      directionsOverlay.classList.add('visible');
+    }
+    function hideDirections() { directionsOverlay.classList.remove('visible'); }
+
+    // Required-answer validation on submit: every question in the current
+    // set must have a selection, else show the error and don't proceed.
+    function handleSurveySubmit() {
+      const questions = surveyPhase === 'pre' ? PRE_SURVEY_QUESTIONS : POST_SURVEY_QUESTIONS;
+      const allAnswered = questions.every((q) => surveyResponses[q.id] !== undefined);
+      if (!allAnswered) {
+        surveyErrorEl.classList.add('visible');
+        return;
+      }
+      const answers = {};
+      questions.forEach((q) => { answers[q.id] = surveyResponses[q.id]; });
+
+      if (surveyPhase === 'pre') {
+        preSurveyAnswers = answers;
+        // Stamp the PRE survey now, at submit -- otherwise its rows inherit the
+        // POST export time and we lose when the pre was actually taken.
+        preSurveyTimestamp = new Date().toISOString();
+        localStorage.setItem('survey_pre_' + PARTICIPANT_ID, JSON.stringify(answers));
+        localStorage.setItem('survey_pre_ts_' + PARTICIPANT_ID, preSurveyTimestamp);
+        surveyOverlay.classList.remove('visible');
+        showDirections();
+      } else {
+        localStorage.setItem('survey_post_' + PARTICIPANT_ID, JSON.stringify(answers));
+        exportSurveyCSV(answers);
+        localStorage.setItem('post_survey_done_' + PARTICIPANT_ID, 'true');
+        surveyOverlay.classList.remove('visible');
+        // Debrief was held behind the post survey; show it now.
+        if (pendingEndStats) {
+          showEndScreen(pendingEndStats);
+          pendingEndStats = null;
+        }
+      }
+    }
+
+    // ---------------------------------------------------------------------
+    // REMOTE DATA COLLECTION
+    // The CSV exports below still download locally (a reliable backup), but on
+    // itch.io a local download lands on the PLAYER's machine, not ours -- so we
+    // ALSO POST the same rows to a Google Apps Script web app that appends them
+    // to a Sheet we own. Fire-and-forget: `no-cors` sends the request without a
+    // CORS preflight and we don't read the response, so a slow or failed send
+    // can never stall or break the game. If DATA_ENDPOINT is empty (local dev),
+    // the POST is skipped and only the download runs.
+    //
+    // `kind` picks the Sheet tab: 'trials' or 'surveys'. Payload is
+    // { kind, headers, rows } -- the same header + row arrays the CSV is built
+    // from, so the Sheet and the downloaded CSV always match.
+    // ---------------------------------------------------------------------
+    const DATA_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwkj7hPye8DlzPCr-cCFOet33PtFPE5obfM2gOwB2gzFxTa7Pc8kxnMQcDkuuFkUm69/exec';
+
+    function sendToServer(kind, headers, rows) {
+      if (!DATA_ENDPOINT || !rows.length) return;   // no endpoint / nothing to send
+      try {
+        fetch(DATA_ENDPOINT, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: JSON.stringify({ kind, headers, rows }),
+        }).catch(() => {});   // swallow network errors -- the local download is our backup
+      } catch (e) { /* ignore -- never let logging break gameplay */ }
+    }
+
+    // Survey CSV in LONG format: one row per answered question, all PRE rows
+    // (phase "pre") then all POST rows (phase "post"). PRE answers are read
+    // from the retained variable, falling back to localStorage. Fields with
+    // a comma or quote are CSV-escaped (question texts contain commas).
+    // Reuses the Blob-download approach from exportResultsCSV.
+    function exportSurveyCSV(postAnswers) {
+      const csvEscape = (v) => {
+        const s = (v === null || v === undefined) ? '' : String(v);
+        return /[",]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const headers = [
+        'participant_id', 'session_id', 'condition', 'phase',
+        'question_id', 'question_text', 'response', 'timestamp',
+      ];
+      const postTimestamp = new Date().toISOString();
+      // Pre rows carry the time the pre survey was actually submitted (stamped
+      // in handleSurveySubmit), not the post-export time. Fall back to the post
+      // time only if that stamp is somehow missing.
+      const preTimestamp = preSurveyTimestamp
+        || localStorage.getItem('survey_pre_ts_' + PARTICIPANT_ID)
+        || postTimestamp;
+      const rows = [];
+      const preAnswers = preSurveyAnswers
+        || JSON.parse(localStorage.getItem('survey_pre_' + PARTICIPANT_ID) || 'null');
+      const addRows = (phase, questions, answers, timestamp) => {
+        if (!answers) return;
+        questions.forEach((q) => {
+          if (answers[q.id] === undefined) return;
+          rows.push([
+            PARTICIPANT_ID, SESSION_ID, CONDITION, phase,
+            q.id, q.text, answers[q.id], timestamp,
+          ]);
+        });
+      };
+      addRows('pre', PRE_SURVEY_QUESTIONS, preAnswers, preTimestamp);
+      addRows('post', POST_SURVEY_QUESTIONS, postAnswers, postTimestamp);
+
+      sendToServer('surveys', headers, rows);   // POST to our Sheet (backup: the download below)
+
+      const csv = [headers, ...rows]
+        .map((row) => row.map(csvEscape).join(','))
+        .join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `survey-${PARTICIPANT_ID}-${postTimestamp.replace(/[:/.]/g, '-')}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    surveySubmitBtn.addEventListener('click', handleSurveySubmit);
+    document.getElementById('directions-close').addEventListener('click', hideDirections);
+    document.getElementById('directions-accept').addEventListener('click', hideDirections);
+
+    // END-OF-GAME DEBRIEF
+    // A per-game stats screen. It's held in pendingEndStats when the post
+    // survey needs to go first (AI-assist, first game) and shown the moment
+    // that survey is submitted; otherwise (human-only, or an AI replay whose
+    // post survey is already done) it shows straight from the completion
+    // branch. Stats come from station.results (the same rows the trial CSV
+    // exports), so they always match the logged data.
+    // ---------------------------------------------------------------------
+    const endOverlay = document.getElementById('end-overlay');
+    const endStatsEl = document.getElementById('end-stats');
+    let pendingEndStats = null;
+
+    function computeStats(station) {
+      const r = station.results;
+      const total = r.length;
+      const correct = r.filter((e) => e.correct === true).length;
+      // A null player_answer_human means the 45s timer ran out with no call.
+      const timeouts = r.filter((e) => e.player_answer_human === null).length;
+      const accuracy = total ? Math.round((correct / total) * 100) : 0;
+      // Reaction time only means something for rounds the player actually
+      // decided, so timeouts (which always read ~45s) are excluded.
+      const rts = r.filter((e) => e.player_answer_human !== null).map((e) => e.reaction_time_ms);
+      const avgRtMs = rts.length ? rts.reduce((a, b) => a + b, 0) / rts.length : null;
+      const disguisesTotal = r.filter((e) => e.ground_truth_human === false).length;
+      const disguisesCaught = r.filter((e) => e.ground_truth_human === false && e.correct === true).length;
+      const humansTotal = r.filter((e) => e.ground_truth_human === true).length;
+      const humansCleared = r.filter((e) => e.ground_truth_human === true && e.correct === true).length;
+      return { total, correct, timeouts, accuracy, avgRtMs,
+               disguisesTotal, disguisesCaught, humansTotal, humansCleared };
+    }
+
+    function showEndScreen(stats) {
+      const cells = [
+        { label: 'SCORE', value: `${stats.correct} / ${stats.total}` },
+        { label: 'ACCURACY', value: `${stats.accuracy}%` },
+        { label: 'AVG REACTION', value: stats.avgRtMs === null ? '—' : `${(stats.avgRtMs / 1000).toFixed(1)}s` },
+        { label: 'DISGUISES CAUGHT', value: `${stats.disguisesCaught} / ${stats.disguisesTotal}` },
+        { label: 'HUMANS CLEARED', value: `${stats.humansCleared} / ${stats.humansTotal}` },
+        { label: 'TIMED OUT', value: `${stats.timeouts}` },
+      ];
+      endStatsEl.innerHTML = '';
+      cells.forEach((c) => {
+        const cell = document.createElement('div');
+        cell.className = 'end-stat';
+        const v = document.createElement('div');
+        v.className = 'end-stat-value';
+        v.textContent = c.value;
+        const l = document.createElement('div');
+        l.className = 'end-stat-label';
+        l.textContent = c.label;
+        cell.appendChild(v);
+        cell.appendChild(l);
+        endStatsEl.appendChild(cell);
+      });
+      endOverlay.classList.add('visible');
+    }
+
+    // No DONE button: the debrief IS the final screen. Results were already
+    // exported/POSTed before it showed, so the session simply ends here.
 
     function getNextContentSession(participantId) {
       const countKey = 'session_count_' + participantId;
@@ -805,7 +1204,7 @@
     let ROUNDS = [];
     async function loadRounds() {
       try {
-        const res = await fetch('data/game_sets/rounds.json');
+        const res = await fetch('data/game_sets/rounds.json', { cache: 'no-store' });
         if (!res.ok) {
           throw new Error(`rounds.json responded ${res.status} ${res.statusText}`);
         }
@@ -1274,6 +1673,17 @@
         drawStationHUD(station);
         console.log(`Final results for ${station.meshName}:`, station.results);
         exportResultsCSV(station);
+        // End-of-game debrief. AI-assist players (first game only) take the
+        // POST survey first, and the debrief waits behind it (pendingEndStats,
+        // released on survey submit); everyone else sees it immediately.
+        const stats = computeStats(station);
+        if (CONDITION === 'human_ai'
+            && localStorage.getItem('post_survey_done_' + PARTICIPANT_ID) !== 'true') {
+          pendingEndStats = stats;
+          showSurvey('post');
+        } else {
+          showEndScreen(stats);
+        }
         return;
       }
       station.currentRound = ROUNDS[station.roundIndex];
@@ -1305,10 +1715,12 @@
         condition: CONDITION,
         subject: station.currentRound.subjectId,
         tier: station.currentRound.tier,
+        round_index: station.roundIndex,
         ground_truth_human: station.currentRound.groundTruthIsHuman,
         player_answer_human: saysHuman,
         correct: saysHuman === null ? null : correct,
         ai_confidence_shown: station.currentRound.aiConfidence,
+        cnn_says_human: station.currentRound.cnnSaysHuman,
         reaction_time_ms: reactionMs,
         scanned: station.scanned,
         zoomed: station.zoomed,
@@ -1337,18 +1749,21 @@
       if (!station.results.length) return;
       const headers = [
         'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
-        'station', 'subject_id', 'malice_tier', 'condition',
+        'station', 'subject_id', 'malice_tier', 'round_index', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
-        'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
+        'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'scanned', 'zoomed',
         'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
       ];
       const rows = station.results.map((r) => [
         r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
-        r.station, r.subject, r.tier, r.condition,
+        r.station, r.subject, r.tier, r.round_index, r.condition,
         r.ground_truth_human, r.player_answer_human, r.correct,
-        r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
+        r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.scanned, r.zoomed,
         r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
       ]);
+
+      sendToServer('trials', headers, rows);   // POST to our Sheet (backup: the download below)
+
       const csv = [headers, ...rows]
         .map((row) => row.map((v) => (v === null || v === undefined) ? '' : v).join(','))
         .join('\n');
@@ -1597,6 +2012,13 @@
     const clock = new THREE.Clock();
     let frameCount = 0;
     let lastStatusUpdate = 0;
+    // Ground state lives outside animate() so the every-other-frame cache below
+    // actually persists between frames. Declaring these inside the loop made the
+    // ternary reference them before initialization (temporal dead zone), which
+    // threw on every odd frame and skipped the rest of that frame -- including
+    // gravity, the ground snap, and the render call.
+    let groundY = null;
+    let grounded = false;
     function animate() {
       requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
@@ -1622,10 +2044,10 @@
 
         const feetY = camera.position.y - PLAYER.eyeHeight;
         // Cache ground check every other frame
-        const groundY = (frameCount % 2 === 0 || !grounded)
-          ? findGroundHeight(camera.position.x, feetY, camera.position.z)
-          : groundY;
-        const grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
+        if (frameCount % 2 === 0 || !grounded) {
+          groundY = findGroundHeight(camera.position.x, feetY, camera.position.z);
+        }
+        grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
 
         if (grounded) {
           verticalVelocity = 0;
