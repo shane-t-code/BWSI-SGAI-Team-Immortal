@@ -60,6 +60,7 @@
     }
 
     #status {
+      display: none; /* dev-only position/status readout, hidden for players */
       position: fixed; left: 12px; bottom: 12px; z-index: 5;
       padding: 9px 11px; border-radius: 7px;
       background: rgba(0, 0, 0, 0.58);
@@ -1320,9 +1321,16 @@
     // ============================================================
     const HUD_CANVAS_W = 1280;
     const HUD_CANVAS_H = 720;
+    // The backing bitmap is rendered at a higher pixel density than the
+    // 1280x720 logical layout -- the mesh sits close to the player and the
+    // canvas texture (esp. the subject photo) looked soft at 1:1. All the
+    // drawing code below still works in 1280x720 logical coordinates; the
+    // ctx.setTransform at the top of drawStationHUD maps that up to the
+    // larger backing store.
+    const HUD_RENDER_SCALE = 2;
     const hudCanvas = document.createElement('canvas');
-    hudCanvas.width = HUD_CANVAS_W;
-    hudCanvas.height = HUD_CANVAS_H;
+    hudCanvas.width = HUD_CANVAS_W * HUD_RENDER_SCALE;
+    hudCanvas.height = HUD_CANVAS_H * HUD_RENDER_SCALE;
     const hudCtx = hudCanvas.getContext('2d');
     const hudTexture = new THREE.CanvasTexture(hudCanvas);
     hudTexture.colorSpace = THREE.SRGBColorSpace;
@@ -1403,7 +1411,7 @@
         // (confidence box) -- same size as before, just stacked so its
         // bottom edge meets the confidence box's top edge.
         threat: frac(0.72, 0.16, 0.28, 0.24),
-        viewport: frac(0.30, 0.16, 0.40, 0.36), // subject image "camera feed" window
+        viewport: frac(0.28, 0.16, 0.44, 0.36), // subject image "camera feed" window -- widened slightly, still centered at x=0.50
         reticleCy: frac(0, 0.34, 0, 0).y, // reticle sits mid-viewport
         subjectLabelY: frac(0, 0.56, 0, 0).y,
         actions: frac(0.00, 0.40, 0.20, 0.24),
@@ -1489,6 +1497,11 @@
     // on a fixed schedule, so it's cheap in the common case.
     function drawStationHUD(station) {
       const ctx = hudCtx;
+      // Reset to the logical 1280x720 coordinate space every frame (the
+      // backing bitmap is HUD_RENDER_SCALE times larger -- see its
+      // declaration above) so none of the layout/drawing code below needs
+      // to know about the supersampling.
+      ctx.setTransform(HUD_RENDER_SCALE, 0, 0, HUD_RENDER_SCALE, 0, 0);
       ctx.clearRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
       ctx.fillStyle = '#04080c';
       ctx.fillRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
@@ -1696,17 +1709,6 @@
         ctx.textAlign = 'left';
       }
 
-      // Debug hover marker -- confirms the cursor-to-canvas mapping is
-      // calibrated correctly; remove once you've verified the cursor lines
-      // up with the highlighted button.
-      if (hoverCanvasPos) {
-        ctx.beginPath();
-        ctx.arc(hoverCanvasPos.x, hoverCanvasPos.y, 6, 0, Math.PI * 2);
-        ctx.strokeStyle = '#ff4444';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.lineWidth = 1;
-      }
 
       // Debug border guide -- yellow marks the full canvas edge (the true
       // 0..1 UV extent), useful for seeing how much margin is dialed in.
