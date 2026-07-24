@@ -10,16 +10,16 @@ def _sample_trials() -> pd.DataFrame:
     return pd.DataFrame(
         [
             # tier 0, human_alone: 2 correct, 1 incorrect
-            {"malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2000, "player_answer_human": True},
-            {"malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2200, "player_answer_human": True},
-            {"malice_tier": 0, "condition": "human_alone", "correct": False, "reaction_time_ms": 1800, "player_answer_human": False},
+            {"malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2000, "player_answer_human": "human"},
+            {"malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2200, "player_answer_human": "human"},
+            {"malice_tier": 0, "condition": "human_alone", "correct": False, "reaction_time_ms": 1800, "player_answer_human": "zombie"},
             # tier 6, human_alone: 1 correct, 1 incorrect, plus 1 flagged (too fast)
-            {"malice_tier": 6, "condition": "human_alone", "correct": True, "reaction_time_ms": 3000, "player_answer_human": True},
-            {"malice_tier": 6, "condition": "human_alone", "correct": False, "reaction_time_ms": 2800, "player_answer_human": True},
-            {"malice_tier": 6, "condition": "human_alone", "correct": False, "reaction_time_ms": 200, "player_answer_human": True},
+            {"malice_tier": 6, "condition": "human_alone", "correct": True, "reaction_time_ms": 3000, "player_answer_human": "human"},
+            {"malice_tier": 6, "condition": "human_alone", "correct": False, "reaction_time_ms": 2800, "player_answer_human": "human"},
+            {"malice_tier": 6, "condition": "human_alone", "correct": False, "reaction_time_ms": 200, "player_answer_human": "human"},
             # tier 6, human_ai: 2 correct
-            {"malice_tier": 6, "condition": "human_ai", "correct": True, "reaction_time_ms": 1500, "player_answer_human": True},
-            {"malice_tier": 6, "condition": "human_ai", "correct": True, "reaction_time_ms": 1600, "player_answer_human": True},
+            {"malice_tier": 6, "condition": "human_ai", "correct": True, "reaction_time_ms": 1500, "player_answer_human": "human"},
+            {"malice_tier": 6, "condition": "human_ai", "correct": True, "reaction_time_ms": 1600, "player_answer_human": "human"},
         ]
     )
 
@@ -87,10 +87,10 @@ def _sample_trials_with_sessions() -> pd.DataFrame:
     return pd.DataFrame(
         [
             # participant A: two sessions, first one earlier -> only this row should survive
-            {"participant_id": "A", "session_id": "A-s1", "timestamp": "2026-07-17T10:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2000, "player_answer_human": True},
-            {"participant_id": "A", "session_id": "A-s2", "timestamp": "2026-07-17T11:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": False, "reaction_time_ms": 1900, "player_answer_human": False},
+            {"participant_id": "A", "session_id": "A-s1", "timestamp": "2026-07-17T10:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": True, "reaction_time_ms": 2000, "player_answer_human": "human"},
+            {"participant_id": "A", "session_id": "A-s2", "timestamp": "2026-07-17T11:00:00Z", "malice_tier": 0, "condition": "human_alone", "correct": False, "reaction_time_ms": 1900, "player_answer_human": "zombie"},
             # participant B: single session
-            {"participant_id": "B", "session_id": "B-s1", "timestamp": "2026-07-17T09:30:00Z", "malice_tier": 0, "condition": "human_ai", "correct": True, "reaction_time_ms": 1700, "player_answer_human": True},
+            {"participant_id": "B", "session_id": "B-s1", "timestamp": "2026-07-17T09:30:00Z", "malice_tier": 0, "condition": "human_ai", "correct": True, "reaction_time_ms": 1700, "player_answer_human": "human"},
         ]
     )
 

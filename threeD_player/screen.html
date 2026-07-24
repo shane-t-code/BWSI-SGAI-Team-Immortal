@@ -539,7 +539,7 @@ let scanned = false;
 let zoomed = false;
 let aiAssistUsed = false;
 let flagged = false;
-let aiAssistClickTime = null; // used to log how long into the round they asked for help
+let aiAssistClickTime = null; // tracks whether AI Assist has been opened yet this round (no longer logged)
 
 document.getElementById('wave-total').textContent = WAVE_TOTAL;
 
@@ -616,6 +616,13 @@ function startRound() {
   startTimer();
 }
 
+// Maps a saysHuman/groundTruthIsHuman boolean (or null for a timeout) to
+// the "human"/"zombie" label recorded in the trial log, so log.csv reads
+// as the actual classes rather than an opaque true/false.
+function humanZombieLabel(isHuman) {
+  return isHuman === null ? null : (isHuman ? 'human' : 'zombie');
+}
+
 function recordAnswer(saysHuman) {
   if (!currentRound) return;
   clearInterval(timerInterval);
@@ -630,16 +637,12 @@ function recordAnswer(saysHuman) {
     condition: CONDITION,
     subject: currentRound.subjectId,
     tier: currentRound.tier,
-    ground_truth_human: currentRound.groundTruthIsHuman,
-    player_answer_human: saysHuman, // null = timed out, no answer
+    ground_truth_human: humanZombieLabel(currentRound.groundTruthIsHuman),
+    player_answer_human: humanZombieLabel(saysHuman), // null = timed out, no answer
     correct: saysHuman === null ? null : correct,
     ai_confidence_shown: currentRound.aiConfidence,
     reaction_time_ms: reactionMs,
-    scanned,
     zoomed,
-    ai_assist_used: aiAssistUsed,
-    ai_assist_time_ms: aiAssistClickTime, // null if never opened
-    flagged,
     timestamp: new Date().toISOString(),
   };
   results.push(entry);
@@ -671,15 +674,13 @@ function exportResultsCSV(sessionResults) {
     'participant_id', 'session_id', 'content_session_key', 'play_count',
     'subject_id', 'malice_tier', 'condition',
     'ground_truth_human', 'player_answer_human', 'correct',
-    'ai_confidence_shown', 'reaction_time_ms', 'scanned', 'zoomed',
-    'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
+    'ai_confidence_shown', 'reaction_time_ms', 'zoomed', 'timestamp',
   ];
   const rows = sessionResults.map((r) => [
     r.participant_id, r.session_id, r.content_session_key, r.play_count,
     r.subject, r.tier, r.condition,
     r.ground_truth_human, r.player_answer_human, r.correct,
-    r.ai_confidence_shown, r.reaction_time_ms, r.scanned, r.zoomed,
-    r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
+    r.ai_confidence_shown, r.reaction_time_ms, r.zoomed, r.timestamp,
   ]);
   const csv = [headers, ...rows]
     .map((row) => row.map((v) => (v === null || v === undefined) ? '' : v).join(','))
