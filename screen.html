@@ -154,6 +154,37 @@
       cursor: pointer; line-height: 1;
     }
     #directions-close:hover { filter: brightness(1.35); }
+
+    /* Story/lore screen -- shown once, after condition-select and (if
+       present) the PRE survey, before the mission briefing. Pure black
+       (not the dark-blue #020309 the other overlays use) per spec: a
+       plain black in-fiction screen rather than another HUD-styled panel.
+       Same z-index tier (13) as survey/directions since it's sequential
+       with them, never simultaneous. The whole overlay is the click
+       target -- "click anywhere to continue" -- not a button. */
+    #story-overlay {
+      position: fixed; inset: 0; z-index: 13;
+      display: none; flex-direction: column; align-items: center; justify-content: center;
+      gap: 28px; padding: 60px 20px; box-sizing: border-box; overflow-y: auto;
+      background: #000;
+      color: #d4d4d4; text-align: center;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+    }
+    #story-overlay.visible { display: flex; }
+    #story-overlay .story-body {
+      max-width: 640px; text-align: left; font-size: 14px; line-height: 1.8;
+    }
+    #story-overlay .story-body p { margin: 0 0 18px 0; }
+    #story-overlay .story-body p:last-child { margin-bottom: 0; }
+    #story-continue {
+      font-size: 12px; letter-spacing: 3px; color: var(--cyan);
+      animation: story-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes story-pulse {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
     /* End-of-game debrief. Shown once a game is finished: after the post
        survey for AI-assist players, or straight away for human-only. Same
        overlay treatment (z-index 13, dark bg, cyan, monospace) as the survey
@@ -204,6 +235,18 @@
     <button id="survey-submit">SUBMIT</button>
   </div>
 
+  <div id="story-overlay">
+    <div class="story-body">
+      <p>Cosmic radiation hit Earth. Every human cell began regenerating &mdash; aggressively, endlessly.</p>
+      <p>Those who kept their minds heal normally. They still look like themselves. Their fight is quieter: rationing the resources their bodies now burn just to keep the regeneration in check.</p>
+      <p>Those who lost their minds, or were corrupted by the radiation, don't heal &mdash; they don't stop. Their bodies keep rebuilding past any shape a person should hold. We call them the <strong>overgrowns</strong>.</p>
+      <p>The overgrowns are trying to get into the space station to spread the infection. An overgrown hit lightly can only disguise their skin tone slightly. One hit hard can recolor themselves almost completely.</p>
+      <p id="story-ai-line">Fortunately, your lead engineer has developed an agent to help you.</p>
+      <p>Save as many humans as you can.</p>
+    </div>
+    <div id="story-continue">CLICK ANYWHERE TO CONTINUE</div>
+  </div>
+
   <div id="directions-overlay">
     <div id="directions-close" title="Close">✕</div>
     <h2>MISSION BRIEFING</h2>
@@ -213,18 +256,13 @@
       <br /><br />
       You have 45 seconds per subject. Choose PERMIT to let a healthy human
       through, or REJECT to turn away a disguised survivor.
-      <span id="directions-ai-line"><br /><br />
-      In AI-assist mode you'll also see a Threat Advisory and the AI's
-      confidence for extra information before you decide.</span>
       <br /><br />
       Use the ZOOM 1/2/3 buttons to magnify the subject image.
       <br /><br />
       Controls: WASD = move · Mouse = look · SPACE = jump · ESC = release mouse.
     </div>
     <div class="directions-warning">
-      WARNING: some of the images have been deliberately WARPED/manipulated by
-      an adversarial AI to fool you into thinking a disguised survivor is a
-      healthy human. Look carefully before you decide.
+      WARNING: an overgrown's skin tone is not always as it seems...
     </div>
     <button id="directions-accept">ACCEPT</button>
   </div>
@@ -858,12 +896,13 @@
       localStorage.setItem('condition', value);
       conditionSelectEl.classList.remove('visible');
       // First-time onboarding, once per participant: AI-assist takes the PRE
-      // survey first, then the briefing; human-only goes straight to the
-      // briefing (no survey). Both hand off to #blocker "Click to start".
+      // survey first, then the story screen, then the briefing; human-only
+      // goes straight to the story screen (no survey). Both hand off to
+      // #blocker "Click to start" after the briefing.
       if (value === 'human_ai') {
         showSurvey('pre');
       } else {
-        showDirections();
+        showStory();
       }
     }
 
@@ -964,13 +1003,26 @@
     }
 
     function showDirections() {
-      // Only AI-assist players see the threat/confidence panels, so hide
-      // that line for human-only players rather than describing info they lack.
-      document.getElementById('directions-ai-line').style.display =
-        CONDITION === 'human_ai' ? '' : 'none';
       directionsOverlay.classList.add('visible');
     }
     function hideDirections() { directionsOverlay.classList.remove('visible'); }
+
+    // STORY / LORE SCREEN
+    // Shown once per participant, after condition-select and (for AI-assist)
+    // the PRE survey, before the mission briefing. Plain black screen, the
+    // whole thing is the click target -- clicking anywhere advances straight
+    // to the briefing.
+    const storyOverlay = document.getElementById('story-overlay');
+    function showStory() {
+      document.getElementById('story-ai-line').style.display =
+        CONDITION === 'human_ai' ? '' : 'none';
+      storyOverlay.classList.add('visible');
+    }
+    function hideStory() { storyOverlay.classList.remove('visible'); }
+    storyOverlay.addEventListener('click', () => {
+      hideStory();
+      showDirections();
+    });
 
     // Required-answer validation on submit: every question in the current
     // set must have a selection, else show the error and don't proceed.
@@ -992,7 +1044,7 @@
         localStorage.setItem('survey_pre_' + PARTICIPANT_ID, JSON.stringify(answers));
         localStorage.setItem('survey_pre_ts_' + PARTICIPANT_ID, preSurveyTimestamp);
         surveyOverlay.classList.remove('visible');
-        showDirections();
+        showStory();
       } else {
         localStorage.setItem('survey_post_' + PARTICIPANT_ID, JSON.stringify(answers));
         exportSurveyCSV(answers);
