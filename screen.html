@@ -2012,6 +2012,13 @@
     const clock = new THREE.Clock();
     let frameCount = 0;
     let lastStatusUpdate = 0;
+    // Ground state lives outside animate() so the every-other-frame cache below
+    // actually persists between frames. Declaring these inside the loop made the
+    // ternary reference them before initialization (temporal dead zone), which
+    // threw on every odd frame and skipped the rest of that frame -- including
+    // gravity, the ground snap, and the render call.
+    let groundY = null;
+    let grounded = false;
     function animate() {
       requestAnimationFrame(animate);
       const delta = Math.min(clock.getDelta(), 0.05);
@@ -2037,10 +2044,10 @@
 
         const feetY = camera.position.y - PLAYER.eyeHeight;
         // Cache ground check every other frame
-        const groundY = (frameCount % 2 === 0 || !grounded)
-          ? findGroundHeight(camera.position.x, feetY, camera.position.z)
-          : groundY;
-        const grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
+        if (frameCount % 2 === 0 || !grounded) {
+          groundY = findGroundHeight(camera.position.x, feetY, camera.position.z);
+        }
+        grounded = groundY !== null && feetY <= groundY + 0.05 && verticalVelocity <= 0;
 
         if (grounded) {
           verticalVelocity = 0;
