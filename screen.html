@@ -214,8 +214,10 @@
       You have 45 seconds per subject. Choose PERMIT to let a healthy human
       through, or REJECT to turn away a disguised survivor.
       <span id="directions-ai-line"><br /><br />
-      In AI-assist mode you can also use SCAN (threat advisory) and AI ASSIST
-      (the AI's confidence) for extra information before you decide.</span>
+      In AI-assist mode you'll also see a Threat Advisory and the AI's
+      confidence for extra information before you decide.</span>
+      <br /><br />
+      Use the ZOOM 1/2/3 buttons to magnify the subject image.
       <br /><br />
       Controls: WASD = move · Mouse = look · SPACE = jump · ESC = release mouse.
     </div>
@@ -277,7 +279,7 @@
     const MAP_PATH = "threeD_player/finalMap4.glb";
 
     const SPAWN = { x: 11.456, y: 1.539, z: 10.938, yaw: 0.020 };
-    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 8, gravity: -45 };
+    const PLAYER = { eyeHeight: 0.75, moveSpeed: 4.2, jumpSpeed: 7, gravity: -20 };
 
     const KIOSK_TRIGGER_RADIUS = 4;
 
@@ -325,9 +327,9 @@
     camera.rotation.order = "YXZ";
     camera.rotation.y = SPAWN.yaw;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance", stencil: false, depth: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance", stencil: false, depth: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.AgXToneMapping;
     renderer.toneMappingExposure = 1.14;
@@ -438,10 +440,10 @@
       const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
       for (const texture of textures) {
         if (!texture) continue;
-        texture.anisotropy = Math.min(2, maxAnisotropy);
-        texture.minFilter = THREE.LinearFilter;
+        texture.anisotropy = maxAnisotropy;
+        texture.minFilter = THREE.LinearMipmapLinearFilter;
         texture.magFilter = THREE.LinearFilter;
-        texture.generateMipmaps = false;
+        texture.generateMipmaps = true;
         texture.needsUpdate = true;
       }
       material.needsUpdate = true;
@@ -508,11 +510,7 @@
         timerInterval: null,
         timeRemaining: 45,
         results: [],
-        scanned: false,
-        zoomed: false,
-        aiAssistUsed: false,
-        flagged: false,
-        aiAssistClickTime: null,
+        zoomLevel: 0, // 0 = off, 1-3 = zoom settings (ZOOM 1/2/3 buttons)
       };
     }
     const stations = STATION_CONFIGS.map(createStationState);
@@ -966,8 +964,8 @@
     }
 
     function showDirections() {
-      // Only AI-assist players have SCAN / AI ASSIST, so hide that line for
-      // human-only players rather than telling them about buttons they lack.
+      // Only AI-assist players see the threat/confidence panels, so hide
+      // that line for human-only players rather than describing info they lack.
       document.getElementById('directions-ai-line').style.display =
         CONDITION === 'human_ai' ? '' : 'none';
       directionsOverlay.classList.add('visible');
@@ -1247,6 +1245,7 @@
     const hudCtx = hudCanvas.getContext('2d');
     const hudTexture = new THREE.CanvasTexture(hudCanvas);
     hudTexture.colorSpace = THREE.SRGBColorSpace;
+    hudTexture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
     // The mesh appears larger than the actual visible screen area -- the
     // border meshes (Mesh_desk_computerScreen004/005/006) sit in front of
@@ -1269,6 +1268,10 @@
     // everything up by a small fixed pixel amount on top of that -- tweak
     // this directly for further tiny vertical adjustments.
     const VERTICAL_NUDGE = 15;
+    // Magnification applied to the subject image per zoom level (index =
+    // station.zoomLevel, 0 = off). Each step zooms in further than the old
+    // single fixed-12% zoom toggle did.
+    const ZOOM_PADS = [0, 0.25, 0.55, 0.95];
     function frac(fx, fy, fw, fh) {
       return {
         x: SAFE_RECT.x + fx * SAFE_RECT.w,
@@ -1305,7 +1308,10 @@
       LAYOUT = {
         wave: frac(0.00, 0.00, 0.22, 0.09),
         timerCircle: { cx: frac(0.5, 0.14, 0, 0).x, cy: frac(0, 0.14, 0, 0).y, r: 0.045 * SAFE_RECT.h },
-        threat: frac(0.72, 0.00, 0.28, 0.24),
+        // Threat advisory (scan box) sits directly above the AI assistant
+        // (confidence box) -- same size as before, just stacked so its
+        // bottom edge meets the confidence box's top edge.
+        threat: frac(0.72, 0.16, 0.28, 0.24),
         viewport: frac(0.30, 0.16, 0.40, 0.36), // subject image "camera feed" window
         reticleCy: frac(0, 0.34, 0, 0).y, // reticle sits mid-viewport
         subjectLabelY: frac(0, 0.56, 0, 0).y,
@@ -1317,23 +1323,17 @@
       };
 
       // Button hit-boxes in canvas pixel space, matching LAYOUT above.
-      // `disabledWhen` greys a button out and makes it unclickable (matches
-      // the old "human_alone blocks SCAN/AI ASSIST" behavior); `toggledWhen`
-      // highlights it when active. SCAN/ZOOM/AI ASSIST/FLAG are stacked rows
-      // inside the ACTIONS panel, like the reference.
+      // `toggledWhen` highlights a button when active. ZOOM 1/2/3 are
+      // mutually-exclusive zoom-level rows stacked inside the ACTIONS panel.
       actionsHeaderH = LAYOUT.actions.h * 0.18;
-      actionsRowH = (LAYOUT.actions.h - actionsHeaderH) / 4;
+      actionsRowH = (LAYOUT.actions.h - actionsHeaderH) / 3;
       BUTTONS = [
-        { id: 'scan', label: 'SCAN', ...actionsRow(0),
-          disabledWhen: () => CONDITION === 'human_alone',
-          toggledWhen: (st) => st.scanned },
-        { id: 'zoom', label: 'ZOOM', ...actionsRow(1),
-          toggledWhen: (st) => st.zoomed },
-        { id: 'assist', label: 'AI ASSIST', ...actionsRow(2),
-          disabledWhen: () => CONDITION === 'human_alone',
-          toggledWhen: (st) => st.aiAssistUsed },
-        { id: 'flag', label: 'FLAG', ...actionsRow(3),
-          toggledWhen: (st) => st.flagged },
+        { id: 'zoom1', label: 'ZOOM 1', ...actionsRow(0),
+          toggledWhen: (st) => st.zoomLevel === 1 },
+        { id: 'zoom2', label: 'ZOOM 2', ...actionsRow(1),
+          toggledWhen: (st) => st.zoomLevel === 2 },
+        { id: 'zoom3', label: 'ZOOM 3', ...actionsRow(2),
+          toggledWhen: (st) => st.zoomLevel === 3 },
         { id: 'permit', label: 'PERMIT', ...LAYOUT.permit },
         { id: 'reject', label: 'REJECT', ...LAYOUT.reject },
         { id: 'exit', label: 'EXIT (ESC)', ...LAYOUT.exit },
@@ -1401,6 +1401,8 @@
       ctx.clearRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
       ctx.fillStyle = '#04080c';
       ctx.fillRect(0, 0, HUD_CANVAS_W, HUD_CANVAS_H);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high'; // sharper subject image, esp. when zoomed in
 
       // Decorative tick ruler across the top of the safe area
       ctx.strokeStyle = 'rgba(111,214,232,0.25)';
@@ -1438,8 +1440,8 @@
       ctx.font = '26px monospace';
       ctx.fillText(String(Math.max(station.timeRemaining, 0)), LAYOUT.timerCircle.cx, LAYOUT.timerCircle.cy + 9);
 
-      // Threat advisory, top-right (only after SCAN)
-      if (station.scanned && station.currentRound) {
+      // Threat advisory, top-right (human_ai condition only)
+      if (CONDITION === 'human_ai' && station.currentRound) {
         const tp = LAYOUT.threat;
         ctx.fillStyle = 'rgba(111,214,232,0.10)';
         ctx.fillRect(tp.x, tp.y, tp.w, tp.h);
@@ -1464,7 +1466,7 @@
         const url = `data/game_sets/images/${station.currentRound.image}`;
         const img = getCachedSubjectImage(url);
         if (img.complete && img.naturalWidth > 0) {
-          const zoomPad = station.zoomed ? 0.12 : 0;
+          const zoomPad = ZOOM_PADS[station.zoomLevel] || 0;
           const drawRect = {
             x: vp.x - vp.w * zoomPad / 2, y: vp.y - vp.h * zoomPad / 2,
             w: vp.w * (1 + zoomPad), h: vp.h * (1 + zoomPad),
@@ -1509,8 +1511,8 @@
         ctx.fillText(`SUBJECT ${station.currentRound.subjectId}`, rcx, LAYOUT.subjectLabelY);
       }
 
-      // AI assistant panel, bottom-right (only after AI ASSIST)
-      if (station.aiAssistUsed && station.currentRound) {
+      // AI assistant panel, bottom-right (human_ai condition only)
+      if (CONDITION === 'human_ai' && station.currentRound) {
         const ap = LAYOUT.ai;
         ctx.fillStyle = 'rgba(111,214,232,0.10)';
         ctx.fillRect(ap.x, ap.y, ap.w, ap.h);
@@ -1689,11 +1691,7 @@
       station.currentRound = ROUNDS[station.roundIndex];
       feedbackText = '';
 
-      station.scanned = false;
-      station.zoomed = false;
-      station.aiAssistUsed = false;
-      station.flagged = false;
-      station.aiAssistClickTime = null;
+      station.zoomLevel = 0;
 
       station.roundStartTime = performance.now();
       startTimer(station); // also does the first drawStationHUD() call
@@ -1722,11 +1720,15 @@
         ai_confidence_shown: station.currentRound.aiConfidence,
         cnn_says_human: station.currentRound.cnnSaysHuman,
         reaction_time_ms: reactionMs,
-        scanned: station.scanned,
-        zoomed: station.zoomed,
-        ai_assist_used: station.aiAssistUsed,
-        ai_assist_time_ms: station.aiAssistClickTime,
-        flagged: station.flagged,
+        // SCAN/AI ASSIST/FLAG buttons were removed -- the threat advisory
+        // and AI confidence panels are now shown automatically whenever the
+        // human_ai condition applies (see drawStationHUD), so `scanned`/
+        // `ai_assist_used` just record that fact rather than a click.
+        scanned: CONDITION === 'human_ai',
+        zoom_level: station.zoomLevel,
+        ai_assist_used: CONDITION === 'human_ai',
+        ai_assist_time_ms: CONDITION === 'human_ai' ? 0 : null,
+        flagged: false,
         timestamp: new Date().toISOString(),
       };
       station.results.push(entry);
@@ -1751,14 +1753,14 @@
         'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
         'station', 'subject_id', 'malice_tier', 'round_index', 'condition',
         'ground_truth_human', 'player_answer_human', 'correct',
-        'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'scanned', 'zoomed',
+        'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'scanned', 'zoom_level',
         'ai_assist_used', 'ai_assist_time_ms', 'flagged', 'timestamp',
       ];
       const rows = station.results.map((r) => [
         r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
         r.station, r.subject, r.tier, r.round_index, r.condition,
         r.ground_truth_human, r.player_answer_human, r.correct,
-        r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.scanned, r.zoomed,
+        r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.scanned, r.zoom_level,
         r.ai_assist_used, r.ai_assist_time_ms, r.flagged, r.timestamp,
       ]);
 
@@ -1791,20 +1793,14 @@
       const btn = BUTTONS.find((b) => b.id === id);
       if (btn && btn.disabledWhen && btn.disabledWhen(station)) return;
       switch (id) {
-        case 'scan':
-          station.scanned = true;
+        case 'zoom1':
+          station.zoomLevel = station.zoomLevel === 1 ? 0 : 1;
           break;
-        case 'zoom':
-          station.zoomed = !station.zoomed;
+        case 'zoom2':
+          station.zoomLevel = station.zoomLevel === 2 ? 0 : 2;
           break;
-        case 'assist':
-          if (!station.aiAssistUsed) {
-            station.aiAssistClickTime = Math.round(performance.now() - station.roundStartTime);
-          }
-          station.aiAssistUsed = true;
-          break;
-        case 'flag':
-          station.flagged = !station.flagged;
+        case 'zoom3':
+          station.zoomLevel = station.zoomLevel === 3 ? 0 : 3;
           break;
         case 'permit':
           if (station.currentRound) recordAnswer(station, true);
@@ -2100,7 +2096,7 @@
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
       renderer.setSize(width, height);
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       composer.setSize(width, height);
       bloomPass.setSize(width, height);
     });

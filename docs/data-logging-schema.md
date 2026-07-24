@@ -7,6 +7,19 @@ function already implemented in `index.html` (the checkpoint-terminal
 prototype) — nothing here invents a new format, it documents and locks down
 the one that already exists so it doesn't drift as the UI is wired up further.
 
+**Update (Claire, `screen.html`):** the SCAN, AI ASSIST, and FLAG buttons
+were removed from the UI. The Threat Advisory and AI Assistant panels are no
+longer opened by a click — they now render automatically for every
+`human_ai`-condition round (and never for `human_alone`), which is a cleaner
+way of enforcing the "disabled entirely in `human_alone`" requirement below
+than gating individual buttons was. `scanned` / `ai_assist_used` /
+`ai_assist_time_ms` are kept in the schema but are now derived from
+`condition` rather than recorded from a click; `flagged` has no button behind
+it anymore and is always `false`. The old boolean `zoomed` field was replaced
+by `zoom_level` (int 0-3) since zoom is now 3 discrete magnification settings
+(ZOOM 1/2/3) instead of a single on/off toggle. See the field table below for
+the updated per-field detail.
+
 ## One row per trial (one humanoid judged by one participant)
 
 | Field | Type | Source | Description |
@@ -16,17 +29,17 @@ the one that already exists so it doesn't drift as the UI is wired up further.
 | `game_set` | int (1-6) | `game_manifest.csv` / `rounds.json` `session` column | Which of Shane's 6 disjoint 30-round content sets was shown. **Not the same thing as `session_id` above** — `game_set` identifies the content shown, `session_id` identifies the sitting. Naming collision with the raw CSV's `session` column called out explicitly so it doesn't get confused with a participant's sitting. |
 | `subject_id` | string | `currentRound.subjectId` (`game_manifest.csv` `subject_id`, e.g. `test_00074_tier1`) | Identifies which humanoid/image was shown. |
 | `malice_tier` | int | `currentRound.tier` (`game_manifest.csv` `malice_tier`) | Independent variable. 4 confirmed levels: **`{0, 2, 8, 10}`** — `0` is the real-human control; `2`/`8`/`10` are the agent's malice budgets (Shane, PR #13's reward redesign; supersedes the earlier `{0, 1, 5, 10}`). See "Tier definition" below. |
-| `condition` | enum: `human_alone` \| `human_ai` | `getOrCreateParticipantId()` bootstrap in `index.html`, via `analysis/trial_protocol.assign_condition()` logic mirrored client-side | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. See "Participant tracking" below. Still Claire's job to make SCAN/AI ASSIST actually respect this in `human_alone` (per her PR #7 assignment) — this field just records what was assigned. |
+| `condition` | enum: `human_alone` \| `human_ai` | `getOrCreateParticipantId()` bootstrap in `index.html`, via `analysis/trial_protocol.assign_condition()` logic mirrored client-side | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. See "Participant tracking" below. The Threat Advisory / AI Assistant panels are now gated on this directly in `drawStationHUD()` (`human_ai` only), rather than via disabled SCAN/AI ASSIST buttons — this field records what was assigned and, since the removal of those buttons, also fully determines whether the panels were shown. |
 | `ground_truth_human` | bool | `currentRound.groundTruthIsHuman` | True if the subject is actually a healthy human, false if overgrown/zombie. |
 | `player_answer_human` | bool \| null | argument to `recordAnswer()` | `null` = timed out, no decision made. |
 | `correct` | bool \| null | computed: `player_answer_human === ground_truth_human` | `null` when `player_answer_human` is `null`. |
 | `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, the CNN's `max_prob` — its probability for whichever class it predicted, not `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary, so its winning-class probability falls toward 50%. |
 | `reaction_time_ms` | int | `performance.now() - roundStartTime` | Primary dependent variable alongside `correct`. |
-| `scanned` | bool | `scanned` toggle | Did the player open the Threat Advisory panel. |
-| `zoomed` | bool | `zoomed` toggle | Did the player use zoom. |
-| `ai_assist_used` | bool | `aiAssistUsed` toggle | Did the player open the AI panel this round. |
-| `ai_assist_time_ms` | int \| null | `aiAssistClickTime` | Time into the round when AI assist was first opened; `null` if never opened. |
-| `flagged` | bool | `flagged` toggle | Player marked the subject for review — not scored, just logged. |
+| `scanned` | bool | `condition === 'human_ai'` (SCAN button removed; no longer a player toggle) | Whether the Threat Advisory panel was shown this round — `true` for every `human_ai` trial, `false` for every `human_alone` trial. |
+| `zoom_level` | int (0-3) | `zoomLevel` state, set by the ZOOM 1 / ZOOM 2 / ZOOM 3 buttons | Which zoom setting was active when the player answered; `0` = no zoom. Replaces the old boolean `zoomed` field now that zoom has 3 discrete magnification levels instead of a single toggle. |
+| `ai_assist_used` | bool | `condition === 'human_ai'` (AI ASSIST button removed; no longer a player toggle) | Whether the AI Assistant/confidence panel was shown this round — same automatic-display logic as `scanned` above. |
+| `ai_assist_time_ms` | int \| null | `condition === 'human_ai' ? 0 : null` | `0` for `human_ai` trials, since the panel is visible from the moment the round starts (no click to time anymore); `null` for `human_alone`. No longer measures a meaningful "time to open" — kept for schema/column-count stability, but analysis should not treat it as a real latency. |
+| `flagged` | bool | Always `false` — FLAG button removed | Dead field, kept only so the CSV column order/count doesn't change. Player marking-for-review is no longer collected. |
 | `timestamp` | ISO 8601 string | `new Date().toISOString()` | Wall-clock time the trial was recorded. |
 
 ## Data quality field (added by analysis, not the UI)
@@ -140,11 +153,15 @@ participant: `15 x 5 = 75` to `20 x 5 = 100` trials per (tier, condition) cell
 
 ## Still open
 
-1. `data/game_sets/rounds.json` now exists in `main` (Shane, PR #13 — 6 game
-   sets). Claire still needs to wire it into `index.html` in place of the
-   placeholder `ROUNDS` array, and make SCAN/AI ASSIST actually respect the
-   assigned `condition` (disabled entirely in `human_alone`) rather than always
-   being available — her assignment, not mine to patch unilaterally.
+1. ~~`data/game_sets/rounds.json` wiring / SCAN/AI ASSIST respecting
+   `condition`~~ — `screen.html` now fetches `rounds.json` directly (see the
+   `fetch('data/game_sets/rounds.json')` call), and the "disabled entirely in
+   `human_alone`" requirement is resolved by removing the SCAN/AI ASSIST/FLAG
+   buttons altogether: the Threat Advisory and AI Assistant panels render
+   automatically for `human_ai` and never for `human_alone`, so there's no
+   button state left to gate. See the schema update note at the top of this
+   doc and the `scanned`/`ai_assist_used`/`zoom_level`/`flagged` field rows
+   above for the resulting field-level changes.
 2. `game_set` is defined in the schema above but **not yet exported** by
    `exportResultsCSV()` in `index.html`. The blocker is no longer the data
    (`rounds.json` carries the `session`/game-set column now) — it's just Claire's
