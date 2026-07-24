@@ -149,6 +149,19 @@
       max-width: 640px; text-align: left; font-size: 13px; line-height: 1.6;
       color: var(--orange); border: 1px solid var(--orange); padding: 12px 16px;
     }
+    #directions-refs {
+      display: flex; gap: 20px; justify-content: center; max-width: 640px;
+    }
+    #directions-refs figure {
+      margin: 0; display: flex; flex-direction: column; gap: 7px; align-items: center;
+    }
+    #directions-refs img {
+      width: 220px; max-width: 40vw; height: auto; display: block;
+      border: 1px solid var(--line);
+    }
+    #directions-refs figcaption { font-size: 11px; letter-spacing: 2px; }
+    #directions-refs .ref-human { color: var(--cyan); }
+    #directions-refs .ref-overgrown { color: var(--orange); }
     #directions-close {
       position: absolute; top: 16px; right: 20px; font-size: 20px; color: var(--cyan);
       cursor: pointer; line-height: 1;
@@ -260,6 +273,22 @@
       Use the ZOOM 1/2/3 buttons to magnify the subject image.
       <br /><br />
       Controls: WASD = move · Mouse = look · SPACE = jump · ESC = release mouse.
+    </div>
+    <!-- Reference pair so the player knows what each class looks like before
+         starting. Both source scenes come from content session 6, which a
+         participant only ever reaches on their sixth replay -- a first-time
+         player never sees these scenes in the game itself (and the raw
+         bright-green overgrown form below never appears in-game at all; the
+         in-game ones are always at least partly recolored). -->
+    <div id="directions-refs">
+      <figure>
+        <img src="assets/briefing/reference_human.png" alt="confirmed healthy human" />
+        <figcaption class="ref-human">CONFIRMED HUMAN</figcaption>
+      </figure>
+      <figure>
+        <img src="assets/briefing/reference_overgrown.png" alt="confirmed overgrown" />
+        <figcaption class="ref-overgrown">CONFIRMED OVERGROWN</figcaption>
+      </figure>
     </div>
     <div class="directions-warning">
       WARNING: an overgrown's skin tone is not always as it seems...
@@ -1324,6 +1353,16 @@
     // station.zoomLevel, 0 = off). Each step zooms in further than the old
     // single fixed-12% zoom toggle did.
     const ZOOM_PADS = [0, 0.25, 0.55, 0.95];
+    // Plain-language gloss for the four official verdict lines the advisory
+    // can open with (they come from THREAT_TEXT in curate_game_sets.py, via
+    // rounds.json). Display-only translation of what the CNN actually said --
+    // no invented reasoning, same rule as the advisory lines themselves.
+    const THREAT_GLOSS = {
+      'No Anomalies Detected': 'reads as a healthy human',
+      'Trauma Indicators Present': 'reads as injured, but human',
+      'Overgrowth Signature Detected': 'reads as an overgrown',
+      'No Vital Signs Detected': 'reads as a corpse',
+    };
     function frac(fx, fy, fw, fh) {
       return {
         x: SAFE_RECT.x + fx * SAFE_RECT.w,
@@ -1503,11 +1542,41 @@
         ctx.fillStyle = '#6fd6e8';
         ctx.font = '14px monospace';
         ctx.fillText('THREAT ADVISORY', tp.x + 14, tp.y + 24);
-        ctx.fillStyle = '#b9cdd4';
-        ctx.font = '13px monospace';
-        station.currentRound.threats.forEach((t, i) => {
-          ctx.fillText(`- ${t}`, tp.x + 14, tp.y + 50 + i * 22);
+        // Advisory lines, each glossed in plain terms where the official
+        // wording is opaque, then the AI's explicit recommendation. Both are
+        // restatements of the CNN's real output (its verdict / says-human),
+        // never invented reasoning.
+        let ty = tp.y + 50;
+        station.currentRound.threats.forEach((t) => {
+          ctx.fillStyle = '#b9cdd4';
+          ctx.font = '13px monospace';
+          ctx.fillText(`- ${t}`, tp.x + 14, ty);
+          ty += 18;
+          const gloss = THREAT_GLOSS[t];
+          if (gloss) {
+            ctx.fillStyle = '#7d939b';
+            ctx.font = '11px monospace';
+            ctx.fillText(`  (${gloss})`, tp.x + 14, ty);
+            ty += 16;
+          }
         });
+        // The AI's own verdict, restated as an explicit call plus its real
+        // confidence. When the classifier is torn (the "Ambiguous
+        // Classification" line above, top-2 gap < 0.25) it is only ~45%
+        // accurate, so the call is softened to LEANS and coloured amber
+        // rather than the decisive permit-cyan / reject-orange. The direction
+        // is still shown: withholding it entirely would remove any advice to
+        // agree or disagree with on exactly the trials where over-trust is
+        // measurable.
+        const saysHuman = station.currentRound.cnnSaysHuman;
+        const conf = Math.round(station.currentRound.aiConfidence);
+        const torn = station.currentRound.threats.includes('Ambiguous Classification');
+        ctx.fillStyle = torn ? '#e8c45a' : (saysHuman ? '#6fd6e8' : '#e8845a');
+        ctx.font = 'bold 13px monospace';
+        ctx.fillText(
+          `${torn ? 'AI LEANS' : 'AI RECOMMENDS'}: ${saysHuman ? 'PERMIT' : 'REJECT'} (${conf}%)`,
+          tp.x + 14, ty + 6
+        );
       }
 
       // Camera-feed viewport (subject image) with targeting reticle over it
@@ -1555,12 +1624,15 @@
       ctx.strokeRect(-diamond, -diamond, diamond * 2, diamond * 2);
       ctx.restore();
       ctx.lineWidth = 1;
-      // Subject ID label below the reticle
+      // Subject label below the reticle. Shows the round NUMBER, never the
+      // filename/subjectId -- ids like "test_00074_tier2" would leak the
+      // malice tier (and tier0 = human, i.e. the answer) to the player. The
+      // real subjectId still goes to the trial log in recordAnswer().
       if (station.currentRound) {
         ctx.fillStyle = '#6fd6e8';
         ctx.font = '14px monospace';
         ctx.textAlign = 'center';
-        ctx.fillText(`SUBJECT ${station.currentRound.subjectId}`, rcx, LAYOUT.subjectLabelY);
+        ctx.fillText(`SUBJECT ${String(station.roundIndex + 1).padStart(2, '0')}`, rcx, LAYOUT.subjectLabelY);
       }
 
       // AI assistant panel, bottom-right (human_ai condition only)
