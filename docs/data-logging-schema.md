@@ -25,17 +25,21 @@ field table below for the updated per-field detail.
 
 | Field | Type | Source | Description |
 |---|---|---|---|
-| `participant_id` | string | `getOrCreateParticipantId()` in `index.html`, persisted via `localStorage` | Identifies one person across repeat plays on the same browser. See "Participant tracking" below. |
+| `participant_id` | string | `getOrCreateParticipantId()` in `screen.html`, persisted via `localStorage` | Identifies one person across repeat plays on the same browser. See "Participant tracking" below. |
+| `prev_participant_id` | string \| null | last entry of the `participant_id_chain` in `localStorage` | The id this browser used *before* the most recent dev-reset, so a reset-and-replay browser is traceable ("played before as X, came back as Y"). `null` if this browser was never reset. |
 | `session_id` | string | generated fresh each page load (`crypto.randomUUID()`) | One sitting/playthrough — a participant who replays gets a new `session_id` each time but the same `participant_id`. |
-| `game_set` | int (1-6) | `game_manifest.csv` / `rounds.json` `session` column | Which of Shane's 6 disjoint 30-round content sets was shown. **Not the same thing as `session_id` above** — `game_set` identifies the content shown, `session_id` identifies the sitting. Naming collision with the raw CSV's `session` column called out explicitly so it doesn't get confused with a participant's sitting. |
+| `content_session_key` | string `"1"`–`"6"` | `getNextContentSession()` — rotates `play_count % 6` per page load | Which of the 6 disjoint 30-round content sets (`rounds.json` keys) was dealt. This is the field the earlier draft called `game_set`. **Not the same thing as `session_id` above** — it identifies the content shown, `session_id` identifies the sitting. |
+| `play_count` | int | `session_count_<participant_id>` counter in `localStorage` | How many page loads this participant had before this one (`0` = first sitting). Increments on page load, not on game completion, so an abandoned/refreshed load still advances the content rotation. |
+| `station` | string | `station.meshName` | Which in-world screen the trial was answered at (currently only `screenMain` exists in the map). |
 | `subject_id` | string | `currentRound.subjectId` (`game_manifest.csv` `subject_id`, e.g. `test_00074_tier1`) | Identifies which humanoid/image was shown. |
 | `malice_tier` | int | `currentRound.tier` (`game_manifest.csv` `malice_tier`) | Independent variable. 4 confirmed levels: **`{0, 2, 8, 10}`** — `0` is the real-human control; `2`/`8`/`10` are the agent's malice budgets (Shane, PR #13's reward redesign; supersedes the earlier `{0, 1, 5, 10}`). See "Tier definition" below. |
-| `condition` | enum: `human_alone` \| `human_ai` | `getOrCreateParticipantId()` bootstrap in `index.html`, via `analysis/trial_protocol.assign_condition()` logic mirrored client-side | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. See "Participant tracking" below. The Threat Advisory / AI Assistant panels are now gated on this directly in `drawStationHUD()` (`human_ai` only), rather than via disabled SCAN/AI ASSIST buttons — this field records what was assigned and, since the removal of those buttons, also fully determines whether the panels were shown. |
+| `round_index` | int | `station.roundIndex` | 0-based position of this trial in the shuffled deal order for the session (the shuffle is seeded off `content_session_key`, so order is reproducible per content set). Lets the analysis test order effects (fatigue/learning across the 30 rounds). |
+| `condition` | enum: `human_alone` \| `human_ai` | chosen once on the condition-select screen (first visit only), persisted via `localStorage` | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. Selected by the research team at session start (sessions are monitored via screenshare), not hashed client-side. See "Participant tracking" below. The Threat Advisory / AI Assistant panels are gated on this directly in `drawStationHUD()` (`human_ai` only) — this field records what was assigned and also fully determines whether the panels were shown. |
 | `ground_truth_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.groundTruthIsHuman)` | `"human"` if the subject is actually a healthy human, `"zombie"` if overgrown/disguised. Logged as a label (not a raw bool) so `log.csv` reads as the actual classes. |
 | `player_answer_human` | `"human"` \| `"zombie"` \| null | `humanZombieLabel()` applied to the argument passed to `recordAnswer()` | `null` = timed out, no decision made. |
 | `correct` | bool \| null | computed internally from the raw `saysHuman`/`groundTruthIsHuman` booleans before labeling: `saysHuman === groundTruthIsHuman` | `null` when the player timed out (`player_answer_human` is `null`). |
 | `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, the CNN's `max_prob` — its probability for whichever class it predicted, not `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary, so its winning-class probability falls toward 50%. |
-| `cnn_says_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.cnnSaysHuman)` (root `screen.html` only — not logged by `threeD_player/screen.html`, which has no CNN-prediction field) | The classifier's predicted class, labeled the same way as `ground_truth_human`/`player_answer_human`. |
+| `cnn_says_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.cnnSaysHuman)` (`rounds.json` `cnnSaysHuman`, from `curate_game_sets.py`) | The classifier's predicted class, labeled the same way as `ground_truth_human`/`player_answer_human`. Logged per trial so "did the player follow the AI" / over-trust is computable without joining `subject_id` back to the manifest — `ai_confidence_shown` alone is directionless. |
 | `reaction_time_ms` | int | `performance.now() - roundStartTime` | Primary dependent variable alongside `correct`. |
 | `zoom_level` | int (0-3) | `zoomLevel` state, set by the ZOOM 1 / ZOOM 2 / ZOOM 3 buttons | Which zoom setting was active when the player answered; `0` = no zoom. Replaces the old boolean `zoomed` field now that zoom has 3 discrete magnification levels instead of a single toggle. |
 | `timestamp` | ISO 8601 string | `new Date().toISOString()` | Wall-clock time the trial was recorded. |
@@ -45,7 +49,9 @@ and `flagged` are no longer logged or exported. All four had become
 dead/fully-derived once the SCAN/AI ASSIST/FLAG buttons were removed (see the
 update note above) — `condition` alone already tells you everything they
 used to encode, so the redundant columns were cut from the trial-results CSV
-export in both `screen.html` and `threeD_player/screen.html`.
+export in `screen.html`. (The parallel `threeD_player/screen.html` prototype
+has since been deleted from the repo — `screen.html` at the root is the only
+game file.)
 
 ## Data quality field (added by analysis, not the UI)
 
@@ -114,20 +120,16 @@ between-subjects design below.
 - `condition`: assigned **once**, the first time a `participant_id` is created,
   and never changes on repeat visits (between-subjects, per Shane's note that
   AI advice teaches people what a disguise looks like — letting someone see
-  both conditions would contaminate the comparison). Assigned client-side by
-  hashing the `participant_id` UUID and taking it mod 2.
-  **Balance caveat (Shane, PR #7 review):** this is *not* equivalent to
-  `analysis/trial_protocol.assign_condition()`, despite the earlier claim that
-  it "mirrors" it. The Python version alternates on an enrollment index, which
-  *guarantees* a near-50/50 split. The browser version has no shared enrollment
-  counter (static page, independent browsers, no backend), so it hashes the
-  UUID instead — which is only 50/50 *in expectation*. With ~30-40 participants
-  a lopsided split (e.g. 24/13) can happen by chance. **Mitigation:** check the
-  realized `condition` split after data collection and report it; if it's badly
-  skewed, weight or note it in the analysis. A guaranteed balance would require
-  assigning `condition` at signup from a shared counter (backend or manual
-  enrollment sheet) rather than client-side hashing — out of scope for the MVP,
-  but the fallback if the observed split is unacceptable.
+  both conditions would contaminate the comparison). **Assignment is now
+  manual**, superseding the earlier hash-the-UUID-mod-2 scheme: the first page
+  load shows a full-screen condition-select (above the "Click to start"
+  blocker), and since every session is run monitored over screenshare, the
+  research team picks the mode for the participant. That puts the 50/50 split
+  under the team's direct control (keep a running tally per condition while
+  recruiting) instead of leaving it to hash luck — but it also means balance
+  is now a *protocol* obligation, not a code guarantee: still check and report
+  the realized split after data collection. A returning `participant_id` skips
+  the selector entirely (`condition` is already in `localStorage`).
 - `session_id`: a fresh `crypto.randomUUID()` every page load/game start —
   identifies one sitting. A participant who plays 3 times has 1 `participant_id`,
   1 `condition`, and 3 distinct `session_id`s.
@@ -167,15 +169,12 @@ participant: `15 x 5 = 75` to `20 x 5 = 100` trials per (tier, condition) cell
    button state left to gate. See the schema update note at the top of this
    doc and the `scanned`/`ai_assist_used`/`zoom_level`/`flagged` field rows
    above for the resulting field-level changes.
-2. `game_set` is defined in the schema above but **not yet exported** by
-   `exportResultsCSV()` in `index.html`. The blocker is no longer the data
-   (`rounds.json` carries the `session`/game-set column now) — it's just Claire's
-   wiring: the moment `ROUNDS` is fed from `rounds.json`, add a `game_set` column
-   to the `exportResultsCSV()` header + row arrays so it reaches the trial CSV.
-3. Prajwal still needs to fix `tests/test_scorekeeper.py::test_save_log_log_csv_columns`
-   (missing `confidence_score` in `LOG_COLUMNS`) per Shane's note — unrelated
-   to this pipeline, flagging here only because it's a known pre-existing
-   failure noted twice now.
+2. ~~`game_set` not yet exported~~ — resolved: it ships as the
+   `content_session_key` column (see the field table above), assigned by
+   `getNextContentSession()` and included in both the CSV export and the
+   Sheet POST.
+3. ~~`tests/test_scorekeeper.py::test_save_log_log_csv_columns`~~ — resolved;
+   the full suite passes.
 
 ## Survey data (pre/post AI-attitude surveys)
 
@@ -198,11 +197,12 @@ answered question:
 | `question_id` | stable id: `pre_q1`..`pre_q10`, `post_q1`..`post_q10` |
 | `question_text` | full item wording (CSV-escaped; several contain commas) |
 | `response` | integer 1–7 |
-| `timestamp` | ISO-8601, when the post survey was submitted/exported |
+| `timestamp` | ISO-8601 — `pre` rows carry the time the pre survey was actually submitted (stamped at submit, persisted in `localStorage`); `post` rows carry the post-survey submit/export time |
 
 The pre items measure general AI trust/reliance attitudes; the post items
 measure the in-game AI experience. Both are required (a participant cannot
 advance past a survey until every item is answered), so there are no partial
 rows. Analysis idea: pair `pre`/`post` per participant to measure attitude
 shift, and correlate post reliance items against that participant's trial-level
-`ai_assist_used` rate and accuracy.
+accuracy and AI-agreement rate (`player_answer_human` vs `cnn_says_human` —
+the `ai_assist_used` field this originally referenced was dropped).
