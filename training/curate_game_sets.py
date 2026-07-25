@@ -146,6 +146,14 @@ def build_sessions(meta: pd.DataFrame, per_tier: int, n_sessions: int, seed: int
 
     out = pd.DataFrame(picked)
     out["threats"] = [derive_threats(r) for r in out.itertuples()]
+    # A tier-0 human the CNN itself reads as a corpse ("No Vital Signs Detected")
+    # is ground-truth DEAD, not a living human -- PERMIT/REJECT doesn't apply to
+    # them (see the `groundTruth === 'dead'` check in screen.html's
+    # recordAnswer()). This is a single "human"/"zombie"/"dead" label rather than
+    # two overlapping booleans, so there's one column to check instead of two
+    # that could disagree.
+    out["ground_truth"] = out["ground_truth_human"].map({True: "human", False: "zombie"})
+    out.loc[out["ground_truth_human"] & (out["cnn_predicted"] == "corpse"), "ground_truth"] = "dead"
     return out
 
 
@@ -172,7 +180,12 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     for fname in sets.filename:
         shutil.copy2(os.path.join(pool_dir, fname), os.path.join(img_dir, fname))
 
-    sets.to_csv(os.path.join(out_dir, "game_manifest.csv"), index=False)
+    # ground_truth_human is the raw true-class boolean used to build the sessions
+    # above; the manifest exports only the single "human"/"zombie"/"dead" label
+    # (ground_truth) that the game actually scores against.
+    sets.drop(columns=["ground_truth_human"]).to_csv(
+        os.path.join(out_dir, "game_manifest.csv"), index=False
+    )
 
     # --- rounds.json: shaped like Claire's ROUNDS array, one array per session ---
     rounds = {}
@@ -182,7 +195,7 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
                 "subjectId": r.subject_id,
                 "image": r.filename,
                 "tier": int(r.malice_tier),
-                "groundTruthIsHuman": bool(r.ground_truth_human),
+                "groundTruth": r.ground_truth,
                 "aiConfidence": float(r.ai_confidence_shown),
                 # What the CNN actually recommended (human vs zombie). The game logs this
                 # per trial so "did the player follow the AI" / over-trust is computable
@@ -200,20 +213,21 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     print(f"{len(sets)} rounds across {n_sessions} disjoint sessions -> {out_dir}\n")
     print("per session (tilt rates must match, or 'tilted' leaks 'zombie'):")
     for session, g in sets.groupby("session"):
-        z, h = g[~g.ground_truth_human], g[g.ground_truth_human]
+        z, h = g[g.ground_truth == "zombie"], g[g.ground_truth != "zombie"]
         zt = (z.angle != 0).mean()
         ht = (h.angle != 0).mean()
         print(f"  session {session}: {len(g)} rounds | {len(z)} zombie / {len(h)} human "
               f"({100*len(h)/len(g):.0f}% human) | tilt: zombie {zt:.0%} vs human {ht:.0%}"
               f"{'  <-- MISMATCH' if abs(zt - ht) > 0.01 else ''}")
     print("\nsource disjointness across sessions: OK (asserted)")
+    n_dead = int((sets["ground_truth"] == "dead").sum())
+    print(f"ground_truth == 'dead': {n_dead} tier-0 humans the CNN itself reads as a corpse")
     print("\nassistant reliability by tier (what SCAN/AI panel will tell players):")
     print(sets.groupby("malice_tier")["cnn_correct"].agg(["size", "mean"]).round(3))
     print("\nsample threat lines:")
     for tier in sorted(sets.malice_tier.unique()):
         r = sets[sets.malice_tier == tier].iloc[0]
-        truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
-        print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
+        print(f"  tier {tier} ({r.ground_truth.upper():6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
 
 
 if __name__ == "__main__":
