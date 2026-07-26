@@ -1857,6 +1857,7 @@
         tier: round.tier,
         round_index: station.roundIndex,
         ground_truth_human: round.groundTruth,
+        is_injured: round.isInjured,
         player_answer_human: permitRejectLabel(saysHuman),
         correct,
         ai_confidence_shown: round.aiConfidence,
@@ -1886,13 +1887,13 @@
       const headers = [
         'participant_id', 'prev_participant_id', 'session_id', 'content_session_key', 'play_count',
         'station', 'subject_id', 'malice_tier', 'round_index', 'condition',
-        'ground_truth_human', 'player_answer_human', 'correct',
+        'ground_truth_human', 'is_injured', 'player_answer_human', 'correct',
         'ai_confidence_shown', 'cnn_says_human', 'reaction_time_ms', 'zoom_level', 'timestamp',
       ];
       const rows = station.results.map((r) => [
         r.participant_id, r.prev_participant_id, r.session_id, r.content_session_key, r.play_count,
         r.station, r.subject, r.tier, r.round_index, r.condition,
-        r.ground_truth_human, r.player_answer_human, r.correct,
+        r.ground_truth_human, r.is_injured, r.player_answer_human, r.correct,
         r.ai_confidence_shown, r.cnn_says_human, r.reaction_time_ms, r.zoom_level, r.timestamp,
       ]);
 

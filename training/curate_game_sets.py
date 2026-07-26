@@ -197,9 +197,17 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int,
     # and is NOT committed — it rebuilds from the agent weights + generate_rl_pool.py.
     # Wipe the folder first: if the tiers change (e.g. 1/5/10 -> 2/8/10), the old tier
     # images would otherwise linger here as orphans, unreferenced but committed.
+    # Clear the directory's contents rather than rmtree-ing the directory itself:
+    # on OneDrive-synced checkouts this folder is a Files-on-Demand reparse point,
+    # and OneDrive's filter driver denies the final rmdir() even after every file
+    # inside has been removed.
     img_dir = os.path.join(out_dir, "images")
     if os.path.isdir(img_dir):
-        shutil.rmtree(img_dir)
+        for entry in os.scandir(img_dir):
+            if entry.is_dir():
+                shutil.rmtree(entry.path)
+            else:
+                os.remove(entry.path)
     os.makedirs(img_dir, exist_ok=True)
     for fname in sets.filename:
         shutil.copy2(os.path.join(pool_dir, fname), os.path.join(img_dir, fname))
@@ -220,6 +228,10 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int,
                 "image": r.filename,
                 "tier": int(r.malice_tier),
                 "groundTruth": r.ground_truth,
+                # subject_injured is NaN for any source missing from the metadata
+                # lookup; NaN is truthy in Python, so this must be checked
+                # explicitly rather than passed through bool().
+                "isInjured": bool(r.subject_injured) if pd.notna(r.subject_injured) else False,
                 "aiConfidence": float(r.ai_confidence_shown),
                 # What the CNN actually recommended (human vs zombie). The game logs this
                 # per trial so "did the player follow the AI" / over-trust is computable
