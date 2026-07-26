@@ -79,6 +79,20 @@ def derive_threats(row) -> list[str]:
     return lines
 
 
+def load_injury_lookup(metadata_path: str) -> dict:
+    """Map each source stem (e.g. "test_00190") to its Injured flag.
+
+    consolidated_metadata.csv is keyed by the original render, not the
+    per-tier pool image, so this is a separate lookup rather than a column
+    generate_rl_pool.py could just carry through: `source` in the pool/game
+    manifest already IS that same stem (Path(Filename).stem), which is what
+    makes the join exact.
+    """
+    df = pd.read_csv(metadata_path)
+    stems = df["Filename"].map(lambda f: Path(f).stem)
+    return dict(zip(stems, df["Injured"]))
+
+
 def build_sessions(meta: pd.DataFrame, per_tier: int, n_sessions: int, seed: int):
     """Assemble disjoint, class-balanced, tilt-matched sessions.
 
@@ -146,13 +160,31 @@ def build_sessions(meta: pd.DataFrame, per_tier: int, n_sessions: int, seed: int
 
     out = pd.DataFrame(picked)
     out["threats"] = [derive_threats(r) for r in out.itertuples()]
+    # Ground truth is always the subject's real class -- a wounded-but-alive
+    # human is still PERMIT, even at tier 0 where the CNN itself misreads them
+    # as a corpse ("No Vital Signs Detected"). Scoring off cnn_predicted would
+    # make ground truth depend on the classifier's own error, and would grade
+    # the CNN using the CNN's output. That confusability is real and worth
+    # keeping visible -- see subject_injured below -- it just isn't a
+    # different correct answer.
+    out["ground_truth"] = out["ground_truth_human"].map({True: "human", False: "zombie"})
     return out
 
 
-def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int) -> None:
+def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int,
+         metadata_path: str) -> None:
     meta = pd.read_csv(os.path.join(pool_dir, "pool_metadata.csv"))
     os.makedirs(out_dir, exist_ok=True)
     sets = build_sessions(meta, per_tier, n_sessions, seed)
+
+    # subject_injured is descriptive, not scoring: whether a human subject is
+    # wounded doesn't change the correct PERMIT/REJECT answer (see
+    # build_sessions), but it does let analysis ask "do players reject
+    # injured humans more often?" -- especially at tier 0, where the CNN's
+    # own "No Vital Signs Detected" misread on injured subjects is the
+    # clearest over-trust case in the dataset.
+    injury_lookup = load_injury_lookup(metadata_path)
+    sets["subject_injured"] = sets["source"].map(injury_lookup)
 
     # --- hard guarantee: no source may appear in two sessions (repeat-player safety) ---
     per_source = sets.groupby("source")["session"].nunique()
@@ -172,7 +204,12 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     for fname in sets.filename:
         shutil.copy2(os.path.join(pool_dir, fname), os.path.join(img_dir, fname))
 
-    sets.to_csv(os.path.join(out_dir, "game_manifest.csv"), index=False)
+    # ground_truth_human is the raw true-class boolean used to build the sessions
+    # above; the manifest exports only the single "human"/"zombie" label
+    # (ground_truth) that the game actually scores against.
+    sets.drop(columns=["ground_truth_human"]).to_csv(
+        os.path.join(out_dir, "game_manifest.csv"), index=False
+    )
 
     # --- rounds.json: shaped like Claire's ROUNDS array, one array per session ---
     rounds = {}
@@ -182,7 +219,7 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
                 "subjectId": r.subject_id,
                 "image": r.filename,
                 "tier": int(r.malice_tier),
-                "groundTruthIsHuman": bool(r.ground_truth_human),
+                "groundTruth": r.ground_truth,
                 "aiConfidence": float(r.ai_confidence_shown),
                 # What the CNN actually recommended (human vs zombie). The game logs this
                 # per trial so "did the player follow the AI" / over-trust is computable
@@ -200,20 +237,25 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int)
     print(f"{len(sets)} rounds across {n_sessions} disjoint sessions -> {out_dir}\n")
     print("per session (tilt rates must match, or 'tilted' leaks 'zombie'):")
     for session, g in sets.groupby("session"):
-        z, h = g[~g.ground_truth_human], g[g.ground_truth_human]
+        z, h = g[g.ground_truth == "zombie"], g[g.ground_truth != "zombie"]
         zt = (z.angle != 0).mean()
         ht = (h.angle != 0).mean()
         print(f"  session {session}: {len(g)} rounds | {len(z)} zombie / {len(h)} human "
               f"({100*len(h)/len(g):.0f}% human) | tilt: zombie {zt:.0%} vs human {ht:.0%}"
               f"{'  <-- MISMATCH' if abs(zt - ht) > 0.01 else ''}")
     print("\nsource disjointness across sessions: OK (asserted)")
+    n_injured = int(sets["subject_injured"].fillna(False).sum())
+    n_injured_misread = int((sets["subject_injured"].fillna(False)
+                              & (sets["cnn_predicted"] == "corpse")).sum())
+    print(f"subject_injured: {n_injured} injured humans in the curated sessions "
+          f"({n_injured_misread} of those the CNN itself reads as a corpse -- "
+          f"still ground_truth 'human', still PERMIT)")
     print("\nassistant reliability by tier (what SCAN/AI panel will tell players):")
     print(sets.groupby("malice_tier")["cnn_correct"].agg(["size", "mean"]).round(3))
     print("\nsample threat lines:")
     for tier in sorted(sets.malice_tier.unique()):
         r = sets[sets.malice_tier == tier].iloc[0]
-        truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
-        print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
+        print(f"  tier {tier} ({r.ground_truth.upper():6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
 
 
 if __name__ == "__main__":
@@ -223,5 +265,7 @@ if __name__ == "__main__":
     ap.add_argument("--per-tier", type=int, default=5, help="zombies per tier per session")
     ap.add_argument("--sessions", type=int, default=6)
     ap.add_argument("--seed", type=int, default=20260716)
+    ap.add_argument("--metadata", default="data/consolidated_metadata.csv",
+                     help="path to consolidated_metadata.csv, for subject_injured")
     args = ap.parse_args()
-    main(args.pool, args.out, args.per_tier, args.sessions, args.seed)
+    main(args.pool, args.out, args.per_tier, args.sessions, args.seed, args.metadata)

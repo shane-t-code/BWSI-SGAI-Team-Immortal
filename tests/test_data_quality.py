@@ -9,13 +9,13 @@ def _sample_df() -> pd.DataFrame:
     return pd.DataFrame(
         [
             # normal, valid response
-            {"player_answer_human": "human", "reaction_time_ms": 2500},
+            {"player_answer_human": "permit", "reaction_time_ms": 2500},
             # too fast — under the 1000ms floor
-            {"player_answer_human": "zombie", "reaction_time_ms": 300},
+            {"player_answer_human": "reject", "reaction_time_ms": 300},
             # timed out — no answer given
             {"player_answer_human": None, "reaction_time_ms": None},
             # right at the boundary — valid (not strictly less than the floor)
-            {"player_answer_human": "human", "reaction_time_ms": 1000},
+            {"player_answer_human": "permit", "reaction_time_ms": 1000},
         ]
     )
 

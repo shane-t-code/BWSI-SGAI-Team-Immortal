@@ -973,8 +973,8 @@
       { id: 'post_q4', text: 'I relied on the AI more as the game progressed.' },
       { id: 'post_q5', text: 'I depended on the AI more than I expected.' },
       { id: 'post_q6', text: "I often accepted the AI's recommendation without much additional thought." },
-      { id: 'post_q7', text: 'I noticed situations where the AI made mistakes.' },
-      { id: 'post_q8', text: 'Even when the AI made mistakes, I still trusted its future recommendations.' },
+      { id: 'post_q7', text: "There were times I thought the AI's assessment was wrong."},
+      { id: 'post_q8', text: 'Even when I thought the AI was wrong, I still trusted its future recommendations.' },
       { id: 'post_q9', text: 'I felt confident in my own decisions during the game.' },
       { id: 'post_q10', text: 'I would feel comfortable making similar decisions without AI assistance.' },
     ];
@@ -1823,18 +1823,27 @@
       startTimer(station); // also does the first drawStationHUD() call
     }
 
-    // Maps a saysHuman/groundTruthIsHuman/cnnSaysHuman boolean (or null for a
-    // timeout) to the "human"/"zombie" label recorded in the trial log, so
-    // log.csv reads as the actual classes rather than an opaque true/false.
+    // Maps a cnnSaysHuman boolean (or null for a timeout) to the "human"/
+    // "zombie" label recorded in the trial log, so log.csv reads as the
+    // actual classes rather than an opaque true/false.
     function humanZombieLabel(isHuman) {
       return isHuman === null ? null : (isHuman ? 'human' : 'zombie');
+    }
+
+    // Maps the player's PERMIT(true)/REJECT(false) call (or null for a
+    // timeout) to the label recorded in player_answer_human -- this records
+    // the player's literal action, unlike ground_truth_human/cnn_says_human
+    // which record the subject's/AI's class.
+    function permitRejectLabel(saysHuman) {
+      return saysHuman === null ? null : (saysHuman ? 'permit' : 'reject');
     }
 
     function recordAnswer(station, saysHuman) {
       if (!station.currentRound) return;
       clearInterval(station.timerInterval);
       const reactionMs = Math.round(performance.now() - station.roundStartTime);
-      const correct = saysHuman === station.currentRound.groundTruthIsHuman;
+      const round = station.currentRound;
+      const correct = saysHuman === null ? null : (saysHuman === (round.groundTruth === 'human'));
 
       const entry = {
         participant_id: PARTICIPANT_ID,
@@ -1844,14 +1853,14 @@
         play_count: PLAY_COUNT,
         station: station.meshName,
         condition: CONDITION,
-        subject: station.currentRound.subjectId,
-        tier: station.currentRound.tier,
+        subject: round.subjectId,
+        tier: round.tier,
         round_index: station.roundIndex,
-        ground_truth_human: humanZombieLabel(station.currentRound.groundTruthIsHuman),
-        player_answer_human: humanZombieLabel(saysHuman),
-        correct: saysHuman === null ? null : correct,
-        ai_confidence_shown: station.currentRound.aiConfidence,
-        cnn_says_human: humanZombieLabel(station.currentRound.cnnSaysHuman),
+        ground_truth_human: round.groundTruth,
+        player_answer_human: permitRejectLabel(saysHuman),
+        correct,
+        ai_confidence_shown: round.aiConfidence,
+        cnn_says_human: humanZombieLabel(round.cnnSaysHuman),
         reaction_time_ms: reactionMs,
         zoom_level: station.zoomLevel,
         timestamp: new Date().toISOString(),
@@ -1906,10 +1915,11 @@
     // Button actions. PERMIT = "let them through the checkpoint", i.e. the
     // player judges the subject a healthy human (saysHuman = true). REJECT =
     // "turn them away", i.e. a disguised survivor (saysHuman = false). This
-    // matches groundTruthIsHuman, which is true only for the tier-0 real
-    // humans (logged as ground_truth_human: "human"/"zombie" — see
-    // humanZombieLabel()). recordAnswer() handles correctness scoring,
-    // logging, advancing to the next round, and CSV export on the final round.
+    // matches groundTruth === 'human', true only for the tier-0 real humans
+    // (logged as ground_truth_human: "human"/"zombie" — see
+    // permitRejectLabel()). recordAnswer() handles correctness scoring,
+    // logging, advancing to the next round, and CSV export on the final
+    // round.
     //
     // Called from handleStationClick() below once a raycast + UV lookup has
     // already determined which on-screen button (if any) was clicked.

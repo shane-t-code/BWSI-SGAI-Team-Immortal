@@ -4,7 +4,7 @@
       "subjectId": "test_00074_tier2",
       "image": "test_00074_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.55,
       "cnnSaysHuman": true,
       "threats": [
@@ -16,7 +16,7 @@
       "subjectId": "test_00048_tier2",
       "image": "test_00048_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.86,
       "cnnSaysHuman": false,
       "threats": [
@@ -28,7 +28,7 @@
       "subjectId": "test_00058_tier2",
       "image": "test_00058_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.61,
       "cnnSaysHuman": false,
       "threats": [
@@ -40,7 +40,7 @@
       "subjectId": "test_00116_tier2",
       "image": "test_00116_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 93.09,
       "cnnSaysHuman": false,
       "threats": [
@@ -52,7 +52,7 @@
       "subjectId": "test_00199_tier2",
       "image": "test_00199_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.86,
       "cnnSaysHuman": false,
       "threats": [
@@ -64,7 +64,7 @@
       "subjectId": "test_00016_tier8",
       "image": "test_00016_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 93.46,
       "cnnSaysHuman": false,
       "threats": [
@@ -76,7 +76,7 @@
       "subjectId": "test_00149_tier8",
       "image": "test_00149_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 77.06,
       "cnnSaysHuman": false,
       "threats": [
@@ -88,7 +88,7 @@
       "subjectId": "test_00110_tier8",
       "image": "test_00110_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 87.74,
       "cnnSaysHuman": false,
       "threats": [
@@ -100,7 +100,7 @@
       "subjectId": "test_00060_tier8",
       "image": "test_00060_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 62.03,
       "cnnSaysHuman": false,
       "threats": [
@@ -112,7 +112,7 @@
       "subjectId": "test_00029_tier8",
       "image": "test_00029_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 74.62,
       "cnnSaysHuman": false,
       "threats": [
@@ -124,7 +124,7 @@
       "subjectId": "test_00022_tier10",
       "image": "test_00022_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 78.56,
       "cnnSaysHuman": false,
       "threats": [
@@ -136,7 +136,7 @@
       "subjectId": "test_00156_tier10",
       "image": "test_00156_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.92,
       "cnnSaysHuman": true,
       "threats": [
@@ -148,7 +148,7 @@
       "subjectId": "test_00018_tier10",
       "image": "test_00018_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 47.2,
       "cnnSaysHuman": false,
       "threats": [
@@ -161,7 +161,7 @@
       "subjectId": "test_00091_tier10",
       "image": "test_00091_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 51.08,
       "cnnSaysHuman": true,
       "threats": [
@@ -174,7 +174,7 @@
       "subjectId": "test_00112_tier10",
       "image": "test_00112_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 53.99,
       "cnnSaysHuman": false,
       "threats": [
@@ -187,7 +187,7 @@
       "subjectId": "test_00194_tier0_tilt",
       "image": "test_00194_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 90.29,
       "cnnSaysHuman": true,
       "threats": [
@@ -199,7 +199,7 @@
       "subjectId": "test_00055_tier0_tilt",
       "image": "test_00055_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 81.53,
       "cnnSaysHuman": true,
       "threats": [
@@ -211,7 +211,7 @@
       "subjectId": "test_00063_tier0_tilt",
       "image": "test_00063_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 73.35,
       "cnnSaysHuman": true,
       "threats": [
@@ -223,7 +223,7 @@
       "subjectId": "test_00185_tier0_tilt",
       "image": "test_00185_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.43,
       "cnnSaysHuman": true,
       "threats": [
@@ -235,7 +235,7 @@
       "subjectId": "test_00150_tier0_tilt",
       "image": "test_00150_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 92.8,
       "cnnSaysHuman": true,
       "threats": [
@@ -247,7 +247,7 @@
       "subjectId": "test_00196_tier0_tilt",
       "image": "test_00196_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -259,7 +259,7 @@
       "subjectId": "test_00069_tier0_tilt",
       "image": "test_00069_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 94.18,
       "cnnSaysHuman": true,
       "threats": [
@@ -271,7 +271,7 @@
       "subjectId": "test_00171_tier0_tilt",
       "image": "test_00171_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.83,
       "cnnSaysHuman": true,
       "threats": [
@@ -283,7 +283,7 @@
       "subjectId": "test_00132_tier0_tilt",
       "image": "test_00132_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.87,
       "cnnSaysHuman": true,
       "threats": [
@@ -295,7 +295,7 @@
       "subjectId": "test_00023_tier0_tilt",
       "image": "test_00023_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.83,
       "cnnSaysHuman": true,
       "threats": [
@@ -307,7 +307,7 @@
       "subjectId": "test_00085_tier0",
       "image": "test_00085_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 71.3,
       "cnnSaysHuman": true,
       "threats": [
@@ -319,7 +319,7 @@
       "subjectId": "test_00011_tier0",
       "image": "test_00011_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.81,
       "cnnSaysHuman": true,
       "threats": [
@@ -331,7 +331,7 @@
       "subjectId": "test_00186_tier0",
       "image": "test_00186_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 87.96,
       "cnnSaysHuman": true,
       "threats": [
@@ -343,7 +343,7 @@
       "subjectId": "test_00190_tier0",
       "image": "test_00190_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 49.95,
       "cnnSaysHuman": false,
       "threats": [
@@ -356,7 +356,7 @@
       "subjectId": "test_00114_tier0",
       "image": "test_00114_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 97.98,
       "cnnSaysHuman": true,
       "threats": [
@@ -370,7 +370,7 @@
       "subjectId": "test_00142_tier2",
       "image": "test_00142_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.99,
       "cnnSaysHuman": false,
       "threats": [
@@ -382,7 +382,7 @@
       "subjectId": "test_00049_tier2",
       "image": "test_00049_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 97.78,
       "cnnSaysHuman": false,
       "threats": [
@@ -394,7 +394,7 @@
       "subjectId": "test_00046_tier2",
       "image": "test_00046_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 94.55,
       "cnnSaysHuman": false,
       "threats": [
@@ -406,7 +406,7 @@
       "subjectId": "test_00145_tier2",
       "image": "test_00145_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.94,
       "cnnSaysHuman": false,
       "threats": [
@@ -418,7 +418,7 @@
       "subjectId": "test_00138_tier2",
       "image": "test_00138_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 79.26,
       "cnnSaysHuman": true,
       "threats": [
@@ -430,7 +430,7 @@
       "subjectId": "test_00197_tier8",
       "image": "test_00197_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 68.9,
       "cnnSaysHuman": false,
       "threats": [
@@ -442,7 +442,7 @@
       "subjectId": "test_00177_tier8",
       "image": "test_00177_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 66.93,
       "cnnSaysHuman": false,
       "threats": [
@@ -454,7 +454,7 @@
       "subjectId": "test_00121_tier8",
       "image": "test_00121_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 92.77,
       "cnnSaysHuman": false,
       "threats": [
@@ -466,7 +466,7 @@
       "subjectId": "test_00180_tier8",
       "image": "test_00180_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 54.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -478,7 +478,7 @@
       "subjectId": "test_00167_tier8",
       "image": "test_00167_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 94.79,
       "cnnSaysHuman": false,
       "threats": [
@@ -490,7 +490,7 @@
       "subjectId": "test_00047_tier10",
       "image": "test_00047_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 68.68,
       "cnnSaysHuman": false,
       "threats": [
@@ -502,7 +502,7 @@
       "subjectId": "test_00161_tier10",
       "image": "test_00161_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 49.53,
       "cnnSaysHuman": true,
       "threats": [
@@ -515,7 +515,7 @@
       "subjectId": "test_00179_tier10",
       "image": "test_00179_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 59.17,
       "cnnSaysHuman": true,
       "threats": [
@@ -528,7 +528,7 @@
       "subjectId": "test_00037_tier10",
       "image": "test_00037_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 61.2,
       "cnnSaysHuman": false,
       "threats": [
@@ -540,7 +540,7 @@
       "subjectId": "test_00044_tier10",
       "image": "test_00044_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 74.77,
       "cnnSaysHuman": false,
       "threats": [
@@ -552,7 +552,7 @@
       "subjectId": "test_00111_tier0_tilt",
       "image": "test_00111_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.82,
       "cnnSaysHuman": true,
       "threats": [
@@ -564,7 +564,7 @@
       "subjectId": "test_00126_tier0_tilt",
       "image": "test_00126_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.96,
       "cnnSaysHuman": true,
       "threats": [
@@ -576,7 +576,7 @@
       "subjectId": "test_00053_tier0_tilt",
       "image": "test_00053_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.79,
       "cnnSaysHuman": true,
       "threats": [
@@ -588,7 +588,7 @@
       "subjectId": "test_00102_tier0_tilt",
       "image": "test_00102_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.93,
       "cnnSaysHuman": true,
       "threats": [
@@ -600,7 +600,7 @@
       "subjectId": "test_00012_tier0_tilt",
       "image": "test_00012_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 93.89,
       "cnnSaysHuman": true,
       "threats": [
@@ -612,7 +612,7 @@
       "subjectId": "test_00184_tier0_tilt",
       "image": "test_00184_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 88.77,
       "cnnSaysHuman": true,
       "threats": [
@@ -624,7 +624,7 @@
       "subjectId": "test_00165_tier0_tilt",
       "image": "test_00165_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.49,
       "cnnSaysHuman": true,
       "threats": [
@@ -636,7 +636,7 @@
       "subjectId": "test_00130_tier0_tilt",
       "image": "test_00130_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.68,
       "cnnSaysHuman": true,
       "threats": [
@@ -648,7 +648,7 @@
       "subjectId": "test_00178_tier0_tilt",
       "image": "test_00178_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.79,
       "cnnSaysHuman": true,
       "threats": [
@@ -660,7 +660,7 @@
       "subjectId": "test_00003_tier0",
       "image": "test_00003_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 93.97,
       "cnnSaysHuman": true,
       "threats": [
@@ -672,7 +672,7 @@
       "subjectId": "test_00169_tier0",
       "image": "test_00169_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -684,7 +684,7 @@
       "subjectId": "test_00073_tier0",
       "image": "test_00073_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.49,
       "cnnSaysHuman": true,
       "threats": [
@@ -696,7 +696,7 @@
       "subjectId": "test_00067_tier0",
       "image": "test_00067_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.49,
       "cnnSaysHuman": true,
       "threats": [
@@ -708,7 +708,7 @@
       "subjectId": "test_00036_tier0",
       "image": "test_00036_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.82,
       "cnnSaysHuman": true,
       "threats": [
@@ -720,7 +720,7 @@
       "subjectId": "test_00182_tier0",
       "image": "test_00182_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.95,
       "cnnSaysHuman": true,
       "threats": [
@@ -734,7 +734,7 @@
       "subjectId": "test_00043_tier2",
       "image": "test_00043_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 80.28,
       "cnnSaysHuman": false,
       "threats": [
@@ -746,7 +746,7 @@
       "subjectId": "test_00087_tier2",
       "image": "test_00087_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.95,
       "cnnSaysHuman": false,
       "threats": [
@@ -758,7 +758,7 @@
       "subjectId": "test_00095_tier2",
       "image": "test_00095_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 81.37,
       "cnnSaysHuman": false,
       "threats": [
@@ -770,7 +770,7 @@
       "subjectId": "test_00133_tier2",
       "image": "test_00133_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.79,
       "cnnSaysHuman": false,
       "threats": [
@@ -782,7 +782,7 @@
       "subjectId": "test_00014_tier2",
       "image": "test_00014_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.03,
       "cnnSaysHuman": false,
       "threats": [
@@ -794,7 +794,7 @@
       "subjectId": "test_00173_tier8",
       "image": "test_00173_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 62.99,
       "cnnSaysHuman": false,
       "threats": [
@@ -806,7 +806,7 @@
       "subjectId": "test_00113_tier8",
       "image": "test_00113_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 63.84,
       "cnnSaysHuman": false,
       "threats": [
@@ -818,7 +818,7 @@
       "subjectId": "test_00033_tier8",
       "image": "test_00033_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.8,
       "cnnSaysHuman": false,
       "threats": [
@@ -830,7 +830,7 @@
       "subjectId": "test_00166_tier8",
       "image": "test_00166_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 32.77,
       "cnnSaysHuman": true,
       "threats": [
@@ -843,7 +843,7 @@
       "subjectId": "test_00092_tier8",
       "image": "test_00092_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 96.88,
       "cnnSaysHuman": false,
       "threats": [
@@ -855,7 +855,7 @@
       "subjectId": "test_00031_tier10",
       "image": "test_00031_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.83,
       "cnnSaysHuman": false,
       "threats": [
@@ -867,7 +867,7 @@
       "subjectId": "test_00159_tier10",
       "image": "test_00159_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 91.04,
       "cnnSaysHuman": false,
       "threats": [
@@ -879,7 +879,7 @@
       "subjectId": "test_00101_tier10",
       "image": "test_00101_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 67.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -891,7 +891,7 @@
       "subjectId": "test_00009_tier10",
       "image": "test_00009_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 53.21,
       "cnnSaysHuman": true,
       "threats": [
@@ -904,7 +904,7 @@
       "subjectId": "test_00005_tier10",
       "image": "test_00005_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 58.58,
       "cnnSaysHuman": true,
       "threats": [
@@ -917,7 +917,7 @@
       "subjectId": "test_00094_tier0_tilt",
       "image": "test_00094_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 96.13,
       "cnnSaysHuman": true,
       "threats": [
@@ -929,7 +929,7 @@
       "subjectId": "test_00151_tier0_tilt",
       "image": "test_00151_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.05,
       "cnnSaysHuman": true,
       "threats": [
@@ -941,7 +941,7 @@
       "subjectId": "test_00115_tier0_tilt",
       "image": "test_00115_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.57,
       "cnnSaysHuman": true,
       "threats": [
@@ -953,7 +953,7 @@
       "subjectId": "test_00006_tier0_tilt",
       "image": "test_00006_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 62.74,
       "cnnSaysHuman": true,
       "threats": [
@@ -965,7 +965,7 @@
       "subjectId": "test_00160_tier0_tilt",
       "image": "test_00160_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.05,
       "cnnSaysHuman": true,
       "threats": [
@@ -977,7 +977,7 @@
       "subjectId": "test_00127_tier0_tilt",
       "image": "test_00127_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 96.47,
       "cnnSaysHuman": true,
       "threats": [
@@ -989,7 +989,7 @@
       "subjectId": "test_00191_tier0_tilt",
       "image": "test_00191_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.56,
       "cnnSaysHuman": true,
       "threats": [
@@ -1001,7 +1001,7 @@
       "subjectId": "test_00041_tier0_tilt",
       "image": "test_00041_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -1013,7 +1013,7 @@
       "subjectId": "test_00147_tier0",
       "image": "test_00147_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 95.13,
       "cnnSaysHuman": false,
       "threats": [
@@ -1025,7 +1025,7 @@
       "subjectId": "test_00010_tier0",
       "image": "test_00010_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.61,
       "cnnSaysHuman": true,
       "threats": [
@@ -1037,7 +1037,7 @@
       "subjectId": "test_00054_tier0",
       "image": "test_00054_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 91.45,
       "cnnSaysHuman": true,
       "threats": [
@@ -1049,7 +1049,7 @@
       "subjectId": "test_00119_tier0",
       "image": "test_00119_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.67,
       "cnnSaysHuman": true,
       "threats": [
@@ -1061,7 +1061,7 @@
       "subjectId": "test_00128_tier0",
       "image": "test_00128_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.87,
       "cnnSaysHuman": true,
       "threats": [
@@ -1073,7 +1073,7 @@
       "subjectId": "test_00008_tier0",
       "image": "test_00008_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.84,
       "cnnSaysHuman": true,
       "threats": [
@@ -1085,7 +1085,7 @@
       "subjectId": "test_00026_tier0",
       "image": "test_00026_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 69.78,
       "cnnSaysHuman": true,
       "threats": [
@@ -1099,7 +1099,7 @@
       "subjectId": "test_00103_tier2",
       "image": "test_00103_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.82,
       "cnnSaysHuman": false,
       "threats": [
@@ -1111,7 +1111,7 @@
       "subjectId": "test_00051_tier2",
       "image": "test_00051_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.95,
       "cnnSaysHuman": false,
       "threats": [
@@ -1123,7 +1123,7 @@
       "subjectId": "test_00089_tier2",
       "image": "test_00089_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 100.0,
       "cnnSaysHuman": false,
       "threats": [
@@ -1135,7 +1135,7 @@
       "subjectId": "test_00093_tier2",
       "image": "test_00093_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.95,
       "cnnSaysHuman": false,
       "threats": [
@@ -1147,7 +1147,7 @@
       "subjectId": "test_00146_tier2",
       "image": "test_00146_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.43,
       "cnnSaysHuman": false,
       "threats": [
@@ -1159,7 +1159,7 @@
       "subjectId": "test_00157_tier8",
       "image": "test_00157_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 65.66,
       "cnnSaysHuman": false,
       "threats": [
@@ -1171,7 +1171,7 @@
       "subjectId": "test_00198_tier8",
       "image": "test_00198_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 67.1,
       "cnnSaysHuman": false,
       "threats": [
@@ -1183,7 +1183,7 @@
       "subjectId": "test_00013_tier8",
       "image": "test_00013_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 61.38,
       "cnnSaysHuman": false,
       "threats": [
@@ -1195,7 +1195,7 @@
       "subjectId": "test_00004_tier8",
       "image": "test_00004_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 86.12,
       "cnnSaysHuman": false,
       "threats": [
@@ -1207,7 +1207,7 @@
       "subjectId": "test_00030_tier8",
       "image": "test_00030_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 97.27,
       "cnnSaysHuman": false,
       "threats": [
@@ -1219,7 +1219,7 @@
       "subjectId": "test_00024_tier10",
       "image": "test_00024_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 95.23,
       "cnnSaysHuman": false,
       "threats": [
@@ -1231,7 +1231,7 @@
       "subjectId": "test_00106_tier10",
       "image": "test_00106_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.47,
       "cnnSaysHuman": false,
       "threats": [
@@ -1243,7 +1243,7 @@
       "subjectId": "test_00175_tier10",
       "image": "test_00175_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 86.78,
       "cnnSaysHuman": false,
       "threats": [
@@ -1255,7 +1255,7 @@
       "subjectId": "test_00007_tier10",
       "image": "test_00007_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 54.87,
       "cnnSaysHuman": false,
       "threats": [
@@ -1268,7 +1268,7 @@
       "subjectId": "test_00144_tier10",
       "image": "test_00144_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 59.03,
       "cnnSaysHuman": false,
       "threats": [
@@ -1281,7 +1281,7 @@
       "subjectId": "test_00050_tier0_tilt",
       "image": "test_00050_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.93,
       "cnnSaysHuman": true,
       "threats": [
@@ -1293,7 +1293,7 @@
       "subjectId": "test_00141_tier0_tilt",
       "image": "test_00141_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.9,
       "cnnSaysHuman": true,
       "threats": [
@@ -1305,7 +1305,7 @@
       "subjectId": "test_00104_tier0_tilt",
       "image": "test_00104_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 97.51,
       "cnnSaysHuman": true,
       "threats": [
@@ -1317,7 +1317,7 @@
       "subjectId": "test_00154_tier0_tilt",
       "image": "test_00154_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 79.28,
       "cnnSaysHuman": true,
       "threats": [
@@ -1329,7 +1329,7 @@
       "subjectId": "test_00000_tier0_tilt",
       "image": "test_00000_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 80.97,
       "cnnSaysHuman": true,
       "threats": [
@@ -1341,7 +1341,7 @@
       "subjectId": "test_00148_tier0_tilt",
       "image": "test_00148_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 97.69,
       "cnnSaysHuman": true,
       "threats": [
@@ -1353,7 +1353,7 @@
       "subjectId": "test_00100_tier0_tilt",
       "image": "test_00100_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 100.0,
       "cnnSaysHuman": true,
       "threats": [
@@ -1365,7 +1365,7 @@
       "subjectId": "test_00020_tier0_tilt",
       "image": "test_00020_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -1377,7 +1377,7 @@
       "subjectId": "test_00120_tier0_tilt",
       "image": "test_00120_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.54,
       "cnnSaysHuman": true,
       "threats": [
@@ -1389,7 +1389,7 @@
       "subjectId": "test_00002_tier0_tilt",
       "image": "test_00002_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.25,
       "cnnSaysHuman": true,
       "threats": [
@@ -1401,7 +1401,7 @@
       "subjectId": "test_00038_tier0",
       "image": "test_00038_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.77,
       "cnnSaysHuman": true,
       "threats": [
@@ -1413,7 +1413,7 @@
       "subjectId": "test_00057_tier0",
       "image": "test_00057_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 97.37,
       "cnnSaysHuman": true,
       "threats": [
@@ -1425,7 +1425,7 @@
       "subjectId": "test_00028_tier0",
       "image": "test_00028_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.16,
       "cnnSaysHuman": true,
       "threats": [
@@ -1437,7 +1437,7 @@
       "subjectId": "test_00109_tier0",
       "image": "test_00109_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.7,
       "cnnSaysHuman": true,
       "threats": [
@@ -1449,7 +1449,7 @@
       "subjectId": "test_00125_tier0",
       "image": "test_00125_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.95,
       "cnnSaysHuman": true,
       "threats": [
@@ -1463,7 +1463,7 @@
       "subjectId": "test_00170_tier2",
       "image": "test_00170_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 93.47,
       "cnnSaysHuman": false,
       "threats": [
@@ -1475,7 +1475,7 @@
       "subjectId": "test_00082_tier2",
       "image": "test_00082_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.24,
       "cnnSaysHuman": true,
       "threats": [
@@ -1487,7 +1487,7 @@
       "subjectId": "test_00045_tier2",
       "image": "test_00045_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 67.01,
       "cnnSaysHuman": true,
       "threats": [
@@ -1499,7 +1499,7 @@
       "subjectId": "test_00061_tier2",
       "image": "test_00061_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.52,
       "cnnSaysHuman": false,
       "threats": [
@@ -1511,7 +1511,7 @@
       "subjectId": "test_00070_tier2",
       "image": "test_00070_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.81,
       "cnnSaysHuman": false,
       "threats": [
@@ -1523,7 +1523,7 @@
       "subjectId": "test_00140_tier8",
       "image": "test_00140_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.96,
       "cnnSaysHuman": false,
       "threats": [
@@ -1535,7 +1535,7 @@
       "subjectId": "test_00152_tier8",
       "image": "test_00152_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 98.73,
       "cnnSaysHuman": false,
       "threats": [
@@ -1547,7 +1547,7 @@
       "subjectId": "test_00077_tier8",
       "image": "test_00077_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 95.38,
       "cnnSaysHuman": false,
       "threats": [
@@ -1559,7 +1559,7 @@
       "subjectId": "test_00071_tier8",
       "image": "test_00071_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.92,
       "cnnSaysHuman": false,
       "threats": [
@@ -1571,7 +1571,7 @@
       "subjectId": "test_00099_tier8",
       "image": "test_00099_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 91.96,
       "cnnSaysHuman": false,
       "threats": [
@@ -1583,7 +1583,7 @@
       "subjectId": "test_00195_tier10",
       "image": "test_00195_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 57.74,
       "cnnSaysHuman": false,
       "threats": [
@@ -1596,7 +1596,7 @@
       "subjectId": "test_00072_tier10",
       "image": "test_00072_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 88.83,
       "cnnSaysHuman": false,
       "threats": [
@@ -1608,7 +1608,7 @@
       "subjectId": "test_00168_tier10",
       "image": "test_00168_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 49.67,
       "cnnSaysHuman": true,
       "threats": [
@@ -1621,7 +1621,7 @@
       "subjectId": "test_00122_tier10",
       "image": "test_00122_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 53.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -1634,7 +1634,7 @@
       "subjectId": "test_00164_tier10",
       "image": "test_00164_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 56.29,
       "cnnSaysHuman": true,
       "threats": [
@@ -1647,7 +1647,7 @@
       "subjectId": "test_00107_tier0_tilt",
       "image": "test_00107_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 52.16,
       "cnnSaysHuman": true,
       "threats": [
@@ -1660,7 +1660,7 @@
       "subjectId": "test_00052_tier0_tilt",
       "image": "test_00052_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.91,
       "cnnSaysHuman": true,
       "threats": [
@@ -1672,7 +1672,7 @@
       "subjectId": "test_00136_tier0_tilt",
       "image": "test_00136_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.15,
       "cnnSaysHuman": true,
       "threats": [
@@ -1684,7 +1684,7 @@
       "subjectId": "test_00163_tier0_tilt",
       "image": "test_00163_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -1696,7 +1696,7 @@
       "subjectId": "test_00158_tier0_tilt",
       "image": "test_00158_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 94.09,
       "cnnSaysHuman": true,
       "threats": [
@@ -1708,7 +1708,7 @@
       "subjectId": "test_00143_tier0_tilt",
       "image": "test_00143_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.58,
       "cnnSaysHuman": true,
       "threats": [
@@ -1720,7 +1720,7 @@
       "subjectId": "test_00083_tier0_tilt",
       "image": "test_00083_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.01,
       "cnnSaysHuman": true,
       "threats": [
@@ -1732,7 +1732,7 @@
       "subjectId": "test_00040_tier0_tilt",
       "image": "test_00040_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 95.76,
       "cnnSaysHuman": true,
       "threats": [
@@ -1744,7 +1744,7 @@
       "subjectId": "test_00056_tier0_tilt",
       "image": "test_00056_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 96.74,
       "cnnSaysHuman": true,
       "threats": [
@@ -1756,7 +1756,7 @@
       "subjectId": "test_00162_tier0_tilt",
       "image": "test_00162_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 44.94,
       "cnnSaysHuman": true,
       "threats": [
@@ -1769,7 +1769,7 @@
       "subjectId": "test_00155_tier0",
       "image": "test_00155_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.95,
       "cnnSaysHuman": true,
       "threats": [
@@ -1781,7 +1781,7 @@
       "subjectId": "test_00075_tier0",
       "image": "test_00075_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.87,
       "cnnSaysHuman": true,
       "threats": [
@@ -1793,7 +1793,7 @@
       "subjectId": "test_00064_tier0",
       "image": "test_00064_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 81.66,
       "cnnSaysHuman": false,
       "threats": [
@@ -1805,7 +1805,7 @@
       "subjectId": "test_00139_tier0",
       "image": "test_00139_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.9,
       "cnnSaysHuman": true,
       "threats": [
@@ -1817,7 +1817,7 @@
       "subjectId": "test_00078_tier0",
       "image": "test_00078_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.98,
       "cnnSaysHuman": true,
       "threats": [
@@ -1831,7 +1831,7 @@
       "subjectId": "test_00027_tier2",
       "image": "test_00027_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.33,
       "cnnSaysHuman": false,
       "threats": [
@@ -1843,7 +1843,7 @@
       "subjectId": "test_00137_tier2",
       "image": "test_00137_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.98,
       "cnnSaysHuman": false,
       "threats": [
@@ -1855,7 +1855,7 @@
       "subjectId": "test_00105_tier2",
       "image": "test_00105_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.68,
       "cnnSaysHuman": false,
       "threats": [
@@ -1867,7 +1867,7 @@
       "subjectId": "test_00192_tier2",
       "image": "test_00192_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.88,
       "cnnSaysHuman": false,
       "threats": [
@@ -1879,7 +1879,7 @@
       "subjectId": "test_00097_tier2",
       "image": "test_00097_tier2.png",
       "tier": 2,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.93,
       "cnnSaysHuman": false,
       "threats": [
@@ -1891,7 +1891,7 @@
       "subjectId": "test_00088_tier8",
       "image": "test_00088_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 95.11,
       "cnnSaysHuman": false,
       "threats": [
@@ -1903,7 +1903,7 @@
       "subjectId": "test_00181_tier8",
       "image": "test_00181_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 62.56,
       "cnnSaysHuman": false,
       "threats": [
@@ -1915,7 +1915,7 @@
       "subjectId": "test_00079_tier8",
       "image": "test_00079_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 50.84,
       "cnnSaysHuman": true,
       "threats": [
@@ -1928,7 +1928,7 @@
       "subjectId": "test_00108_tier8",
       "image": "test_00108_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 96.49,
       "cnnSaysHuman": false,
       "threats": [
@@ -1940,7 +1940,7 @@
       "subjectId": "test_00034_tier8",
       "image": "test_00034_tier8.png",
       "tier": 8,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 90.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -1952,7 +1952,7 @@
       "subjectId": "test_00076_tier10",
       "image": "test_00076_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 59.43,
       "cnnSaysHuman": false,
       "threats": [
@@ -1964,7 +1964,7 @@
       "subjectId": "test_00086_tier10",
       "image": "test_00086_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 60.52,
       "cnnSaysHuman": false,
       "threats": [
@@ -1977,7 +1977,7 @@
       "subjectId": "test_00032_tier10",
       "image": "test_00032_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 99.29,
       "cnnSaysHuman": true,
       "threats": [
@@ -1989,7 +1989,7 @@
       "subjectId": "test_00042_tier10",
       "image": "test_00042_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 78.26,
       "cnnSaysHuman": false,
       "threats": [
@@ -2001,7 +2001,7 @@
       "subjectId": "test_00080_tier10",
       "image": "test_00080_tier10.png",
       "tier": 10,
-      "groundTruthIsHuman": false,
+      "groundTruth": "zombie",
       "aiConfidence": 64.4,
       "cnnSaysHuman": true,
       "threats": [
@@ -2013,7 +2013,7 @@
       "subjectId": "test_00131_tier0_tilt",
       "image": "test_00131_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 91.11,
       "cnnSaysHuman": true,
       "threats": [
@@ -2025,7 +2025,7 @@
       "subjectId": "test_00081_tier0_tilt",
       "image": "test_00081_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 95.04,
       "cnnSaysHuman": true,
       "threats": [
@@ -2037,7 +2037,7 @@
       "subjectId": "test_00129_tier0_tilt",
       "image": "test_00129_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 93.58,
       "cnnSaysHuman": true,
       "threats": [
@@ -2049,7 +2049,7 @@
       "subjectId": "test_00001_tier0_tilt",
       "image": "test_00001_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.62,
       "cnnSaysHuman": true,
       "threats": [
@@ -2061,7 +2061,7 @@
       "subjectId": "test_00035_tier0_tilt",
       "image": "test_00035_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 54.91,
       "cnnSaysHuman": false,
       "threats": [
@@ -2074,7 +2074,7 @@
       "subjectId": "test_00153_tier0_tilt",
       "image": "test_00153_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.75,
       "cnnSaysHuman": true,
       "threats": [
@@ -2086,7 +2086,7 @@
       "subjectId": "test_00084_tier0_tilt",
       "image": "test_00084_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 96.78,
       "cnnSaysHuman": true,
       "threats": [
@@ -2098,7 +2098,7 @@
       "subjectId": "test_00189_tier0_tilt",
       "image": "test_00189_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 97.58,
       "cnnSaysHuman": true,
       "threats": [
@@ -2110,7 +2110,7 @@
       "subjectId": "test_00193_tier0_tilt",
       "image": "test_00193_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 76.4,
       "cnnSaysHuman": false,
       "threats": [
@@ -2122,7 +2122,7 @@
       "subjectId": "test_00068_tier0_tilt",
       "image": "test_00068_tier0_tilt.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.89,
       "cnnSaysHuman": true,
       "threats": [
@@ -2134,7 +2134,7 @@
       "subjectId": "test_00021_tier0",
       "image": "test_00021_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 78.17,
       "cnnSaysHuman": true,
       "threats": [
@@ -2146,7 +2146,7 @@
       "subjectId": "test_00174_tier0",
       "image": "test_00174_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 98.85,
       "cnnSaysHuman": true,
       "threats": [
@@ -2158,7 +2158,7 @@
       "subjectId": "test_00096_tier0",
       "image": "test_00096_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.98,
       "cnnSaysHuman": true,
       "threats": [
@@ -2170,7 +2170,7 @@
       "subjectId": "test_00123_tier0",
       "image": "test_00123_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 99.79,
       "cnnSaysHuman": true,
       "threats": [
@@ -2182,7 +2182,7 @@
       "subjectId": "test_00025_tier0",
       "image": "test_00025_tier0.png",
       "tier": 0,
-      "groundTruthIsHuman": true,
+      "groundTruth": "human",
       "aiConfidence": 79.56,
       "cnnSaysHuman": false,
       "threats": [
