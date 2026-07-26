@@ -21,20 +21,30 @@ field was replaced by `zoom_level` (int 0-3) since zoom is now 3 discrete
 magnification settings (ZOOM 1/2/3) instead of a single on/off toggle. See the
 field table below for the updated per-field detail.
 
-**Update (2026-07-25):** `ground_truth_human` gained a third value, `"dead"`,
-for the tier-0 humans the CNN itself classifies as a corpse (`cnn_predicted ==
-"corpse"`) — currently 5 subjects across the curated sessions. `rounds.json`
-and `game_manifest.csv` carry this as a single `groundTruth` /
-`ground_truth` field (`"human"` \| `"zombie"` \| `"dead"`), added by
-`curate_game_sets.py` — one column to check rather than two overlapping
-booleans (`groundTruthIsHuman` + `groundTruthIsDead`) that could disagree.
-Since PERMIT/REJECT has no correct answer for an already-dead subject, those
-trials are excluded from `correct` scoring the same way a timeout is
-(`correct` is `null`, not scored against `groundTruth`). Separately,
-`player_answer_human`'s values changed from `"human"`/`"zombie"` to
-`"permit"`/`"reject"` — it now logs the player's literal checkpoint action
-rather than translating it into a class judgment; `ground_truth_human` and
-`cnn_says_human` are unaffected and still log classes.
+**Update (2026-07-25):** `player_answer_human`'s values changed from
+`"human"`/`"zombie"` to `"permit"`/`"reject"` — it now logs the player's
+literal checkpoint action rather than translating it into a class judgment;
+`ground_truth_human` and `cnn_says_human` are unaffected and still log
+classes.
+
+An earlier version of this update also gave `ground_truth_human` a third
+value, `"dead"`, for the tier-0 humans the CNN itself classifies as a corpse
+(`cnn_predicted == "corpse"`), and excluded those trials from `correct`
+scoring. That was reverted the same day: those subjects are the *injured*
+humans in the pool (`consolidated_metadata.csv`'s `Injured` flag), and
+`true_class == "human"` and `cnn_predicted == "corpse"` are exactly the ones
+the classifier got wrong — so `"dead"` was deriving ground truth from the
+CNN's own error, meaning two physically identical injured subjects could get
+different ground truths depending only on whether the CNN happened to
+misclassify that particular render. It also made those rows unscoreable,
+discarding the clearest over-trust case in the dataset ("AI confidently
+called a savable person dead — did the player follow?"). Ground truth is
+back to a plain `"human"` \| `"zombie"` boolean-backed label; wounded-but-alive
+is still PERMIT. The distinction is preserved separately as the descriptive
+`subject_injured` column in `game_manifest.csv` (sourced from
+`consolidated_metadata.csv`, joined by `curate_game_sets.py`'s
+`load_injury_lookup()`) — it doesn't affect `correct` scoring, but supports
+analysis like "do players reject injured humans more often?".
 
 ## One row per trial (one humanoid judged by one participant)
 
@@ -50,9 +60,9 @@ rather than translating it into a class judgment; `ground_truth_human` and
 | `malice_tier` | int | `currentRound.tier` (`game_manifest.csv` `malice_tier`) | Independent variable. 4 confirmed levels: **`{0, 2, 8, 10}`** — `0` is the real-human control; `2`/`8`/`10` are the agent's malice budgets (Shane, PR #13's reward redesign; supersedes the earlier `{0, 1, 5, 10}`). See "Tier definition" below. |
 | `round_index` | int | `station.roundIndex` | 0-based position of this trial in the shuffled deal order for the session (the shuffle is seeded off `content_session_key`, so order is reproducible per content set). Lets the analysis test order effects (fatigue/learning across the 30 rounds). |
 | `condition` | enum: `human_alone` \| `human_ai` | chosen once on the condition-select screen (first visit only), persisted via `localStorage` | Assigned once per `participant_id` (between-subjects) — never changes across a participant's repeat sessions. Selected by the research team at session start (sessions are monitored via screenshare), not hashed client-side. See "Participant tracking" below. The Threat Advisory / AI Assistant panels are gated on this directly in `drawStationHUD()` (`human_ai` only) — this field records what was assigned and also fully determines whether the panels were shown. |
-| `ground_truth_human` | `"human"` \| `"zombie"` \| `"dead"` | `currentRound.groundTruth` (`rounds.json` `groundTruth` / `game_manifest.csv` `ground_truth`, from `curate_game_sets.py`) | `"human"` if the subject is actually a healthy human, `"zombie"` if overgrown/disguised, `"dead"` if a tier-0 human the CNN itself reads as a corpse (`true_class == "human"` and `cnn_predicted == "corpse"`). A single label column (not two overlapping booleans) so `log.csv` reads as the actual classes. |
+| `ground_truth_human` | `"human"` \| `"zombie"` | `currentRound.groundTruth` (`rounds.json` `groundTruth` / `game_manifest.csv` `ground_truth`, from `curate_game_sets.py`) | `"human"` if the subject is actually a healthy human (including injured-but-alive), `"zombie"` if overgrown/disguised. |
 | `player_answer_human` | `"permit"` \| `"reject"` \| null | `permitRejectLabel()` applied to the argument passed to `recordAnswer()` | The player's literal checkpoint call, not a class judgment — `"permit"` = let the subject through, `"reject"` = turn them away. `null` = timed out, no decision made. |
-| `correct` | bool \| null | `(saysHuman === null \|\| groundTruth === 'dead') ? null : saysHuman === (groundTruth === 'human')` | `null` when the player timed out (`player_answer_human` is `null`) OR the subject's `ground_truth_human` is `"dead"` — PERMIT/REJECT has no correct answer for an already-dead subject, so those trials are excluded from scoring the same way a timeout is. |
+| `correct` | bool \| null | `saysHuman === null ? null : saysHuman === (groundTruth === 'human')` | `null` only when the player timed out (`player_answer_human` is `null`). |
 | `ai_confidence_shown` | float (0-100) | `currentRound.aiConfidence` (`game_manifest.csv` `ai_confidence_shown`, the CNN's `max_prob` — its probability for whichever class it predicted, not `cnn_p_healthy`) | The AI assistant's confidence — the real classifier's output, not an invented number. Post-PR #13 this trends *down* with tier (96/80/69% at tiers 2/8/10) rather than staying high, because the disguise now drives the CNN toward its decision boundary, so its winning-class probability falls toward 50%. |
 | `cnn_says_human` | `"human"` \| `"zombie"` | `humanZombieLabel(currentRound.cnnSaysHuman)` (`rounds.json` `cnnSaysHuman`, from `curate_game_sets.py`) | The classifier's predicted class, labeled the same way as `ground_truth_human`/`player_answer_human`. Logged per trial so "did the player follow the AI" / over-trust is computable without joining `subject_id` back to the manifest — `ai_confidence_shown` alone is directionless. |
 | `reaction_time_ms` | int | `performance.now() - roundStartTime` | Primary dependent variable alongside `correct`. |

@@ -78,8 +78,7 @@ def verify_tiers():
         game_meta = pd.read_csv(game_manifest)
         for tier in sorted(game_meta.malice_tier.unique()):
             r = game_meta[game_meta.malice_tier == tier].iloc[0]
-            truth = "HUMAN" if r.ground_truth_human else "ZOMBIE"
-            print(f"  tier {tier} ({truth:6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
+            print(f"  tier {tier} ({r.ground_truth.upper():6s}): {r.threats}  [conf {r.ai_confidence_shown}]")
     else:
         print("  (game_manifest.csv not found - threat lines unavailable)")
 

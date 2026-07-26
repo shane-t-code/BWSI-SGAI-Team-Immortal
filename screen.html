@@ -1843,12 +1843,7 @@
       clearInterval(station.timerInterval);
       const reactionMs = Math.round(performance.now() - station.roundStartTime);
       const round = station.currentRound;
-      // A ground-truth-dead subject (a tier-0 human the CNN itself reads as
-      // a corpse) has no correct PERMIT/REJECT answer, so it's excluded from
-      // scoring the same way a timeout is -- correct stays null rather than
-      // being judged against groundTruth.
-      const isDead = round.groundTruth === 'dead';
-      const correct = (saysHuman === null || isDead) ? null : (saysHuman === (round.groundTruth === 'human'));
+      const correct = saysHuman === null ? null : (saysHuman === (round.groundTruth === 'human'));
 
       const entry = {
         participant_id: PARTICIPANT_ID,
@@ -1921,7 +1916,7 @@
     // player judges the subject a healthy human (saysHuman = true). REJECT =
     // "turn them away", i.e. a disguised survivor (saysHuman = false). This
     // matches groundTruth === 'human', true only for the tier-0 real humans
-    // (logged as ground_truth_human: "human"/"zombie"/"dead" — see
+    // (logged as ground_truth_human: "human"/"zombie" — see
     // permitRejectLabel()). recordAnswer() handles correctness scoring,
     // logging, advancing to the next round, and CSV export on the final
     // round.
