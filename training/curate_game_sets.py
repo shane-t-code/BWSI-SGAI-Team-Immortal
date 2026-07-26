@@ -183,8 +183,19 @@ def main(pool_dir: str, out_dir: str, per_tier: int, n_sessions: int, seed: int,
     # injured humans more often?" -- especially at tier 0, where the CNN's
     # own "No Vital Signs Detected" misread on injured subjects is the
     # clearest over-trust case in the dataset.
+    # Gated on ground_truth_human: consolidated_metadata.csv carries an Injured
+    # flag for EVERY source render, zombies included, so the raw lookup marks
+    # wounded-looking zombies as injured too. "Injured" here means specifically
+    # a wounded-but-alive human (a PERMIT the player might wrongly turn away);
+    # an overgrown is a REJECT whether or not its render looks wounded. Without
+    # this gate the flag is true for far more zombies than humans, and any
+    # "do players reject injured humans more often?" analysis run on it would
+    # be dominated by zombies rather than measuring the intended effect.
     injury_lookup = load_injury_lookup(metadata_path)
-    sets["subject_injured"] = sets["source"].map(injury_lookup)
+    sets["subject_injured"] = (
+        sets["source"].map(injury_lookup).fillna(False).astype(bool)
+        & sets["ground_truth_human"].astype(bool)
+    )
 
     # --- hard guarantee: no source may appear in two sessions (repeat-player safety) ---
     per_source = sets.groupby("source")["session"].nunique()

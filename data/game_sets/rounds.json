@@ -70,7 +70,7 @@
       "image": "test_00016_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 93.46,
       "cnnSaysHuman": false,
       "threats": [
@@ -96,7 +96,7 @@
       "image": "test_00110_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 87.74,
       "cnnSaysHuman": false,
       "threats": [
@@ -109,7 +109,7 @@
       "image": "test_00060_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 62.03,
       "cnnSaysHuman": false,
       "threats": [
@@ -122,7 +122,7 @@
       "image": "test_00029_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 74.62,
       "cnnSaysHuman": false,
       "threats": [
@@ -161,7 +161,7 @@
       "image": "test_00018_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 47.2,
       "cnnSaysHuman": false,
       "threats": [
@@ -401,7 +401,7 @@
       "image": "test_00142_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 98.99,
       "cnnSaysHuman": false,
       "threats": [
@@ -414,7 +414,7 @@
       "image": "test_00049_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 97.78,
       "cnnSaysHuman": false,
       "threats": [
@@ -427,7 +427,7 @@
       "image": "test_00046_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 94.55,
       "cnnSaysHuman": false,
       "threats": [
@@ -440,7 +440,7 @@
       "image": "test_00145_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 98.94,
       "cnnSaysHuman": false,
       "threats": [
@@ -505,7 +505,7 @@
       "image": "test_00180_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 54.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -572,7 +572,7 @@
       "image": "test_00037_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 61.2,
       "cnnSaysHuman": false,
       "threats": [
@@ -795,7 +795,7 @@
       "image": "test_00043_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 80.28,
       "cnnSaysHuman": false,
       "threats": [
@@ -821,7 +821,7 @@
       "image": "test_00095_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 81.37,
       "cnnSaysHuman": false,
       "threats": [
@@ -834,7 +834,7 @@
       "image": "test_00133_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 98.79,
       "cnnSaysHuman": false,
       "threats": [
@@ -860,7 +860,7 @@
       "image": "test_00173_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 62.99,
       "cnnSaysHuman": false,
       "threats": [
@@ -886,7 +886,7 @@
       "image": "test_00033_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.8,
       "cnnSaysHuman": false,
       "threats": [
@@ -899,7 +899,7 @@
       "image": "test_00166_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 32.77,
       "cnnSaysHuman": true,
       "threats": [
@@ -913,7 +913,7 @@
       "image": "test_00092_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 96.88,
       "cnnSaysHuman": false,
       "threats": [
@@ -926,7 +926,7 @@
       "image": "test_00031_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.83,
       "cnnSaysHuman": false,
       "threats": [
@@ -939,7 +939,7 @@
       "image": "test_00159_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 91.04,
       "cnnSaysHuman": false,
       "threats": [
@@ -952,7 +952,7 @@
       "image": "test_00101_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 67.99,
       "cnnSaysHuman": true,
       "threats": [
@@ -965,7 +965,7 @@
       "image": "test_00009_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 53.21,
       "cnnSaysHuman": true,
       "threats": [
@@ -979,7 +979,7 @@
       "image": "test_00005_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 58.58,
       "cnnSaysHuman": true,
       "threats": [
@@ -1242,7 +1242,7 @@
       "image": "test_00146_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.43,
       "cnnSaysHuman": false,
       "threats": [
@@ -1268,7 +1268,7 @@
       "image": "test_00198_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 67.1,
       "cnnSaysHuman": false,
       "threats": [
@@ -1281,7 +1281,7 @@
       "image": "test_00013_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 61.38,
       "cnnSaysHuman": false,
       "threats": [
@@ -1294,7 +1294,7 @@
       "image": "test_00004_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 86.12,
       "cnnSaysHuman": false,
       "threats": [
@@ -1307,7 +1307,7 @@
       "image": "test_00030_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 97.27,
       "cnnSaysHuman": false,
       "threats": [
@@ -1320,7 +1320,7 @@
       "image": "test_00024_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 95.23,
       "cnnSaysHuman": false,
       "threats": [
@@ -1333,7 +1333,7 @@
       "image": "test_00106_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 98.47,
       "cnnSaysHuman": false,
       "threats": [
@@ -1346,7 +1346,7 @@
       "image": "test_00175_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 86.78,
       "cnnSaysHuman": false,
       "threats": [
@@ -1610,7 +1610,7 @@
       "image": "test_00045_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 67.01,
       "cnnSaysHuman": true,
       "threats": [
@@ -1636,7 +1636,7 @@
       "image": "test_00070_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.81,
       "cnnSaysHuman": false,
       "threats": [
@@ -1649,7 +1649,7 @@
       "image": "test_00140_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.96,
       "cnnSaysHuman": false,
       "threats": [
@@ -1662,7 +1662,7 @@
       "image": "test_00152_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 98.73,
       "cnnSaysHuman": false,
       "threats": [
@@ -1688,7 +1688,7 @@
       "image": "test_00071_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.92,
       "cnnSaysHuman": false,
       "threats": [
@@ -1701,7 +1701,7 @@
       "image": "test_00099_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 91.96,
       "cnnSaysHuman": false,
       "threats": [
@@ -1741,7 +1741,7 @@
       "image": "test_00168_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 49.67,
       "cnnSaysHuman": true,
       "threats": [
@@ -1755,7 +1755,7 @@
       "image": "test_00122_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 53.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -1982,7 +1982,7 @@
       "image": "test_00027_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.33,
       "cnnSaysHuman": false,
       "threats": [
@@ -2034,7 +2034,7 @@
       "image": "test_00097_tier2.png",
       "tier": 2,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 99.93,
       "cnnSaysHuman": false,
       "threats": [
@@ -2100,7 +2100,7 @@
       "image": "test_00034_tier8.png",
       "tier": 8,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 90.76,
       "cnnSaysHuman": false,
       "threats": [
@@ -2113,7 +2113,7 @@
       "image": "test_00076_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 59.43,
       "cnnSaysHuman": false,
       "threats": [
@@ -2166,7 +2166,7 @@
       "image": "test_00080_tier10.png",
       "tier": 10,
       "groundTruth": "zombie",
-      "isInjured": true,
+      "isInjured": false,
       "aiConfidence": 64.4,
       "cnnSaysHuman": true,
       "threats": [
