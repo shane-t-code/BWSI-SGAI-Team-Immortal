@@ -3,9 +3,8 @@
 // This file is a reference copy only — Apps Script projects aren't stored in
 // this git repo, they live in the Google account of whoever created the
 // deployment. Paste this into Extensions -> Apps Script from inside the
-// target Sheet (currently:
-// https://docs.google.com/spreadsheets/d/11fB30GMa8GNcLraN_7CH8JRy2ECEwlM2joyiXv023Ks/edit)
-// so the script is container-bound to it.
+// target Sheet so the script is container-bound to it. (The study's own
+// deployment has been retired; screen.html ships with an empty DATA_ENDPOINT.)
 //
 // screen.html POSTs { kind: 'trials' | 'surveys', headers, rows } with
 // mode: 'no-cors' (fire-and-forget — the client never reads the response,

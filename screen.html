@@ -1095,14 +1095,18 @@
     // ALSO POST the same rows to a Google Apps Script web app that appends them
     // to a Sheet we own. Fire-and-forget: `no-cors` sends the request without a
     // CORS preflight and we don't read the response, so a slow or failed send
-    // can never stall or break the game. If DATA_ENDPOINT is empty (local dev),
-    // the POST is skipped and only the download runs.
+    // can never stall or break the game. If DATA_ENDPOINT is empty, the POST
+    // is skipped and only the download runs.
     //
     // `kind` picks the Sheet tab: 'trials' or 'surveys'. Payload is
     // { kind, headers, rows } -- the same header + row arrays the CSV is built
     // from, so the Sheet and the downloaded CSV always match.
+    //
+    // The study's endpoint has been retired, so this is left empty. To collect
+    // data yourself, deploy docs/apps-script.gs as a web app bound to your own
+    // Sheet and paste its /exec URL here.
     // ---------------------------------------------------------------------
-    const DATA_ENDPOINT = 'https://script.google.com/macros/s/AKfycbwkj7hPye8DlzPCr-cCFOet33PtFPE5obfM2gOwB2gzFxTa7Pc8kxnMQcDkuuFkUm69/exec';
+    const DATA_ENDPOINT = '';
 
     function sendToServer(kind, headers, rows) {
       if (!DATA_ENDPOINT || !rows.length) return;   // no endpoint / nothing to send
